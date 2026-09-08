@@ -35,15 +35,17 @@ export function Countdown({ n }: { n: number | string }) {
     </motion.div>
   );
 }
-export function AnswerButton({ label, text, state, disabled, onPick, index, image }: { label: string; text: string; state: 'idle' | 'correct' | 'wrong' | 'dim'; disabled: boolean; onPick: () => void; index: number; image?: string }) {
+export function AnswerButton({ label, text, state, disabled, onPick, index, image }: { label: string; text: string; state: 'idle' | 'correct' | 'wrong' | 'dim' | 'picked'; disabled: boolean; onPick: () => void; index: number; image?: string }) {
   const wrap =
     state === 'correct'
       ? { background: '#E7F9E5', border: '1.5px solid #58CC02', boxShadow: '0 12px 28px -12px rgba(88,204,2,0.5)' }
       : state === 'wrong'
         ? { background: '#FFE9E9', border: '1.5px solid #FF4B5C' }
-        : state === 'dim'
-          ? { background: '#F8F9FF', border: '1.5px solid transparent', opacity: 0.55 }
-          : { background: '#F8F9FF', border: '1.5px solid transparent' };
+        : state === 'picked'
+          ? { background: '#EFE9FF', border: '1.5px solid #7C5CFF', boxShadow: '0 12px 28px -14px rgba(124,92,255,0.6)' }
+          : state === 'dim'
+            ? { background: '#F8F9FF', border: '1.5px solid transparent', opacity: 0.55 }
+            : { background: '#F8F9FF', border: '1.5px solid transparent' };
   return (
     <motion.button
       initial={{ opacity: 0, y: 10 }}
@@ -58,8 +60,8 @@ export function AnswerButton({ label, text, state, disabled, onPick, index, imag
       {image && (
         <img src={image} alt="" loading="lazy" className="h-12 w-16 shrink-0 rounded-xl bg-white object-cover" style={{ border: '1px solid rgba(120,100,180,0.10)' }} />
       )}
-      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl font-num text-sm font-extrabold ${state === 'correct' ? 'bg-[#58CC02] text-white' : state === 'wrong' ? 'bg-[#FF4B5C] text-white' : 'bg-white text-muted shadow-sticker-sm'}`}>
-        {state === 'correct' ? <Check size={16} strokeWidth={4} /> : state === 'wrong' ? <X size={16} strokeWidth={4} /> : label}
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl font-num text-sm font-extrabold ${state === 'correct' ? 'bg-[#58CC02] text-white' : state === 'wrong' ? 'bg-[#FF4B5C] text-white' : state === 'picked' ? 'bg-grape text-white' : 'bg-white text-muted shadow-sticker-sm'}`}>
+        {state === 'correct' ? <Check size={16} strokeWidth={4} /> : state === 'wrong' ? <X size={16} strokeWidth={4} /> : state === 'picked' ? <Check size={16} strokeWidth={4} /> : label}
       </span>
       <span className="flex-1 break-words">{text}</span>
     </motion.button>

@@ -123,11 +123,13 @@ function NetPlay({ code }: { code: string }) {
         </p>
         <div className="mx-auto mt-4 grid max-w-2xl gap-2">
           {q.options.map((o, i) => {
-            let st: 'idle' | 'correct' | 'wrong' | 'dim' = 'idle';
+            let st: 'idle' | 'correct' | 'wrong' | 'dim' | 'picked' = 'idle';
             if (phase === 'reveal') {
               if (i === correct) st = 'correct';
               else if (i === picked) st = 'wrong';
               else st = 'dim';
+            } else if (i === picked) {
+              st = 'picked';
             }
             return <AnswerButton key={i} index={i} label={L[i]} text={o} state={st} disabled={phase !== 'q' || expired || picked !== null} onPick={() => choose(i)} />;
           })}
