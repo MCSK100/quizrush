@@ -29,9 +29,12 @@ function fallbackQuestions(cfg: QuizConfig): Question[] {
   let pool = SEED_QUESTIONS.filter((q) => cfg.category === 'mixed' || cfg.category === 'all' ? true : q.category === cfg.category || (cfg.category === 'gk' && q.category === 'gk'));
   if (cfg.difficulty !== 'mixed') pool = pool.filter((q) => q.difficulty === cfg.difficulty);
   if (!pool.length) pool = [...SEED_QUESTIONS];
+  const region = cfg.region || 'global';
+  const isTagged = (q: Question) => region !== 'global' && (q.region === region || (q.region === 'india' && region !== 'india'));
   const seen = new Set(recentIds());
   const fresh = pool.filter((q) => !seen.has(q.id));
-  const base = fresh.length >= Math.min(cfg.count, pool.length) ? fresh : pool;
+  const freshOrdered = [...shuffle(fresh.filter(isTagged)), ...shuffle(fresh.filter((q) => !isTagged(q)))];
+  const base = fresh.length >= Math.min(cfg.count, pool.length) ? freshOrdered : shuffle(pool);
   let out = shuffle(base);
   while (out.length < cfg.count) { out = [...out, ...shuffle(base)] }
   out = out.slice(0, cfg.count).map((q) => ({ ...q, id: q.id + `#${n++}` }));
@@ -87,7 +90,7 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
       const t = setTimeout(() => ctrl.abort(), 30000);
       const res = await fetch(`${base}/api/questions`, {
         method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: cfg.category, count: cfg.count, difficulty: cfg.difficulty }),
+        body: JSON.stringify({ category: cfg.category, count: cfg.count, difficulty: cfg.difficulty, region: cfg.region || 'global' }),
       });
       clearTimeout(t);
       if (res.ok) {

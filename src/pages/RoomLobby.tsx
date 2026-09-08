@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Copy, Share2, Users } from 'lucide-react';
 import { RoomCodeBig } from '../components/board';
+import { regionLabel } from '../data/regions';
 import { useRoom, withoutBots } from '../stores/app';
 import type { Player, Room } from '../types';
 import { generateQuestions } from '../services/questions';
@@ -24,7 +25,7 @@ function LobbyShell({ code, players, config, isHost, alone, starting, err, onSta
         <button onClick={() => navigator.clipboard?.writeText(location.href)} className="btn-press flex items-center gap-1.5 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-ink shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}><Share2 size={14} /> SHARE</button>
       </div>
       <div className="qr-surface mt-5 rounded-[24px] p-4 sm:p-5">
-        <div className="mb-3 text-[11px] font-extrabold tracking-[0.16em] text-muted">SETTINGS · {config.count} QS · {config.timer}s · {String(config.category).toUpperCase()} · {String(config.difficulty).toUpperCase()}</div>
+        <div className="mb-3 text-[11px] font-extrabold tracking-[0.16em] text-muted">SETTINGS · {config.count} QS · {config.timer}s · {String(config.category).toUpperCase()} · {String(config.difficulty).toUpperCase()} · {regionLabel(config.region).toUpperCase()}</div>
         <div className="grid gap-2 sm:grid-cols-2">
           {players.map((p: Player) => (
             <motion.div layout key={p.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2.5 shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>

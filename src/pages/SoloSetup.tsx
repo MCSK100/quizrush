@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import SetupForm from '../components/SetupForm';
+import { regionLabel } from '../data/regions';
 import type { QuizConfig } from '../types';
 import { generateQuestions } from '../services/questions';
 import { sound } from '../services/engine';
 export default function SoloSetup() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
-  const [cfg, setCfg] = useState<QuizConfig>({ category: sp.get('cat') || 'mixed', count: 10, timer: 10, difficulty: 'mixed', randomizeQ: true, randomizeA: true });
+  const [cfg, setCfg] = useState<QuizConfig>({ category: sp.get('cat') || 'mixed', count: 10, timer: 10, difficulty: 'mixed', region: 'global', randomizeQ: true, randomizeA: true });
   const [loading, setLoading] = useState(false);
   async function start() {
     sound.play('click');
@@ -31,7 +32,7 @@ export default function SoloSetup() {
       <button onClick={start} disabled={loading} className="qr-btn-primary group mt-4 w-full justify-center rounded-2xl py-4 font-display text-base tracking-wide disabled:opacity-60">
         {loading ? 'BUILDING THE BATTLE…' : <>START QUIZ <ArrowRight size={18} className="arrow-nudge" /></>}
       </button>
-      <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer}s each · {String(cfg.difficulty).toUpperCase()}</p>
+      <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer}s each · {String(cfg.difficulty).toUpperCase()} · {regionLabel(cfg.region).toUpperCase()}</p>
     </div>
   );
 }

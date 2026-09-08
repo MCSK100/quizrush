@@ -13,6 +13,27 @@ const ALLOWED_CATS = new Set([
   'music', 'kids', 'tamil', 'gk', 'maths', 'literature', 'animals', 'space',
   'gaming', 'world',
 ]);
+const STATE_IDS = new Set([
+  'tamil-nadu', 'kerala', 'karnataka', 'andhra-pradesh', 'telangana',
+  'maharashtra', 'gujarat', 'rajasthan', 'punjab', 'delhi',
+  'uttar-pradesh', 'west-bengal',
+]);
+const STATE_NAMES = {
+  'tamil-nadu': 'Tamil Nadu', kerala: 'Kerala', karnataka: 'Karnataka',
+  'andhra-pradesh': 'Andhra Pradesh', telangana: 'Telangana', maharashtra: 'Maharashtra',
+  gujarat: 'Gujarat', rajasthan: 'Rajasthan', punjab: 'Punjab', delhi: 'Delhi',
+  'uttar-pradesh': 'Uttar Pradesh', 'west-bengal': 'West Bengal',
+};
+function cleanRegion(v) {
+  const r = String(v || 'global').toLowerCase();
+  if (r === 'global' || r === 'india' || STATE_IDS.has(r)) return r;
+  return 'global';
+}
+function regionPrompt(region) {
+  if (region === 'india') return ' Focus on India: its states, history, geography, culture, sports, cinema and current affairs.';
+  if (STATE_IDS.has(region)) return ` Focus on ${STATE_NAMES[region]}, India: its districts and cities, history, geography, culture, festivals, sports, cinema and famous people.`;
+  return '';
+}
 
 /* ---------------- helpers ---------------- */
 function send(res, status, body) {
@@ -111,11 +132,12 @@ function roomCode(len = 5) {
   return s;
 }
 
-async function geminiQuestions({ category, count, difficulty }) {
+async function geminiQuestions({ category, count, difficulty, region }) {
   const catLabel = category === 'mixed' ? 'mixed general knowledge' : category;
   const tamil = category === 'tamil' ? ' Write questions AND options in Tamil (தமிழ்).' : '';
+  const regionBit = regionPrompt(region || 'global');
   const prompt =
-    `Generate exactly ${count} ${difficulty === 'mixed' ? 'mixed-difficulty' : difficulty} multiple-choice quiz questions about ${catLabel}.${tamil} ` +
+    `Generate exactly ${count} ${difficulty === 'mixed' ? 'mixed-difficulty' : difficulty} multiple-choice quiz questions about ${catLabel}.${tamil}${regionBit} ` +
     `Return ONLY a JSON array, no markdown. Each item: {"question":string,"options":[exactly 4 distinct strings],"correctAnswer":0-3 index of the correct option,"explanation":one short sentence}. ` +
     `Rules: exactly 4 options, exactly 1 correct, no duplicates, family-friendly, factually correct.`;
   let lastErr = new Error('no models configured');
@@ -292,6 +314,7 @@ async function handleStart(room, byId) {
         category: room.config.category || 'mixed',
         count: Math.max(3, Math.min(40, Number(room.config.count) || 10)),
         difficulty: room.config.difficulty || 'mixed',
+        region: room.config.region || 'global',
       });
     const qs = fetched.slice(0, Math.max(3, Math.min(40, Number(room.config.count) || 10)));
     if (qs.length < 3) throw new Error('too few questions');
@@ -389,6 +412,7 @@ function onMessage(ws, raw) {
     const difficulty = ALLOWED_DIFFS.has(String(m.config?.difficulty)) ? String(m.config.difficulty) : 'mixed';
     const mode = ['classic', 'speed', 'elimination'].includes(m.config?.mode) ? m.config.mode : 'classic';
     const maxPlayers = [2, 4, 8, 16, 32].includes(Number(m.config?.maxPlayers)) ? Number(m.config.maxPlayers) : 8;
+    const region = cleanRegion(m.config?.region);
     let code = roomCode(5);
     while (rooms.has(code)) code = roomCode(5);
     const player = {
@@ -398,7 +422,7 @@ function onMessage(ws, raw) {
       isHost: true, connected: true, ws: null,
     };
     const room = {
-      code, config: { category, count, timer, difficulty, mode, maxPlayers },
+      code, config: { category, count, timer, difficulty, mode, maxPlayers, region },
       players: [player], hostId: player.id, status: 'LOBBY',
       questions: [], qi: 0, answers: {}, endsAt: 0, timers: [],
       lastMsg: null, rows: [], touchedAt: Date.now(),
@@ -480,6 +504,7 @@ const server = http.createServer(async (req, res) => {
     }
     const category = String(body.category || 'mixed').toLowerCase();
     const difficulty = String(body.difficulty || 'mixed').toLowerCase();
+    const region = cleanRegion(body.region);
     const count = Math.max(3, Math.min(40, Number(body.count) || 10));
     if (!ALLOWED_CATS.has(category) || !ALLOWED_DIFFS.has(difficulty)) {
       send(res, 400, { error: 'invalid category or difficulty' });
@@ -489,7 +514,7 @@ const server = http.createServer(async (req, res) => {
       const stub = process.env.QUIZUSH_STUB_QS;
       const fetched = stub
         ? JSON.parse(stub)
-        : await geminiQuestions({ category, count, difficulty });
+        : await geminiQuestions({ category, count, difficulty, region });
       const questions = fetched
         .map((r) => (r && r.id ? r : normalize(r, category)))
         .filter(Boolean)
