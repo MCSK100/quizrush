@@ -11,13 +11,31 @@ export function validateQuestion(q: unknown): q is Question {
   return true;
 }
 let n = 0;
+const RECENT_KEY = 'qr-recent-q';
+function recentIds(): string[] {
+  try {
+    const a = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+function rememberIds(ids: string[]) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify([...ids, ...recentIds()].slice(0, 80)));
+  } catch { /* ignore */ }
+}
 function fallbackQuestions(cfg: QuizConfig): Question[] {
   let pool = SEED_QUESTIONS.filter((q) => cfg.category === 'mixed' || cfg.category === 'all' ? true : q.category === cfg.category || (cfg.category === 'gk' && q.category === 'gk'));
   if (cfg.difficulty !== 'mixed') pool = pool.filter((q) => q.difficulty === cfg.difficulty);
   if (!pool.length) pool = [...SEED_QUESTIONS];
-  let out = shuffle(pool);
-  while (out.length < cfg.count) { out = [...out, ...shuffle(pool)] }
+  const seen = new Set(recentIds());
+  const fresh = pool.filter((q) => !seen.has(q.id));
+  const base = fresh.length >= Math.min(cfg.count, pool.length) ? fresh : pool;
+  let out = shuffle(base);
+  while (out.length < cfg.count) { out = [...out, ...shuffle(base)] }
   out = out.slice(0, cfg.count).map((q) => ({ ...q, id: q.id + `#${n++}` }));
+  rememberIds(out.map((q) => q.id.split('#')[0]));
   if (cfg.randomizeA !== false) { out = out.map((q) => { const order = shuffle([0, 1, 2, 3]); const opts = order.map((i) => q.options[i]) as [string, string, string, string]; const correct = order.indexOf(q.correctAnswer); return { ...q, options: opts, correctAnswer: correct } }) }
   return out;
 }

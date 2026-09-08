@@ -450,7 +450,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && url.pathname === '/api/questions') {
-    if (!GEMINI_API_KEY) {
+    if (!GEMINI_API_KEY && !process.env.QUIZUSH_STUB_QS) {
       send(res, 503, { error: 'AI not configured on server (GEMINI_API_KEY missing)' });
       return;
     }
@@ -469,7 +469,14 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     try {
-      const questions = (await geminiQuestions({ category, count, difficulty })).slice(0, count);
+      const stub = process.env.QUIZUSH_STUB_QS;
+      const fetched = stub
+        ? JSON.parse(stub)
+        : await geminiQuestions({ category, count, difficulty });
+      const questions = fetched
+        .map((r) => (r && r.id ? r : normalize(r, category)))
+        .filter(Boolean)
+        .slice(0, count);
       if (questions.length < Math.min(3, count)) throw new Error('too few valid questions');
       send(res, 200, { questions });
     } catch (e) {
