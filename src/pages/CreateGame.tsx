@@ -4,6 +4,7 @@ import { ArrowRight, Play } from 'lucide-react';
 import SetupForm from '../components/SetupForm';
 import type { GameMode, QuizConfig } from '../types';
 import { newRoom, useRoom } from '../stores/app';
+import { createNetRoom, netEnabled, saveNetSession } from '../services/net';
 const SOFT = { border: '1px solid rgba(120,100,180,0.08)' } as const;
 export default function CreateGame() {
   const nav = useNavigate();
@@ -11,8 +12,24 @@ export default function CreateGame() {
   const [name, setName] = useState('');
   const [cfg, setCfg] = useState<QuizConfig>({ category: 'mixed', count: 20, timer: 30, difficulty: 'mixed', mode: 'classic', maxPlayers: 8 });
   const [err, setErr] = useState('');
-  function create() {
+  const [busy, setBusy] = useState(false);
+  async function create() {
     if (name.trim().length < 2) { setErr('Enter a display name (2+ characters).'); return; }
+    if (netEnabled()) {
+      setErr('');
+      setBusy(true);
+      try {
+        const { room, you } = await createNetRoom(cfg, name.trim(), '👑');
+        saveNetSession({ code: room.code, playerId: you, name: name.trim() });
+        setRoom(room);
+        nav(`/room/${room.code}`, { replace: true });
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : 'Could not reach the game server. Try again.');
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     const room = newRoom(name.trim(), cfg);
     room.config.mode = cfg.mode;
     room.config.maxPlayers = cfg.maxPlayers;
@@ -51,8 +68,8 @@ export default function CreateGame() {
         </div>
         {err && <p role="alert" className="mt-4 rounded-2xl bg-[#FFE9E9] px-4 py-3 text-sm font-bold text-[#C62828]" style={{ border: '1.5px solid #FF4B5C' }}>{err}</p>}
       </div>
-      <button onClick={create} className="qr-btn-primary group mt-4 w-full justify-center rounded-2xl py-4 font-display text-base tracking-wide">
-        <Play size={18} strokeWidth={3} /> CREATE ROOM <ArrowRight size={18} className="arrow-nudge" />
+      <button onClick={create} disabled={busy} className="qr-btn-primary group mt-4 w-full justify-center rounded-2xl py-4 font-display text-base tracking-wide disabled:opacity-60">
+        <Play size={18} strokeWidth={3} /> {busy ? 'CREATING ROOM…' : 'CREATE ROOM'} {!busy && <ArrowRight size={18} className="arrow-nudge" />}
       </button>
       <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer}s each · up to {cfg.maxPlayers} players</p>
     </div>

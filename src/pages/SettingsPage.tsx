@@ -30,7 +30,7 @@ export default function Settings() {
           <li><b className="text-ink">2.</b> In <code className="font-num text-neon">server/.env</code> set <code className="font-num text-neon">GEMINI_API_KEY</code>, then run <code className="font-num text-neon">npm start --prefix server</code> (or deploy <code className="font-num text-neon">render.yaml</code> to Render).</li>
           <li><b className="text-ink">3.</b> In the frontend <code className="font-num text-neon">.env</code> set <code className="font-num text-neon">VITE_AI_ENDPOINT</code> to the server URL and rebuild.</li>
         </ol>
-        <p className="mt-2 text-xs font-medium text-muted">The key stays on your server — the browser never sees it. Without a backend, the built-in question bank is used.</p>
+        <p className="mt-2 text-xs font-medium text-muted">The key stays on your server — the browser never sees it. Without a backend, the built-in question bank is used and rooms run as local practice.</p>
       </div>
     </div>
   );

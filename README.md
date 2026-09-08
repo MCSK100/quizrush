@@ -13,6 +13,11 @@ npm run dev
 Deploy: push this repo to Render using `render.yaml` (sets `GEMINI_API_KEY` in
 Render dashboard), then point the frontend `VITE_AI_ENDPOINT` at the Render URL.
 ## Demo Mode
-Without backend config: seeded question bank, real-time-feel rooms, countdowns, live leaderboard all work locally.
+Without backend config: seeded question bank and local practice rooms on this device.
+## Multiplayer (live, via backend)
+The server (`server/index.js`) hosts WebSocket rooms at `/socket`: create/join by
+code, live lobby, server-synced countdown/questions/timer, authoritative scoring,
+live leaderboard and results. Set `VITE_AI_ENDPOINT` and the app plays live across
+devices; without it, rooms fall back to local practice.
 ## Scripts
 - npm run dev / build / preview
