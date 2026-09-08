@@ -1,0 +1,9 @@
+export type Difficulty='easy'|'medium'|'hard'|'mixed';
+export type GameMode='classic'|'speed'|'elimination';
+export type GameState='IDLE'|'LOBBY'|'COUNTDOWN'|'QUESTION'|'ANSWERED'|'QUESTION_RESULT'|'NEXT_QUESTION'|'FINISHED'|'DISCONNECTED'|'ERROR';
+export interface Category{id:string;name:string;slug:string;description:string;icon:string;count:number}
+export interface Question{id:string;category:string;difficulty:Exclude<Difficulty,'mixed'>;question:string;options:[string,string,string,string];correctAnswer:number;explanation:string;language?:string}
+export interface QuizConfig{category:string;count:number;timer:number;difficulty:Difficulty;randomizeQ?:boolean;randomizeA?:boolean;mode?:GameMode;maxPlayers?:number}
+export interface Player{id:string;name:string;avatar:string;score:number;correct:number;streak:number;bestStreak:number;rank:number;ready:boolean;isHost:boolean;connected:boolean;eliminated?:boolean;lastDelta?:number}
+export interface AnswerRecord{questionId:string;picked:number|null;correct:boolean;responseTime:number;points:number}
+export interface Room{code:string;config:QuizConfig;players:Player[];hostId:string;status:GameState}
