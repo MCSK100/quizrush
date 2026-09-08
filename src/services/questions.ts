@@ -97,6 +97,11 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
           const out = arr.map((r: unknown) => normalize(r, cfg.category)).filter((q): q is Question => !!q && validateQuestion(q)).slice(0, cfg.count);
           if (out.length >= Math.min(3, cfg.count)) return { questions: out, source: 'ai' };
         }
+        console.error('[quizrush] AI endpoint returned too few valid questions');
+      } else {
+        try {
+          console.error('[quizrush] AI endpoint error:', await res.text());
+        } catch { /* ignore */ }
       }
     } catch { /* fall through to bank */ }
   }

@@ -3,7 +3,10 @@ import { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.PORT || 8787);
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.0-flash,gemini-2.5-flash')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 const ALLOWED_DIFFS = new Set(['easy', 'medium', 'hard', 'mixed']);
 const ALLOWED_CATS = new Set([
   'mixed', 'sports', 'history', 'science', 'geography', 'tech', 'movies',
@@ -115,31 +118,45 @@ async function geminiQuestions({ category, count, difficulty }) {
     `Generate exactly ${count} ${difficulty === 'mixed' ? 'mixed-difficulty' : difficulty} multiple-choice quiz questions about ${catLabel}.${tamil} ` +
     `Return ONLY a JSON array, no markdown. Each item: {"question":string,"options":[exactly 4 distinct strings],"correctAnswer":0-3 index of the correct option,"explanation":one short sentence}. ` +
     `Rules: exactly 4 options, exactly 1 correct, no duplicates, family-friendly, factually correct.`;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: 6000 },
-    }),
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`gemini ${res.status}`);
-  const data = await res.json();
-  const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
-  if (!text.trim()) throw new Error('empty gemini response');
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    const m = text.match(/\[[\s\S]*\]/);
-    if (!m) throw new Error('unparseable gemini response');
-    parsed = JSON.parse(m[0]);
+  let lastErr = new Error('no models configured');
+  for (const model of MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: 6000 },
+        }),
+        signal: AbortSignal.timeout(25000),
+      });
+      if (!res.ok) {
+        const snippet = (await res.text().catch(() => '')).slice(0, 200);
+        throw new Error(`gemini ${res.status} model=${model} ${snippet}`);
+      }
+      const data = await res.json();
+      const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
+      if (!text.trim()) throw new Error(`empty gemini response model=${model}`);
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        const m = text.match(/\[[\s\S]*\]/);
+        if (!m) throw new Error(`unparseable gemini response model=${model}`);
+        parsed = JSON.parse(m[0]);
+      }
+      const arr = Array.isArray(parsed) ? parsed : parsed.questions;
+      if (!Array.isArray(arr)) throw new Error(`unparseable gemini response model=${model}`);
+      const out = arr.map((r) => normalize(r, category)).filter(Boolean);
+      if (out.length) return out;
+      throw new Error(`zero valid questions model=${model}`);
+    } catch (e) {
+      lastErr = e instanceof Error ? e : new Error(String(e));
+      console.error(`[ai] ${lastErr.message}`);
+    }
   }
-  const arr = Array.isArray(parsed) ? parsed : parsed.questions;
-  if (!Array.isArray(arr)) throw new Error('unparseable gemini response');
-  return arr.map((r) => normalize(r, category)).filter(Boolean);
+  throw lastErr;
 }
 
 /* ---------------- realtime rooms ---------------- */
@@ -445,7 +462,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', 'http://localhost');
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
-    send(res, 200, { ok: true, ai: Boolean(GEMINI_API_KEY), model: MODEL, rooms: rooms.size, multiplayer: true });
+    send(res, 200, { ok: true, ai: Boolean(GEMINI_API_KEY), models: MODELS, rooms: rooms.size, multiplayer: true });
     return;
   }
 
