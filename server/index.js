@@ -3,7 +3,7 @@ import { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.PORT || 8787);
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
-const MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.0-flash,gemini-2.5-flash')
+const MODELS = String(process.env.GEMINI_MODEL || 'gemini-3.6-flash,gemini-2.5-flash,gemini-2.0-flash')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
