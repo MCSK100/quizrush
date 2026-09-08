@@ -3,14 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import SetupForm from '../components/SetupForm';
 import type { QuizConfig } from '../types';
-import { generateQuestions, geminiKeyActive } from '../services/questions';
+import { generateQuestions, aiBackendConfigured } from '../services/questions';
 import { sound } from '../services/engine';
 export default function SoloSetup() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
   const [cfg, setCfg] = useState<QuizConfig>({ category: sp.get('cat') || 'mixed', count: 10, timer: 10, difficulty: 'mixed', randomizeQ: true, randomizeA: true });
   const [loading, setLoading] = useState(false);
-  const aiOn = geminiKeyActive();
+  const aiOn = aiBackendConfigured();
   async function start() {
     sound.play('click');
     setLoading(true);
@@ -29,8 +29,8 @@ export default function SoloSetup() {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <p className="text-sm font-medium text-muted">{loading ? 'Preparing your questions…' : 'Solo run. No mercy. Beat your best.'}</p>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-extrabold shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-          <span className={aiOn ? 'text-[#1E7A38]' : 'text-muted'}>{aiOn ? '✨ AI QUESTIONS ON' : '📚 QUESTION BANK MODE'}</span>
-          {!aiOn && <a href="/settings" className="text-grape hover:underline">Add key →</a>}
+          <span className={aiOn ? 'text-[#1E7A38]' : 'text-muted'}>{aiOn ? '✨ AI QUESTIONS VIA BACKEND' : '📚 QUESTION BANK MODE'}</span>
+          {!aiOn && <a href="/settings" className="text-grape hover:underline">Connect →</a>}
         </span>
       </div>
       <div className="qr-surface mt-6 rounded-[24px] p-4 sm:p-6">
