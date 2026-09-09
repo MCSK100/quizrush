@@ -14,7 +14,7 @@ export function FloatingParticles({ count = 18, mobileCount = 8 }: { count?: num
     top: (i * 31 + 7) % 100,
     delay: (i * 0.43) % 3,
     size: i % 3 === 0 ? 7 : i % 3 === 1 ? 5 : 3.5,
-    color: ['#7C5CFF', '#2E9BFF', '#58CC02', '#FF7BAC', '#FFB020', '#FF6B4A'][i % 6],
+    color: ['#7C5CFF', '#2E9BFF', '#58CC02', '#FF7BAC', '#FFB020', '#38BDF8'][i % 6],
   })), [n, reduce]);
   if (reduce) return null;
   return (
@@ -106,7 +106,7 @@ function QuizFloats() {
         animate={{ y: [10, -46], opacity: [0, 1, 0] }} transition={{ duration: 4.2, repeat: Infinity, delay: 1, ease: 'easeOut' }}>
         +120
       </motion.span>
-      <motion.span className="font-display absolute text-[14px] font-extrabold text-coral"
+      <motion.span className="font-display absolute text-[14px] font-extrabold text-electric"
         style={{ left: '10%', top: '40%' }}
         animate={{ y: [10, -40], opacity: [0, 1, 0] }} transition={{ duration: 4.8, repeat: Infinity, delay: 3, ease: 'easeOut' }}>
         +80
@@ -134,7 +134,7 @@ export default function AnimatedBackground({ tone = 'hero' }: { tone?: 'hero' | 
       }} />
       {isHero && !reduce && (
         <div className="absolute left-1/2 top-[38%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 opacity-50 sm:h-[900px] sm:w-[900px]">
-          <div className="animate-spin-slower h-full w-full rounded-full" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,107,74,0.10) 40deg, transparent 90deg, rgba(124,92,255,0.12) 150deg, transparent 200deg, rgba(46,155,255,0.10) 260deg, transparent 310deg)' }} />
+          <div className="animate-spin-slower h-full w-full rounded-full" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(46,155,255,0.10) 40deg, transparent 90deg, rgba(124,92,255,0.12) 150deg, transparent 200deg, rgba(46,155,255,0.10) 260deg, transparent 310deg)' }} />
         </div>
       )}
       <GradientOrb color="#E9E2FF" anim="orbA" className="h-[280px] w-[280px] -left-32 -top-32 opacity-80 sm:h-[440px] sm:w-[440px]" />

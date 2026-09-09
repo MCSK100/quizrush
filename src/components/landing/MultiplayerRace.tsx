@@ -4,7 +4,7 @@ import { Crown } from 'lucide-react';
 import { Reveal, SectionHead } from './Sections';
 
 const RACERS = [
-  { name: 'Arjun', avatar: '⚡', color: '#FF6B4A', bg: '#FFF1E8' },
+  { name: 'Arjun', avatar: '⚡', color: '#2E9BFF', bg: '#E8F4FF' },
   { name: 'Priya', avatar: '🎯', color: '#7C5CFF', bg: '#F1EBFF' },
   { name: 'Karthik', avatar: '🔥', color: '#00C48C', bg: '#E4F8EF' },
   { name: 'Sanjay', avatar: '🏆', color: '#2E9BFF', bg: '#E8F4FF' },

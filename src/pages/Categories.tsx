@@ -18,6 +18,6 @@ return (<div className="mx-auto max-w-6xl px-4 py-10">
 <span className="relative block p-4"><span className="-mt-10 mb-2 grid h-11 w-11 place-items-center rounded-2xl bg-white text-2xl shadow-soft transition-transform group-hover:scale-110" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>{iconFor(c.icon)}</span>
 <span className="font-display mt-1 block text-[17px] text-ink">{c.name}</span>
 <span className="mt-1 block text-xs font-medium text-muted">{c.description}</span>
-<span className="font-num mt-2 block text-[11px] font-bold text-coralDeep">{c.count} QUESTIONS →</span></span></Link></motion.div>))}
+<span className="font-num mt-2 block text-[11px] font-bold text-electric">{c.count} QUESTIONS →</span></span></Link></motion.div>))}
 </div></div>);
 }

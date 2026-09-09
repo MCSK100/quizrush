@@ -9,7 +9,7 @@ export default function LeaderboardPage() {
   const best = Math.max(0, ...(me.history || [0]));
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="text-[11px] font-extrabold tracking-[0.18em] text-coralDeep">LEADERBOARD</div>
+      <div className="text-[11px] font-extrabold tracking-[0.18em] text-electric">LEADERBOARD</div>
       <h1 className="font-display mt-2 text-3xl tracking-tight text-ink sm:text-4xl">Your <span className="qr-gradient-text">board.</span></h1>
       <p className="mt-2 text-sm font-medium text-muted">Saved on this device. Global live boards arrive with the multiplayer server.</p>
       {games === 0 ? (
@@ -30,7 +30,7 @@ export default function LeaderboardPage() {
             ))}
           </div>
           <div className="qr-surface mt-4 rounded-[24px] p-2">
-            <div className="grid grid-cols-[40px_1fr_80px] items-center rounded-2xl px-3 py-2.5" style={{ background: '#FFF1E8', border: '1px solid rgba(255,107,74,0.4)' }}>
+            <div className="grid grid-cols-[40px_1fr_80px] items-center rounded-2xl px-3 py-2.5" style={{ background: '#E8F4FF', border: '1px solid rgba(46,155,255,0.4)' }}>
               <span className="font-num flex items-center gap-1 text-sm font-extrabold text-ink"><Crown size={14} className="text-sunny" /></span>
               <span className="flex items-center gap-2 text-sm font-extrabold text-ink"><span className="grid h-8 w-8 place-items-center rounded-full bg-ink text-[10px] text-white">YO</span>You</span>
               <span className="font-num text-right text-sm font-extrabold text-ink">{fmt(me.totalScore || 0)}</span>

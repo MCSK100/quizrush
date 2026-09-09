@@ -17,7 +17,7 @@ function LobbyShell({ code, players, config, isHost, alone, starting, err, onSta
     <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
       <div className="flex items-center justify-between gap-3">
         <div><div className="text-[11px] font-extrabold tracking-[0.18em] text-muted">ROOM</div><div className="font-num text-2xl font-extrabold text-ink">{code}</div></div>
-        <div className="text-right"><div className="text-[11px] font-extrabold tracking-[0.18em] text-muted">PLAYERS</div><div className="font-num text-2xl font-extrabold text-coralDeep">{players.length} / {config.maxPlayers || 8}</div></div>
+        <div className="text-right"><div className="text-[11px] font-extrabold tracking-[0.18em] text-muted">PLAYERS</div><div className="font-num text-2xl font-extrabold text-electric">{players.length} / {config.maxPlayers || 8}</div></div>
       </div>
       <div className="mt-5 flex justify-center"><RoomCodeBig code={code} /></div>
       <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -72,6 +72,7 @@ function NetLobby({ code }: { code: string }) {
     } else if (m.t === 'count' || m.t === 'question' || m.t === 'reveal' || m.t === 'finished') {
       nav(`/room/${code}/play`);
     } else if (m.t === 'error') {
+      console.error('[quizlly] room error:', String(m.msg || ''), String(m.detail || ''));
       setErr(String(m.msg || 'Something went wrong.'));
       setStarting(false);
     }

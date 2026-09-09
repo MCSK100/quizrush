@@ -63,6 +63,7 @@ function NetPlay({ code }: { code: string }) {
       sessionStorage.setItem('qr-net-result', JSON.stringify({ rows: finalRows, code, you }));
       nav(`/room/${code}/results`, { replace: true });
     } else if (m.t === 'error') {
+      console.error('[quizlly] room error:', String(m.msg || ''), String(m.detail || ''));
       setErr(String(m.msg || 'Something went wrong.'));
     }
   });

@@ -8,7 +8,7 @@ const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemin
   .map((s) => s.trim())
   .filter(Boolean);
 const OPENROUTER_API_KEY = (process.env.OPENROUTER_API_KEY || '').trim();
-const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.1-8b-instruct:free,mistralai/mistral-7b-instruct:free,google/gemma-2-9b-it:free')
+const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,google/gemma-4-31b-it:free')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
@@ -251,7 +251,6 @@ async function callOpenRouter(model, prompt) {
       ],
       temperature: 0.7,
       max_tokens: 6000,
-      response_format: { type: 'json_object' },
     }),
     signal: AbortSignal.timeout(30000),
   });
@@ -483,8 +482,11 @@ async function handleStart(room, byId) {
   } catch (e) {
     room.status = 'LOBBY';
     cast(room, { t: 'room', room: pubRoom(room) });
-    const quota = Boolean(e?.quota) || /(^|\s)429(\s|$)|quota|resource_exhausted|too many requests/i.test(String(e?.message || e));
-    cast(room, { t: 'error', msg: quota ? 'AI limit reached — please try again later.' : 'AI question generation failed. Try again.' });
+    const raw = String(e?.message || e);
+    const quota = Boolean(e?.quota) || /(^|\s)429(\s|$)|quota|resource_exhausted|too many requests/i.test(raw);
+    const detail = raw.slice(0, 200);
+    console.error(`[ai] start failed: ${detail}`);
+    cast(room, { t: 'error', msg: quota ? 'AI limit reached — please try again later.' : 'AI question generation failed. Try again.', detail });
   }
 }
 

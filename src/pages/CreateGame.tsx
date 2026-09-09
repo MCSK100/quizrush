@@ -40,7 +40,7 @@ export default function CreateGame() {
   }
   return (
     <div className="mx-auto w-full min-w-0 max-w-2xl px-4 py-8 sm:px-5 sm:py-12">
-      <div className="text-[11px] font-extrabold tracking-[0.18em] text-coralDeep">MULTIPLAYER · CREATE</div>
+      <div className="text-[11px] font-extrabold tracking-[0.18em] text-electric">MULTIPLAYER · CREATE</div>
       <h1 className="font-display mt-2 text-balance text-3xl tracking-tight text-ink sm:text-4xl">Create your <span className="qr-gradient-text">game.</span></h1>
       <p className="mt-2 text-sm font-medium text-muted">Set the stage, share the code, and play live together in real time.</p>
       <div className="qr-surface mt-6 rounded-[24px] p-4 sm:p-6">

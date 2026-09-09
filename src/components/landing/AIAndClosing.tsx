@@ -6,7 +6,7 @@ import AnimatedBackground from './AnimatedBackground';
 import { Reveal, SectionHead } from './Sections';
 
 const SAMPLES = [
-  { cat: 'Sports', color: '#FF6B4A', bg: '#FFF1E8', q: 'Which country won the 2011 Cricket World Cup?' },
+  { cat: 'Sports', color: '#2E9BFF', bg: '#E8F4FF', q: 'Which country won the 2011 Cricket World Cup?' },
   { cat: 'Science', color: '#2E9BFF', bg: '#E8F4FF', q: 'What gas do plants absorb for photosynthesis?' },
   { cat: 'Tamil', color: '#7C5CFF', bg: '#F1EBFF', q: 'தமிழின் முதல் எழுத்து எது?' },
   { cat: 'Space', color: '#FF3D77', bg: '#FFE9F1', q: 'Which planet has the most moons?' },
@@ -42,7 +42,7 @@ export function AIQuestionSection() {
           <div className="relative mx-auto w-full min-w-0 max-w-md px-1">
             <div aria-hidden className="absolute -inset-2 rounded-[36px] opacity-60 blur-2xl sm:-inset-5" style={{ background: 'linear-gradient(135deg,#FFE3D3,#E9E2FF,#D6EBFF)' }} />
             <div className="relative min-w-0 overflow-hidden rounded-[24px] bg-white shadow-soft sm:rounded-[28px]" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-              <div className="flex flex-wrap items-center gap-2 bg-gradient-to-r from-[#FFF1E8] to-[#F1EBFF] px-4 py-3 sm:px-5 sm:py-3.5">
+              <div className="flex flex-wrap items-center gap-2 bg-gradient-to-r from-[#E8F4FF] to-[#F1EBFF] px-4 py-3 sm:px-5 sm:py-3.5">
                 <span className="flex shrink-0 gap-1.5"><i className="block h-2.5 w-2.5 rounded-full bg-[#FF5F57]" /><i className="block h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" /><i className="block h-2.5 w-2.5 rounded-full bg-[#58CC02]" /></span>
                 <span className="ml-1 flex min-w-0 items-center gap-1.5 truncate text-[11px] font-extrabold tracking-widest text-grape"><Sparkles size={12} className="shrink-0" /> AI GENERATING</span>
               </div>
@@ -56,7 +56,7 @@ export function AIQuestionSection() {
                   </AnimatePresence>
                 </div>
                 <div className="mt-3 flex justify-center gap-1.5">
-                  {SAMPLES.map((_, k) => (<span key={k} className={`h-1.5 rounded-full transition-all ${k === i ? 'w-6 bg-gradient-to-r from-coral to-grape' : 'w-1.5 bg-ink/10'}`} />))}
+                  {SAMPLES.map((_, k) => (<span key={k} className={`h-1.5 rounded-full transition-all ${k === i ? 'w-6 bg-gradient-to-r from-electric to-grape' : 'w-1.5 bg-ink/10'}`} />))}
                 </div>
               </div>
             </div>
@@ -75,7 +75,7 @@ export function FinalCTA() {
     <section className="relative overflow-x-clip overflow-y-visible">
       <AnimatedBackground tone="cta" />
       <div aria-hidden className="pointer-events-none absolute left-[6%] top-16 hidden animate-floaty font-display text-3xl text-[#7C5CFF]/25 min-[480px]:block">?</div>
-      <div aria-hidden className="pointer-events-none absolute right-[8%] top-24 hidden animate-floaty font-display text-2xl text-[#FF6B4A]/30 min-[480px]:block" style={{ animationDelay: '1s' }}>★</div>
+      <div aria-hidden className="pointer-events-none absolute right-[8%] top-24 hidden animate-floaty font-display text-2xl text-[#2E9BFF]/30 min-[480px]:block" style={{ animationDelay: '1s' }}>★</div>
       <div aria-hidden className="pointer-events-none absolute bottom-24 left-[10%] hidden animate-floaty text-2xl text-[#2E9BFF]/25 min-[480px]:block" style={{ animationDelay: '2s' }}>⚡</div>
       <div aria-hidden className="pointer-events-none absolute bottom-32 right-[10%] hidden animate-floaty text-2xl text-[#FFB020]/30 min-[480px]:block" style={{ animationDelay: '0.5s' }}>🏆</div>
       <div className="relative mx-auto w-full min-w-0 max-w-3xl px-4 py-16 text-center sm:px-5 sm:py-28">

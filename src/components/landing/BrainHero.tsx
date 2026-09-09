@@ -33,7 +33,7 @@ function Overlays() {
         <Sparkles size={13} className="text-sunny" /> 7s streak
       </motion.div>
       <motion.div animate={{ y: [0, 9, 0] }} transition={{ duration: 5.2, repeat: Infinity }}
-        className="absolute right-4 top-2 rounded-2xl bg-gradient-to-br from-sunny to-coral px-3 py-2 text-white shadow-lift">
+        className="absolute right-4 top-2 rounded-2xl bg-gradient-to-br from-electric to-grape px-3 py-2 text-white shadow-lift">
         <div className="font-display text-lg leading-none">Q7</div>
         <div className="text-[10px] font-bold opacity-90">/ 20</div>
       </motion.div>
@@ -41,7 +41,7 @@ function Overlays() {
         {['PK', 'AR', 'SJ'].map((t, i) => (
           <motion.span key={t} animate={{ y: [0, -8, 0] }} transition={{ duration: 3.4, repeat: Infinity, delay: i * 0.5 }}
             className="grid h-10 w-10 place-items-center rounded-full bg-white/95 text-[11px] font-extrabold shadow-soft backdrop-blur"
-            style={{ border: '1px solid rgba(120,100,180,0.08)', color: ['#FF6B4A', '#7C5CFF', '#2E9BFF'][i] }}>{t}</motion.span>
+            style={{ border: '1px solid rgba(120,100,180,0.08)', color: ['#2E9BFF', '#7C5CFF', '#38BDF8'][i] }}>{t}</motion.span>
         ))}
       </div>
     </>

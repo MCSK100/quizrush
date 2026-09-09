@@ -12,7 +12,7 @@ import { SectionHead } from './Sections';
 const Q = { q: 'Which planet is known as the Red Planet?', opts: ['Earth', 'Mars', 'Jupiter', 'Venus'], a: 1 };
 const CHAPTERS = ['LOBBY', 'COUNTDOWN', 'FIRST LEAD', 'CROWNED'];
 const LOBBY = [
-  { n: 'Arjun', t: 'AR', c: '#FF6B4A' }, { n: 'Priya', t: 'PR', c: '#7C5CFF' },
+  { n: 'Arjun', t: 'AR', c: '#2E9BFF' }, { n: 'Priya', t: 'PR', c: '#7C5CFF' },
   { n: 'Karthik', t: 'KA', c: '#2E9BFF' }, { n: 'Sanjay', t: 'SA', c: '#0E7A55' },
   { n: 'Meera', t: 'ME', c: '#B8860B' }, { n: 'You', t: 'YO', c: '#1E1B33' },
 ];
@@ -107,7 +107,7 @@ export default function BattleFilm() {
             <span aria-hidden className="absolute bottom-[76px] left-3 z-20 h-5 w-5 rounded-bl-md border-b-2 border-l-2 border-white/25" />
             <span aria-hidden className="absolute bottom-[76px] right-3 z-20 h-5 w-5 rounded-br-md border-b-2 border-r-2 border-white/25" />
             <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-[10px] font-extrabold tracking-[0.2em] text-white shadow-soft backdrop-blur" style={{ border: '1px solid rgba(255,255,255,0.14)' }}>
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-coral" /> ROOM PK-4821 · LIVE
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-electric" /> ROOM PK-4821 · LIVE
             </div>
 
             {/* beats */}
@@ -167,7 +167,7 @@ export default function BattleFilm() {
                       ))}
                       <Crown size={28} className="mx-auto text-sunny" />
                       <div className="font-display mt-2 text-3xl">1,940 <span className="text-sm text-white/70">pts</span></div>
-                      <div className="mt-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white/80"><Flame size={13} className="text-coral" /> 9-streak · 84% accuracy</div>
+                      <div className="mt-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white/80"><Flame size={13} className="text-sunny" /> 9-streak · 84% accuracy</div>
                     </div>
                   </BeatShell>
                 )}

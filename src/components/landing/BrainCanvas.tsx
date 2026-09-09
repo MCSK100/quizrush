@@ -104,7 +104,7 @@ function NeuralShell() {
 
 /* Orbiting quiz chips + tilted glow rings */
 const CHIPS = [
-  { r: 2.62, s: 0.5, c: '#FF6B4A', y: 0.45, off: 0, speed: 0.34 },
+  { r: 2.62, s: 0.5, c: '#2E9BFF', y: 0.45, off: 0, speed: 0.34 },
   { r: 2.72, s: 0.4, c: '#2E9BFF', y: -0.4, off: 2.1, speed: 0.42 },
   { r: 2.5, s: 0.34, c: '#FFC531', y: 0.95, off: 4.2, speed: 0.5 },
 ];

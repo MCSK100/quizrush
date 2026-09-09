@@ -77,7 +77,7 @@ export default function Hero() {
       <div className="relative mx-auto grid w-full min-w-0 max-w-6xl items-center gap-6 px-4 pb-12 pt-24 sm:gap-8 sm:px-5 sm:pb-14 sm:pt-36 lg:grid-cols-[1.02fr_.98fr] lg:gap-4 lg:pb-16">
         <motion.div style={{ y: textY, opacity: textO }} className="relative min-w-0 max-w-xl">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="qr-eyebrow max-w-full text-center sm:text-left">
-            <span className="flex shrink-0 gap-1.5 text-[11px]"><span className="text-coral">●</span><span className="text-grape">●</span><span className="text-electric">●</span></span>
+            <span className="flex shrink-0 gap-1.5 text-[11px]"><span className="text-electric">●</span><span className="text-grape">●</span><span className="text-electric">●</span></span>
             <span className="truncate">PLAY • THINK • COMPETE</span>
           </motion.div>
           <h1 className="font-display mt-5 text-balance text-[clamp(2.6rem,12vw,5.4rem)] font-semibold leading-[0.95] tracking-tight text-ink sm:text-[clamp(3rem,8.5vw,5.4rem)]">

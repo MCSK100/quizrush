@@ -47,12 +47,12 @@ export default function BrainScene() {
       {!reduce && (
         <div aria-hidden className="absolute inset-0 origin-center scale-[0.62] min-[480px]:scale-[0.8] sm:scale-100">
           <Orbit radius={200} duration={26}>
-            <OrbitDot angle={10}><span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/90 font-display text-xl text-coral shadow-soft backdrop-blur" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>?</span></OrbitDot>
+            <OrbitDot angle={10}><span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/90 font-display text-xl text-electric shadow-soft backdrop-blur" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>?</span></OrbitDot>
             <OrbitDot angle={130}><span className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-grape shadow-soft"><Star size={17} /></span></OrbitDot>
             <OrbitDot angle={250}><span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/90 font-display text-sm text-electric shadow-soft">A+</span></OrbitDot>
           </Orbit>
           <Orbit radius={150} duration={32} reverse>
-            <OrbitDot angle={60}><span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-coral to-[#F04E23] text-white shadow-neon"><Zap size={16} /></span></OrbitDot>
+            <OrbitDot angle={60}><span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-electric to-grape text-white shadow-neon"><Zap size={16} /></span></OrbitDot>
             <OrbitDot angle={210}><span className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-sunny shadow-soft"><Trophy size={16} /></span></OrbitDot>
             <OrbitDot angle={330}><span className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-mint shadow-soft"><Timer size={16} /></span></OrbitDot>
           </Orbit>
@@ -93,7 +93,7 @@ export default function BrainScene() {
           <motion.div animate={reduce ? undefined : { y: [0, -8, 0] }} transition={{ duration: 3.6, repeat: Infinity, delay: .8 }} className="absolute -bottom-4 left-2 flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-extrabold text-white shadow-lift sm:left-8">
             <Sparkles size={13} className="text-sunny" /> 7s streak
           </motion.div>
-          <motion.div animate={reduce ? undefined : { y: [0, 9, 0] }} transition={{ duration: 5.2, repeat: Infinity }} className="absolute -right-2 -top-4 rounded-2xl bg-gradient-to-br from-sunny to-coral px-3 py-2 text-white shadow-lift sm:-right-6">
+          <motion.div animate={reduce ? undefined : { y: [0, 9, 0] }} transition={{ duration: 5.2, repeat: Infinity }} className="absolute -right-2 -top-4 rounded-2xl bg-gradient-to-br from-electric to-grape px-3 py-2 text-white shadow-lift sm:-right-6">
             <div className="font-display text-lg leading-none">Q7</div>
             <div className="text-[10px] font-bold opacity-90">/ 20</div>
           </motion.div>
@@ -104,7 +104,7 @@ export default function BrainScene() {
         {['PK', 'AR', 'SJ'].map((t, i) => (
           <motion.span key={t} animate={reduce ? undefined : { y: [0, -8, 0] }} transition={{ duration: 3.4, repeat: Infinity, delay: i * .5 }}
             className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-[11px] font-extrabold shadow-soft backdrop-blur"
-            style={{ border: '1px solid rgba(120,100,180,0.08)', color: ['#FF6B4A', '#7C5CFF', '#2E9BFF'][i] }}>{t}</motion.span>
+            style={{ border: '1px solid rgba(120,100,180,0.08)', color: ['#2E9BFF', '#7C5CFF', '#38BDF8'][i] }}>{t}</motion.span>
         ))}
       </div>
     </div>

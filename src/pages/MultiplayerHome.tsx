@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Plus, LogIn } from 'lucide-react';
 export default function MultiplayerHome(){
 return (<div className="mx-auto max-w-3xl px-4 py-14 text-center">
-<p className="text-[11px] font-extrabold tracking-[0.24em] text-coralDeep">MULTIPLAYER · REAL-TIME</p>
+<p className="text-[11px] font-extrabold tracking-[0.24em] text-electric">MULTIPLAYER · REAL-TIME</p>
 <h1 className="font-display mt-3 text-4xl tracking-tight text-ink sm:text-5xl">Challenge friends.<br/><span className="qr-gradient-text">Live.</span></h1>
 <p className="mx-auto mt-3 max-w-md text-[15px] font-medium text-muted">Create a room, share the code, answer at the same time. Fastest brain climbs the board.</p>
 <div className="mx-auto mt-8 grid max-w-lg gap-3 sm:grid-cols-2">

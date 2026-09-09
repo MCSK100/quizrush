@@ -8,15 +8,15 @@ import { SectionHead, CategoryTile } from './Sections';
 
 export const CAT_IMAGES: Record<string, string> = {};
 const TILE_STYLE: Record<string, { grad: string; glow: string; pattern: string }> = {
-  sports: { grad: 'linear-gradient(135deg,#FF8A3D,#F04E23)', glow: 'rgba(255,138,61,0.35)', pattern: '🏟' },
+  sports: { grad: 'linear-gradient(135deg,#2E9BFF,#2563EB)', glow: 'rgba(46,155,255,0.35)', pattern: '🏟' },
   history: { grad: 'linear-gradient(135deg,#8B5CF6,#5B3DF0)', glow: 'rgba(139,92,246,0.35)', pattern: '🏛' },
   science: { grad: 'linear-gradient(135deg,#38BDF8,#2563EB)', glow: 'rgba(46,155,255,0.35)', pattern: '⚛' },
   geography: { grad: 'linear-gradient(135deg,#00C48C,#059669)', glow: 'rgba(0,196,140,0.32)', pattern: '🗺' },
   tech: { grad: 'linear-gradient(135deg,#22D3EE,#2563EB)', glow: 'rgba(34,211,238,0.35)', pattern: '⌁' },
   movies: { grad: 'linear-gradient(135deg,#FB7185,#E11D48)', glow: 'rgba(244,114,182,0.35)', pattern: '✦' },
   music: { grad: 'linear-gradient(135deg,#A78BFA,#7C3AED)', glow: 'rgba(167,139,250,0.4)', pattern: '♫' },
-  kids: { grad: 'linear-gradient(135deg,#FFC531,#FF8A3D)', glow: 'rgba(251,191,36,0.4)', pattern: '☺' },
-  tamil: { grad: 'linear-gradient(135deg,#FF8A3D,#7C3AED)', glow: 'rgba(255,122,150,0.4)', pattern: 'அ' },
+  kids: { grad: 'linear-gradient(135deg,#FFC531,#FFB020)', glow: 'rgba(251,191,36,0.4)', pattern: '☺' },
+  tamil: { grad: 'linear-gradient(135deg,#A855F7,#7C3AED)', glow: 'rgba(168,85,247,0.4)', pattern: 'அ' },
   gaming: { grad: 'linear-gradient(135deg,#6366F1,#2E9BFF)', glow: 'rgba(99,102,241,0.4)', pattern: '▶' },
 };
 const FALLBACK = [

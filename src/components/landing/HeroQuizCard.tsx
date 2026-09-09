@@ -60,15 +60,15 @@ export default function HeroQuizCard() {
     <div className="relative mx-auto w-full min-w-0 max-w-[480px]">
       <div aria-hidden className="absolute -inset-4 rounded-[36px] opacity-70 blur-2xl" style={{ background: 'linear-gradient(135deg,#FFE3D3,#E9E2FF,#D6EBFF)' }} />
       <div className="relative min-w-0 overflow-hidden rounded-[24px] bg-white shadow-soft sm:rounded-[28px]" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-[#FFF1E8] via-[#F1EBFF] to-[#E8F4FF] px-4 py-3 sm:px-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-[#E8F4FF] via-[#F1EBFF] to-[#E8F4FF] px-4 py-3 sm:px-5">
           <span className="rounded-full bg-ink px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-white sm:text-[11px]">QUICK PLAY · TRY IT</span>
           <span className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-display text-[14px] font-semibold ${left <= 3 && pick === null ? 'bg-[#FF4B5C] text-white' : 'bg-white text-ink shadow-sticker-sm'}`}>
-            <Timer size={14} className={left <= 3 && pick === null ? '' : 'text-coral'} /> 0{Math.max(0, left)}
+            <Timer size={14} className={left <= 3 && pick === null ? '' : 'text-electric'} /> 0{Math.max(0, left)}
           </span>
         </div>
         <div className="min-w-0 p-4 sm:p-6">
           <div className="h-2 overflow-hidden rounded-full bg-[#F1EDFF]">
-            <div className="h-full rounded-full bg-gradient-to-r from-coral via-[#FF3D77] to-grape transition-all duration-500" style={{ width: `${(Math.max(0, left) / 10) * 100}%` }} />
+            <div className="h-full rounded-full bg-gradient-to-r from-electric via-grape to-grape transition-all duration-500" style={{ width: `${(Math.max(0, left) / 10) * 100}%` }} />
           </div>
           <AnimatePresence mode="wait">
             <motion.div key={qi} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>

@@ -16,7 +16,7 @@ export function SectionHead({ eyebrow, title, sub, align = 'left' }: { eyebrow: 
   return (
     <Reveal className={align === 'center' ? 'text-center' : ''}>
       <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[11px] font-extrabold tracking-[0.18em] text-grape shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br from-coral to-grape" /><span className="truncate">{eyebrow}</span>
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br from-electric to-grape" /><span className="truncate">{eyebrow}</span>
       </div>
       <h2 className="font-display mt-4 text-balance text-[1.7rem] leading-[1.1] tracking-tight text-ink sm:text-[42px] sm:leading-[1.04]">{title}</h2>
       {sub && <p className={`mt-3 max-w-xl text-balance text-[15px] font-medium leading-relaxed text-muted sm:text-[15.5px] ${align === 'center' ? 'mx-auto' : ''}`}>{sub}</p>}
@@ -31,7 +31,7 @@ export function Marquee({ items }: { items: string[] }) {
       <div className="qr-marquee flex w-max items-center gap-8 pr-8">
         {row.map((t, i) => (
           <span key={i} className="flex items-center gap-8 whitespace-nowrap text-[13px] font-extrabold tracking-[0.14em] text-ink/50">
-            {t} <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-coral to-grape" />
+            {t} <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-electric to-grape" />
           </span>
         ))}
       </div>

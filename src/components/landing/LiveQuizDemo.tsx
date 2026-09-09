@@ -27,15 +27,15 @@ export function AnimatedQuestion() {
   const cur = QS[qi];
   return (
     <div className="relative min-w-0 overflow-hidden rounded-[24px] bg-white shadow-soft sm:rounded-[28px]" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-[#FFF1E8] via-[#F1EBFF] to-[#E8F4FF] px-4 py-3 sm:px-6 sm:py-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-[#E8F4FF] via-[#F1EBFF] to-[#E8F4FF] px-4 py-3 sm:px-6 sm:py-3.5">
         <span className="rounded-full bg-ink px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-white sm:text-[11px]">QUESTION {String(qi + 7).padStart(2, '0')} / 20</span>
         <span className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-display text-[14px] font-semibold sm:text-[15px] ${tick <= 3 ? 'bg-[#FF4B5C] text-white' : 'bg-white text-ink shadow-sticker-sm'}`}>
-          <Timer size={15} className={tick <= 3 ? '' : 'text-coral'} /> 0{tick}
+          <Timer size={15} className={tick <= 3 ? '' : 'text-electric'} /> 0{tick}
         </span>
       </div>
       <div className="min-w-0 p-4 sm:p-7">
         <div className="h-2 overflow-hidden rounded-full bg-[#F1EDFF]">
-          <motion.div key={qi + 'bar'} className="h-full rounded-full bg-gradient-to-r from-coral via-[#FF3D77] to-grape"
+          <motion.div key={qi + 'bar'} className="h-full rounded-full bg-gradient-to-r from-electric via-grape to-grape"
             initial={{ width: '100%' }} animate={{ width: `${(tick / 7) * 100}%` }} transition={{ duration: 0.6 }} />
         </div>
         <AnimatePresence mode="wait">
@@ -75,7 +75,7 @@ export default function LiveQuizDemo() {
         <div>
           <SectionHead eyebrow="LIVE FEEL" title={<>This is what a <span className="qr-gradient-text">live match feels like.</span></>} sub="A mini playable demo. Watch the timer burn, the answer lock in, and the score climb." />
           <ul className="mt-6 space-y-3 text-sm font-semibold">
-            {[['10-second timer', 'forces fast, fun decisions', '#FF6B4A'], ['Instant reveal', 'learn as you play', '#7C5CFF'], ['Streak bonus', 'rewards the bold', '#58CC02']].map(([t, d, c]) => (
+            {[['10-second timer', 'forces fast, fun decisions', '#2E9BFF'], ['Instant reveal', 'learn as you play', '#7C5CFF'], ['Streak bonus', 'rewards the bold', '#58CC02']].map(([t, d, c]) => (
               <li key={t} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
                 <b className="text-ink">{t}</b><span className="font-medium text-muted">— {d}</span>

@@ -28,7 +28,7 @@ export default function SoloSetup() {
   }
   return (
     <div className="mx-auto w-full min-w-0 max-w-2xl px-4 py-8 sm:px-5 sm:py-12">
-      <div className="text-[11px] font-extrabold tracking-[0.18em] text-coralDeep">SOLO QUIZ</div>
+      <div className="text-[11px] font-extrabold tracking-[0.18em] text-electric">SOLO QUIZ</div>
       <h1 className="font-display mt-2 text-balance text-3xl tracking-tight text-ink sm:text-4xl">Build your <span className="qr-gradient-text">quiz.</span></h1>
       <div className="qr-surface mt-6 rounded-[24px] p-4 sm:p-6">
         <SetupForm value={cfg} onChange={setCfg} />
