@@ -14,7 +14,7 @@ const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openai/gpt-oss
   .filter(Boolean);
 const OPENROUTER_SITE = (process.env.OPENROUTER_SITE || '').trim();
 const GROQ_API_KEY = (process.env.GROQ_API_KEY || '').trim();
-const GROQ_MODELS = String(process.env.GROQ_MODEL || 'llama-3.1-8b-instant,llama-3.3-70b-versatile')
+const GROQ_MODELS = String(process.env.GROQ_MODEL || 'openai/gpt-oss-20b,openai/gpt-oss-120b,llama-3.1-8b-instant')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
