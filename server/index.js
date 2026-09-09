@@ -13,7 +13,12 @@ const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openai/gpt-oss
   .map((s) => s.trim())
   .filter(Boolean);
 const OPENROUTER_SITE = (process.env.OPENROUTER_SITE || '').trim();
-function aiConfigured() { return Boolean(GEMINI_API_KEY || OPENROUTER_API_KEY); }
+const GROQ_API_KEY = (process.env.GROQ_API_KEY || '').trim();
+const GROQ_MODELS = String(process.env.GROQ_MODEL || 'llama-3.1-8b-instant,llama-3.3-70b-versatile')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+function aiConfigured() { return Boolean(GEMINI_API_KEY || OPENROUTER_API_KEY || GROQ_API_KEY); }
 const ALLOWED_DIFFS = new Set(['easy', 'medium', 'hard', 'mixed']);
 const ALLOWED_CATS = new Set([
   'mixed', 'sports', 'history', 'science', 'geography', 'tech', 'movies',
@@ -268,40 +273,89 @@ async function callOpenRouter(model, prompt) {
   if (!Array.isArray(parsed)) throw new Error(`unparseable openrouter response model=${model}`);
   return parsed;
 }
+const aiStats = { lastOk: null, lastFail: null };
+function noteOk(provider, n, cat) {
+  aiStats.lastOk = { at: new Date().toISOString(), provider, n, cat };
+  console.log(`[ai] ${provider} ok n=${n} cat=${cat}`);
+}
+function noteFail(err) {
+  const msg = err instanceof Error ? err.message : String(err);
+  aiStats.lastFail = { at: new Date().toISOString(), message: msg.slice(0, 200) };
+  console.error(`[ai] ${msg}`);
+  return err instanceof Error ? err : new Error(String(err));
+}
+async function callGroq(model, prompt) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: 'You output ONLY valid JSON arrays. No markdown.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+    }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) {
+    const snippet = (await res.text().catch(() => '')).slice(0, 300);
+    const err = new Error(`groq ${res.status} model=${model} ${snippet}`);
+    err.quota = res.status === 429;
+    throw err;
+  }
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content || '';
+  if (!text.trim()) throw new Error(`empty groq response model=${model}`);
+  let parsed = parseJsonArray(text);
+  if (!Array.isArray(parsed) && parsed && Array.isArray(parsed.questions)) parsed = parsed.questions;
+  if (!Array.isArray(parsed)) throw new Error(`unparseable groq response model=${model}`);
+  return parsed;
+}
 async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus }) {
   const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus });
-  let lastErr = new Error('no AI providers configured (set GEMINI_API_KEY and/or OPENROUTER_API_KEY)');
+  let lastErr = new Error('no AI providers configured (set GEMINI_API_KEY, OPENROUTER_API_KEY and/or GROQ_API_KEY)');
+  const tryParse = (parsed, tag, qtype) => {
+    const arr = Array.isArray(parsed) ? parsed : parsed.questions;
+    if (!Array.isArray(arr)) throw new Error(`unparseable ${tag} response`);
+    const out = arr.map((r) => normalize(r, category, qtype)).filter(Boolean);
+    if (out.length < Math.min(3, count)) throw new Error(`zero valid questions ${tag}`);
+    return out;
+  };
   if (GEMINI_API_KEY) {
     for (const model of GEMINI_MODELS) {
       try {
-        const parsed = await callGemini(model, prompt);
-        const arr = Array.isArray(parsed) ? parsed : parsed.questions;
-        if (!Array.isArray(arr)) throw new Error(`unparseable gemini response model=${model}`);
-        const out = arr.map((r) => normalize(r, category, questionType)).filter(Boolean);
-        if (out.length >= Math.min(3, count)) {
-          console.log(`[ai] gemini ok model=${model} n=${out.length} cat=${category}`);
-          return { questions: out, provider: `gemini:${model}` };
-        }
-        throw new Error(`zero valid questions model=${model}`);
+        const out = tryParse(await callGemini(model, prompt), `gemini:${model}`, questionType);
+        noteOk(`gemini:${model}`, out.length, category);
+        return { questions: out, provider: `gemini:${model}` };
       } catch (e) {
-        lastErr = e instanceof Error ? e : new Error(String(e));
-        console.error(`[ai] ${lastErr.message}`);
+        lastErr = noteFail(e);
       }
     }
   }
   if (OPENROUTER_API_KEY) {
     for (const model of OPENROUTER_MODELS) {
       try {
-        const arr = await callOpenRouter(model, prompt);
-        const out = arr.map((r) => normalize(r, category, questionType)).filter(Boolean);
-        if (out.length >= Math.min(3, count)) {
-          console.log(`[ai] openrouter ok model=${model} n=${out.length} cat=${category}`);
-          return { questions: out, provider: `openrouter:${model}` };
-        }
-        throw new Error(`zero valid questions model=${model}`);
+        const out = tryParse(await callOpenRouter(model, prompt), `openrouter:${model}`, questionType);
+        noteOk(`openrouter:${model}`, out.length, category);
+        return { questions: out, provider: `openrouter:${model}` };
       } catch (e) {
-        lastErr = e instanceof Error ? e : new Error(String(e));
-        console.error(`[ai] ${lastErr.message}`);
+        lastErr = noteFail(e);
+      }
+    }
+  }
+  if (GROQ_API_KEY) {
+    for (const model of GROQ_MODELS) {
+      try {
+        const out = tryParse(await callGroq(model, prompt), `groq:${model}`, questionType);
+        noteOk(`groq:${model}`, out.length, category);
+        return { questions: out, provider: `groq:${model}` };
+      } catch (e) {
+        lastErr = noteFail(e);
       }
     }
   }
@@ -652,13 +706,13 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', 'http://localhost');
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
-    send(res, 200, { ok: true, ai: aiConfigured(), gemini: Boolean(GEMINI_API_KEY), openrouter: Boolean(OPENROUTER_API_KEY), models: GEMINI_MODELS, orModels: OPENROUTER_MODELS, rooms: rooms.size, multiplayer: true });
+    send(res, 200, { ok: true, ai: aiConfigured(), gemini: Boolean(GEMINI_API_KEY), openrouter: Boolean(OPENROUTER_API_KEY), groq: Boolean(GROQ_API_KEY), models: GEMINI_MODELS, orModels: OPENROUTER_MODELS, groqModels: GROQ_MODELS, rooms: rooms.size, multiplayer: true, lastOk: aiStats.lastOk, lastFail: aiStats.lastFail });
     return;
   }
 
   if (req.method === 'POST' && url.pathname === '/api/questions') {
     if (!aiConfigured() && !process.env.QUIZUSH_STUB_QS) {
-      send(res, 503, { error: 'AI not configured on server (set GEMINI_API_KEY and/or OPENROUTER_API_KEY)' });
+      send(res, 503, { error: 'AI not configured on server (set GEMINI_API_KEY, OPENROUTER_API_KEY and/or GROQ_API_KEY)' });
       return;
     }
     let body;

@@ -1,0 +1,16 @@
+{
+  "name": "Quizlly — Think Fast. Play Smarter.",
+  "short_name": "Quizlly",
+  "description": "Fast-paced solo and live multiplayer quizzes with fresh AI-generated questions every match.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFDF8",
+  "theme_color": "#2E9BFF",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

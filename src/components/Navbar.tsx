@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ArrowRight, Volume2 } from 'lucide-react';
+import { Menu, X, ArrowRight, Volume2, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { usePwaInstall } from '../hooks/usePwaInstall';
 
 const LINKS = [
   ['/solo', 'Solo Quiz'],
@@ -12,6 +13,16 @@ const LINKS = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const { canPrompt, installed, promptInstall } = usePwaInstall();
+  async function onInstall() {
+    if (canPrompt) {
+      await promptInstall();
+      setShowHelp(false);
+    } else {
+      setShowHelp((s) => !s);
+    }
+  }
   const loc = useLocation();
   useEffect(() => { setOpen(false); }, [loc.pathname]);
   useEffect(() => {
@@ -39,6 +50,20 @@ export default function Navbar() {
           <button aria-label="Sound" className="grid h-10 w-10 place-items-center rounded-full bg-[#F8F9FF] text-muted transition-transform hover:scale-105" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
             <Volume2 size={17} />
           </button>
+          {!installed && (
+            <div className="relative">
+              <button onClick={onInstall} className="flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[14px] font-extrabold text-ink/70 transition-colors hover:bg-[#7C5CFF]/[.07] hover:text-ink">
+                <Download size={16} /> Install App
+              </button>
+              {showHelp && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl bg-white p-4 text-left text-[13px] font-medium text-muted shadow-soft" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>
+                  <b className="text-ink">Get the Quizlly app</b>
+                  <p className="mt-1">Android: browser menu ⋮ → Install app / Add to Home screen.</p>
+                  <p className="mt-1">iPhone: Share <b>⎙</b> → Add to Home Screen.</p>
+                </div>
+              )}
+            </div>
+          )}
           <Link to="/multiplayer/join" className="rounded-full px-4 py-2.5 text-[14px] font-extrabold text-ink/70 transition-colors hover:bg-[#7C5CFF]/[.07] hover:text-ink">Join Game</Link>
           <Link to="/multiplayer/create" className="qr-btn-primary btn-press px-5 py-2.5 text-[14px]">Create Game <ArrowRight size={15} className="arrow-nudge" /></Link>
         </div>
@@ -55,6 +80,16 @@ export default function Navbar() {
             <Link to="/multiplayer/join" className="qr-btn-ghost justify-center px-4 py-3 text-[14px]">Join Game</Link>
             <Link to="/multiplayer/create" className="qr-btn-primary justify-center px-4 py-3 text-[14px]">Create Game</Link>
           </div>
+          {!installed && (
+            <button onClick={onInstall} className="qr-btn-ghost mt-2 w-full justify-center px-4 py-3 text-[14px]">
+              <Download size={16} /> Install App
+            </button>
+          )}
+          {showHelp && (
+            <p className="mt-2 rounded-xl bg-[#F8F9FF] px-4 py-3 text-[13px] font-medium text-muted" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
+              Android: browser menu ⋮ → Install app. iPhone: Share ⎙ → Add to Home Screen.
+            </p>
+          )}
         </div>
       )}
     </header>

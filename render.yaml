@@ -13,5 +13,7 @@ services:
         sync: false
       - key: OPENROUTER_MODEL
         value: openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,google/gemma-4-31b-it:free
+      - key: GROQ_API_KEY
+        sync: false
       - key: NODE_VERSION
         value: 20
