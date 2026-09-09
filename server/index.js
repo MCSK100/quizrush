@@ -596,7 +596,7 @@ function finishRoom(room) {
   room.status = 'FINISHED';
   room.rows = rowsOf(room);
   touch(room);
-  cast(room, { t: 'finished', rows: room.rows }, true);
+  cast(room, { t: 'finished', rows: room.rows, total: room.questions.length }, true);
   later(room, 60000, () => sweepDisconnected(room));
 }
 

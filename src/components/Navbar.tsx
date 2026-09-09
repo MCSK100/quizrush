@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ArrowRight, Volume2, Download } from 'lucide-react';
+import { Menu, X, ArrowRight, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePwaInstall } from '../hooks/usePwaInstall';
 
@@ -47,13 +47,11 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
-          <button aria-label="Sound" className="grid h-10 w-10 place-items-center rounded-full bg-[#F8F9FF] text-muted transition-transform hover:scale-105" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-            <Volume2 size={17} />
-          </button>
           {!installed && (
             <div className="relative">
-              <button onClick={onInstall} className="flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[14px] font-extrabold text-ink/70 transition-colors hover:bg-[#7C5CFF]/[.07] hover:text-ink">
-                <Download size={16} /> Install App
+              <button onClick={onInstall} className="btn-press relative flex items-center gap-1.5 overflow-hidden rounded-full bg-ink px-4 py-2.5 text-[14px] font-extrabold text-white shadow-soft">
+                <span aria-hidden className="animate-shimmer-sweep pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                <Download size={16} className="relative" /> <span className="relative">Install App</span>
               </button>
               {showHelp && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl bg-white p-4 text-left text-[13px] font-medium text-muted shadow-soft" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>
@@ -64,7 +62,7 @@ export default function Navbar() {
               )}
             </div>
           )}
-          <Link to="/multiplayer/join" className="rounded-full px-4 py-2.5 text-[14px] font-extrabold text-ink/70 transition-colors hover:bg-[#7C5CFF]/[.07] hover:text-ink">Join Game</Link>
+          <Link to="/multiplayer/join" className="btn-press rounded-full bg-white/80 px-4 py-2.5 text-[14px] font-extrabold text-ink transition-colors hover:bg-white" style={{ border: '1.5px solid rgba(120,100,180,0.16)' }}>Join Game</Link>
           <Link to="/multiplayer/create" className="qr-btn-primary btn-press px-5 py-2.5 text-[14px]">Create Game <ArrowRight size={15} className="arrow-nudge" /></Link>
         </div>
         <button className="grid h-10 w-10 place-items-center rounded-xl text-ink lg:hidden" aria-label="Menu" onClick={() => setOpen(!open)}>
@@ -81,8 +79,9 @@ export default function Navbar() {
             <Link to="/multiplayer/create" className="qr-btn-primary justify-center px-4 py-3 text-[14px]">Create Game</Link>
           </div>
           {!installed && (
-            <button onClick={onInstall} className="qr-btn-ghost mt-2 w-full justify-center px-4 py-3 text-[14px]">
-              <Download size={16} /> Install App
+            <button onClick={onInstall} className="btn-press relative mt-2 flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-2xl bg-ink px-4 py-3 text-[14px] font-extrabold text-white">
+              <span aria-hidden className="animate-shimmer-sweep pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+              <Download size={16} className="relative" /> <span className="relative">Install App</span>
             </button>
           )}
           {showHelp && (

@@ -60,7 +60,7 @@ function NetPlay({ code }: { code: string }) {
       else sound.play('wrong');
     } else if (m.t === 'finished') {
       const finalRows = Array.isArray(m.rows) ? (m.rows as Player[]) : rows;
-      sessionStorage.setItem('qr-net-result', JSON.stringify({ rows: finalRows, code, you }));
+      sessionStorage.setItem('qr-net-result', JSON.stringify({ rows: finalRows, code, you, total: Number(m.total ?? q?.total ?? finalRows.length) }));
       nav(`/room/${code}/results`, { replace: true });
     } else if (m.t === 'error') {
       console.error('[quizlly] room error:', String(m.msg || ''), String(m.detail || ''));
