@@ -5,7 +5,6 @@ import { Play, Users, ChevronDown, ArrowRight, Hash } from 'lucide-react';
 import AnimatedBackground from './AnimatedBackground';
 import HeroQuizCard from './HeroQuizCard';
 import { CATEGORIES } from '../../data/categories';
-import { SEED_QUESTIONS } from '../../data/questions';
 
 function useCountUp(target: number, start: boolean, duration = 1400) {
   const [v, setV] = useState(0);
@@ -44,7 +43,7 @@ export function HeroStats() {
     ob.observe(el); return () => ob.disconnect();
   }, []);
   const stats = [
-    { target: SEED_QUESTIONS.length, prefix: '', suffix: '+', label: 'QUESTIONS IN BANK' },
+    { target: 100, prefix: '', suffix: '%', label: 'FRESH AI QUESTIONS' },
     { target: CATEGORIES.length, prefix: '', suffix: '', label: 'CATEGORIES' },
     { target: 3, prefix: '', suffix: '', label: 'GAME MODES' },
   ];
@@ -93,7 +92,7 @@ export default function Hero() {
           </h1>
           <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
             className="mt-5 max-w-md text-[16px] font-medium leading-relaxed text-muted">
-            Challenge yourself or race your friends in fast-paced quizzes powered by AI-generated questions.
+            Challenge yourself or take on friends in fast-paced quizzes with fresh AI-generated questions every match.
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="mt-7 flex flex-col items-stretch gap-2.5 min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:items-center sm:gap-3">

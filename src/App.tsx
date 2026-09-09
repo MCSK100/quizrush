@@ -42,11 +42,11 @@ function Shell({ children }: { children: React.ReactNode }) {
   const isHome = loc.pathname === '/';
   useLenis();
   useEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
-  if (isHome) return <div className="min-h-screen bg-cream font-body text-ink"><Navbar /><main>{children}</main></div>;
+  if (isHome) return <div className="flex min-h-screen flex-col bg-cream font-body text-ink"><Navbar /><main className="flex-1">{children}</main></div>;
   return (
-    <div className="min-h-screen bg-cream font-body text-ink">
+    <div className="flex min-h-screen flex-col bg-cream font-body text-ink">
       <Navbar />
-      <main className="pt-[88px]">{children}</main>
+      <main className="flex-1 pt-[88px]">{children}</main>
       <footer className="border-t border-line bg-cream py-8">
         <div className="cf-wrap flex flex-col items-center justify-between gap-4 text-[13px] text-muted sm:flex-row">
           <span className="flex items-center gap-2"><img src="/quizlly-favicon.png" alt="Quizlly" className="h-6 w-6 rounded-md object-cover" /><b className="text-ink">Quizlly</b> · Think fast. Play smarter.</span>

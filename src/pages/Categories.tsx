@@ -7,7 +7,7 @@ export default function Categories(){
 return (<div className="mx-auto max-w-6xl px-4 py-10">
 <div className="inline-flex rounded-full bg-white px-4 py-1.5 text-[11px] font-extrabold tracking-[0.18em] text-grape shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>CATEGORIES</div>
 <h1 className="font-display mt-3 text-3xl tracking-tight text-ink sm:text-4xl">All <span className="qr-gradient-text">playgrounds.</span></h1>
-<p className="mt-2 text-sm font-medium text-muted">{CATEGORIES.length} worlds. Pick your battlefield.</p>
+<p className="mt-2 text-sm font-medium text-muted">{CATEGORIES.length} worlds. Master them all.</p>
 <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
 {CATEGORIES.map((c,i)=>(<motion.div key={c.id} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-30px'}} transition={{delay:(i%4)*0.06,duration:0.45}}>
 <Link to={`/solo?cat=${c.id}`} className="group relative block min-w-0 overflow-hidden rounded-[22px] bg-white shadow-sticker-sm transition-transform duration-300 hover:-translate-y-1.5" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>

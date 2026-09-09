@@ -1,5 +1,5 @@
 # Quizlly — Think Fast. Play Smarter.
-Real-time solo + multiplayer quiz battles. React + TS + Vite + Tailwind + Zustand + Framer Motion.
+Real-time solo + multiplayer quiz matches. React + TS + Vite + Tailwind + Zustand + Framer Motion.
 ## Run (frontend)
 npm install
 npm run dev

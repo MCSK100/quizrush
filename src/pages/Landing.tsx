@@ -10,7 +10,8 @@ import AnimatedBackground from '../components/landing/AnimatedBackground';
 export default function Landing() {
   const [glow, setGlow] = useState('');
   return (
-    <div className="relative min-w-0 overflow-x-clip bg-cream text-ink">
+    <div className="relative flex min-h-screen min-w-0 flex-col overflow-x-clip bg-cream text-ink">
+      <div className="flex-1">
       <Hero />
       <div className="relative overflow-x-clip">
         <AnimatedBackground tone="soft" />
@@ -25,6 +26,7 @@ export default function Landing() {
       <MultiplayerRace />
       <AIQuestionSection />
       <FinalCTA />
+      </div>
       <SiteFooter />
     </div>
   );

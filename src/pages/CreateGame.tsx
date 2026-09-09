@@ -16,11 +16,12 @@ export default function CreateGame() {
   const [busy, setBusy] = useState(false);
   async function create() {
     if (name.trim().length < 2) { setErr('Enter a display name (2+ characters).'); return; }
+    const liveCfg = netEnabled() && cfg.timer <= 0 ? { ...cfg, timer: 10 } : cfg;
     if (netEnabled()) {
       setErr('');
       setBusy(true);
       try {
-        const { room, you } = await createNetRoom(cfg, name.trim(), '👑');
+        const { room, you } = await createNetRoom(liveCfg, name.trim(), '👑');
         saveNetSession({ code: room.code, playerId: you, name: name.trim() });
         setRoom(room);
         nav(`/room/${room.code}`, { replace: true });
@@ -41,7 +42,7 @@ export default function CreateGame() {
     <div className="mx-auto w-full min-w-0 max-w-2xl px-4 py-8 sm:px-5 sm:py-12">
       <div className="text-[11px] font-extrabold tracking-[0.18em] text-coralDeep">MULTIPLAYER · CREATE</div>
       <h1 className="font-display mt-2 text-balance text-3xl tracking-tight text-ink sm:text-4xl">Create your <span className="qr-gradient-text">game.</span></h1>
-      <p className="mt-2 text-sm font-medium text-muted">Pick your settings, share the code, and race in real time.</p>
+      <p className="mt-2 text-sm font-medium text-muted">Set the stage, share the code, and play live together in real time.</p>
       <div className="qr-surface mt-6 rounded-[24px] p-4 sm:p-6">
         <label className="text-[11px] font-extrabold tracking-[0.16em] text-muted" htmlFor="hname">YOUR NAME</label>
         <input id="hname" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Arjun" maxLength={16}
@@ -63,7 +64,7 @@ export default function CreateGame() {
             {(['classic', 'speed', 'elimination'] as GameMode[]).map((m) => (
               <button key={m} onClick={() => setCfg({ ...cfg, mode: m })} aria-pressed={cfg.mode === m}
                 className={`btn-press rounded-2xl py-3 text-xs font-extrabold uppercase transition-all ${cfg.mode === m ? 'qr-btn-primary justify-center' : 'bg-white/80 text-ink hover:bg-white'}`}
-                style={cfg.mode === m ? undefined : SOFT}>{m === 'speed' ? 'Speed Race' : m}</button>
+                style={cfg.mode === m ? undefined : SOFT}>{m === 'speed' ? 'Speed Run' : m}</button>
             ))}
           </div>
         </div>

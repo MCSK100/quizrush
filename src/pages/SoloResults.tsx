@@ -62,7 +62,7 @@ export default function SoloResults() {
           </div>
         ))}
       </div>
-      <p className="mt-4 text-sm font-bold text-muted">{acc >= 80 ? 'YOU BEAT THE ARENA. Legendary pace.' : acc >= 50 ? 'Solid run. One more battle?' : 'Warm up done. Run it back.'}</p>
+      <p className="mt-4 text-sm font-bold text-muted">{acc >= 80 ? 'FLAWLESS. Certified Quizlly pro.' : acc >= 50 ? 'Solid run. One more match?' : 'Warm-up done. Run it back.'}</p>
       <div className="mt-6 flex gap-2">
         <button onClick={rematch} disabled={loading} className="qr-btn-primary btn-press flex-1 justify-center rounded-2xl py-3.5 font-display disabled:opacity-60">
           {loading ? 'DEALING…' : 'REMATCH ↻'}

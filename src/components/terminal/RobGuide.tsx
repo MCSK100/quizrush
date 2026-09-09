@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, X, Sparkles } from 'lucide-react';
 
 const QA: Record<string, string> = {
-  start: 'To begin travel, visit the flight deck: pick SOLO SPRINT for a fast run, or CREATE ROOM to race friends.',
+  start: 'To begin travel, visit the flight deck: pick SOLO SPRINT for a fast run, or CREATE ROOM to challenge friends.',
   solo: 'Solo Sprint boards now at Gate A-01. 10-second rounds, streak bonus, AI-built deck.',
   room: 'Create a room, share the 6-letter code. Friends join from JOIN GAME. First to lock answers climbs fastest.',
   passport: 'Every win stamps your Galactic Passport. Check PROFILE to see badges and your traveler rank.',

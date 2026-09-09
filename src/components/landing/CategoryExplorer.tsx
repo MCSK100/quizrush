@@ -32,7 +32,7 @@ export default function CategoryExplorer({ onHoverGlow }: { onHoverGlow: (c: str
       <div className="mx-auto w-full min-w-0 max-w-6xl px-4 sm:px-5">
         <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1">
-            <SectionHead eyebrow="CATEGORIES" title={<>Pick your <span className="qr-gradient-text">playground.</span></>} sub="Every tile has its own vibe. Hover to feel the arena glow." />
+            <SectionHead eyebrow="CATEGORIES" title={<>Pick your <span className="qr-gradient-text">playground.</span></>} sub="Every tile has its own vibe. Hover to feel the spotlight glow." />
           </div>
           <Link to="/categories" className="group flex shrink-0 items-center gap-1.5 self-start rounded-full bg-white px-5 py-2.5 text-sm font-extrabold text-ink shadow-soft transition-transform hover:-translate-y-0.5 sm:self-auto" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
             View all <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />

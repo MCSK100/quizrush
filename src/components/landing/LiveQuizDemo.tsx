@@ -73,7 +73,7 @@ export default function LiveQuizDemo() {
     <section className="relative overflow-x-clip py-12 sm:py-20">
       <div className="mx-auto grid w-full min-w-0 max-w-6xl items-center gap-8 px-4 sm:px-5 lg:grid-cols-2 lg:gap-10">
         <div>
-          <SectionHead eyebrow="LIVE FEEL" title={<>This is what a <span className="qr-gradient-text">race feels like.</span></>} sub="A mini playable demo. Watch the timer burn, the answer lock in, and the score climb." />
+          <SectionHead eyebrow="LIVE FEEL" title={<>This is what a <span className="qr-gradient-text">live match feels like.</span></>} sub="A mini playable demo. Watch the timer burn, the answer lock in, and the score climb." />
           <ul className="mt-6 space-y-3 text-sm font-semibold">
             {[['10-second timer', 'forces fast, fun decisions', '#FF6B4A'], ['Instant reveal', 'learn as you play', '#7C5CFF'], ['Streak bonus', 'rewards the bold', '#58CC02']].map(([t, d, c]) => (
               <li key={t} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>

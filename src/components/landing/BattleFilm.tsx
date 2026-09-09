@@ -10,7 +10,7 @@ import { SectionHead } from './Sections';
  */
 
 const Q = { q: 'Which planet is known as the Red Planet?', opts: ['Earth', 'Mars', 'Jupiter', 'Venus'], a: 1 };
-const CHAPTERS = ['LOBBY', 'COUNTDOWN', 'FIRST BLOOD', 'CROWNED'];
+const CHAPTERS = ['LOBBY', 'COUNTDOWN', 'FIRST LEAD', 'CROWNED'];
 const LOBBY = [
   { n: 'Arjun', t: 'AR', c: '#FF6B4A' }, { n: 'Priya', t: 'PR', c: '#7C5CFF' },
   { n: 'Karthik', t: 'KA', c: '#2E9BFF' }, { n: 'Sanjay', t: 'SA', c: '#0E7A55' },
@@ -65,10 +65,10 @@ export default function BattleFilm() {
   if (reduce) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <SectionHead eyebrow="THE FILM" title={<>A battle, <span className="qr-gradient-text">frame by frame.</span></>} sub="Lobby fills, countdown burns, first blood, crowned — the full arc of a Quizlly room." />
+        <SectionHead eyebrow="THE FILM" title={<>A match, <span className="qr-gradient-text">frame by frame.</span></>} sub="Lobby fills, countdown burns, answers lock, a winner is crowned — the full arc of a Quizlly room." />
         <div className="qr-surface mt-8 rounded-[28px] p-6 text-center">
-          <p className="font-display text-2xl text-ink">Arjun takes the crown with 1,940 pts.</p>
-          <p className="mt-2 text-sm font-medium text-muted">Six racers · 20 questions · one winner.</p>
+          <p className="font-display text-2xl text-ink">Arjun tops the board with 1,940 pts.</p>
+          <p className="mt-2 text-sm font-medium text-muted">Six players · 20 questions · one winner.</p>
         </div>
       </section>
     );
@@ -114,7 +114,7 @@ export default function BattleFilm() {
             <div className="absolute inset-0 bottom-16 top-10">
               <AnimatePresence mode="wait">
                 {beat === 0 && (
-                  <BeatShell k="b0" ghost="LOBBY" eyebrow="SCENE 01 · THE LOBBY FILLS" title="Six racers. One code.">
+                  <BeatShell k="b0" ghost="LOBBY" eyebrow="SCENE 01 · THE LOBBY FILLS" title="Six players. One code.">
                     <div className="grid grid-cols-3 gap-2">
                       {LOBBY.map((a, i) => (
                         <motion.div key={a.n} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 + i * 0.07 }}
@@ -137,7 +137,7 @@ export default function BattleFilm() {
                   </BeatShell>
                 )}
                 {beat === 2 && (
-                  <BeatShell k="b2" ghost="Q12" eyebrow="SCENE 03 · FIRST BLOOD" title={Q.q}>
+                  <BeatShell k="b2" ghost="Q12" eyebrow="SCENE 03 · FIRST LEAD" title={Q.q}>
                     <div className="overflow-hidden rounded-full bg-white/10">
                       <motion.div className="h-2 origin-left rounded-full bg-gradient-to-r from-violet-500 via-cyan-400 to-lime-300" style={{ scaleX: qbar }} />
                     </div>

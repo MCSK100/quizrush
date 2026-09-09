@@ -35,8 +35,8 @@ export default function JoinGame() {
       setErr("Couldn't find that room on this device. Ask the host to create one, or start your own.");
       return;
     }
-    if (room.players.length >= (room.config.maxPlayers || 8)) { setErr('Room is full. Ask the host for a bigger arena.'); return; }
-    if (room.status !== 'LOBBY') { setErr('Game already started. Wait for the next battle.'); return; }
+    if (room.players.length >= (room.config.maxPlayers || 8)) { setErr('Room is full. Ask the host for a bigger room.'); return; }
+    if (room.status !== 'LOBBY') { setErr('Game already started. Wait for the next match.'); return; }
     if (room.players.some((p) => p.name.toLowerCase() === name.trim().toLowerCase())) { setErr('Name already taken in this room.'); return; }
     const me = { id: 'me-' + Date.now(), name: name.trim(), avatar: av, score: 0, correct: 0, streak: 0, bestStreak: 0, rank: 1, ready: true, isHost: false, connected: true };
     setRoom({ ...room, players: [...room.players, me] });
@@ -45,7 +45,7 @@ export default function JoinGame() {
   return (
     <div className="mx-auto w-full min-w-0 max-w-md px-4 py-8 sm:px-5 sm:py-12">
       <div className="text-center text-[11px] font-extrabold tracking-[0.18em] text-coralDeep">MULTIPLAYER · JOIN</div>
-      <h1 className="mt-2 text-center text-3xl font-black text-ink">Join the <span className="qr-gradient-text">battle.</span></h1>
+      <h1 className="mt-2 text-center text-3xl font-black text-ink">Join the <span className="qr-gradient-text">match.</span></h1>
       <div className="qr-surface mt-6 rounded-[24px] p-5 sm:p-6">
         <label className="text-[11px] font-extrabold tracking-[0.16em] text-muted" htmlFor="code">ENTER ROOM CODE</label>
         <input id="code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Q7X9K" maxLength={6}

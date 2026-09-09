@@ -6,7 +6,7 @@ import { RoomCodeBig } from '../components/board';
 import { regionLabel } from '../data/regions';
 import { useRoom, withoutBots } from '../stores/app';
 import type { Player, Room } from '../types';
-import { generateQuestions } from '../services/questions';
+import { AiError, generateQuestions } from '../services/questions';
 import { loadNetSession, netEnabled, saveNetSession, useNetSocket, type NetMsg } from '../services/net';
 
 function LobbyShell({ code, players, config, isHost, alone, starting, err, onStart }: {
@@ -69,7 +69,7 @@ function NetLobby({ code }: { code: string }) {
         const s = loadNetSession();
         if (s) saveNetSession({ ...s, playerId: m.you as string });
       }
-    } else if (m.t === 'count') {
+    } else if (m.t === 'count' || m.t === 'question' || m.t === 'reveal' || m.t === 'finished') {
       nav(`/room/${code}/play`);
     } else if (m.t === 'error') {
       setErr(String(m.msg || 'Something went wrong.'));
@@ -103,6 +103,8 @@ function LocalLobby({ code }: { code: string }) {
   const nav = useNavigate();
   const room = useRoom((s) => s.room);
   const setRoom = useRoom((s) => s.setRoom);
+  const [err, setErr] = useState('');
+  const [starting, setStarting] = useState(false);
   useEffect(() => { if (!room || room.code !== code) nav('/multiplayer/join', { replace: true }); }, [room, code, nav]);
   useEffect(() => {
     if (!room) return;
@@ -115,16 +117,23 @@ function LocalLobby({ code }: { code: string }) {
   async function start() {
     const r = room;
     if (!r) return;
-    setRoom({ ...r, status: 'COUNTDOWN' });
-    const { questions } = await generateQuestions(r.config);
-    sessionStorage.setItem('qr-room-qs', JSON.stringify(questions));
-    nav(`/room/${r.code}/play`);
+    setErr('');
+    setStarting(true);
+    try {
+      const { questions } = await generateQuestions(r.config);
+      sessionStorage.setItem('qr-room-qs', JSON.stringify(questions));
+      setRoom({ ...r, status: 'COUNTDOWN' });
+      nav(`/room/${r.code}/play`);
+    } catch (e) {
+      setErr(e instanceof AiError ? e.message : 'AI question generation failed. Please try again.');
+      setStarting(false);
+    }
   }
   return (
     <LobbyShell
       code={room.code} players={room.players} config={room.config}
       isHost={!!isHost} alone={room.players.length < 2}
-      starting={false} err=""
+      starting={starting} err={err}
       onStart={start}
     />
   );

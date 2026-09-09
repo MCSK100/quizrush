@@ -32,7 +32,7 @@ export default function MultiplayerRace() {
         <Reveal className="min-w-0">
           <div className="relative min-w-0 overflow-hidden rounded-[24px] bg-white p-4 shadow-soft sm:rounded-[28px] sm:p-7" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
             <div className="relative flex flex-wrap items-center justify-between gap-2">
-              <span className="flex items-center gap-2 text-[12px] font-extrabold tracking-widest text-[#1E7A38]"><span className="h-2 w-2 animate-pulse rounded-full bg-[#58CC02]" /> LIVE RACE · DEMO PREVIEW</span>
+              <span className="flex items-center gap-2 text-[12px] font-extrabold tracking-widest text-[#1E7A38]"><span className="h-2 w-2 animate-pulse rounded-full bg-[#58CC02]" /> LIVE MATCH · DEMO PREVIEW</span>
               <span className="rounded-full bg-[#F8F9FF] px-3.5 py-1.5 font-display text-[13px] font-semibold text-ink" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>Q 12/20</span>
             </div>
             <div className="relative mt-7 space-y-5">
@@ -61,9 +61,9 @@ export default function MultiplayerRace() {
           </div>
         </Reveal>
         <div>
-          <SectionHead eyebrow="MULTIPLAYER" title={<>Race your friends, <span className="qr-gradient-text">live.</span></>} sub="Real avatars, live scores and positions that move as answers land — read the whole game at a glance." />
+          <SectionHead eyebrow="MULTIPLAYER" title={<>Challenge friends, <span className="qr-gradient-text">live.</span></>} sub="Real avatars, live scores and ranks that move as answers land — read the whole match at a glance." />
           <div className="mt-6 grid grid-cols-3 gap-2 text-center sm:gap-3">
-            {[['4', 'racers / room', '#FF6B4A'], ['10s', 'per question', '#7C5CFF'], ['0', 'setup needed', '#00C48C']].map(([v, l, c]) => (
+            {[['32', 'players / room', '#2E9BFF'], ['10s', 'per question', '#7C5CFF'], ['0', 'sign-up needed', '#00C48C']].map(([v, l, c]) => (
               <div key={l} className="min-w-0 rounded-[18px] bg-white px-1 py-4 shadow-sticker-sm sm:rounded-[20px] sm:px-2 sm:py-5" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
                 <div className="font-display text-[20px] font-semibold sm:text-[24px]" style={{ color: c }}>{v}</div>
                 <div className="mt-0.5 break-words px-1 text-[9.5px] font-extrabold uppercase tracking-wider text-muted sm:text-[10.5px]">{l}</div>

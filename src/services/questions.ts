@@ -1,5 +1,4 @@
 import type { Question, QuizConfig } from '../types';
-import { SEED_QUESTIONS } from '../data/questions';
 export function shuffle<T>(arr: T[]): T[] { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
 export function validateQuestion(q: unknown): q is Question {
   if (!q || typeof q !== 'object') return false; const o = q as Record<string, unknown>;
@@ -10,8 +9,17 @@ export function validateQuestion(q: unknown): q is Question {
   if (typeof o.correctAnswer !== 'number' || o.correctAnswer < 0 || o.correctAnswer > o.options.length - 1) return false;
   return true;
 }
+export type AiErrorCode = 'quota' | 'setup' | 'failed';
+export class AiError extends Error {
+  code: AiErrorCode;
+  constructor(code: AiErrorCode, message: string) { super(message); this.code = code; }
+}
+export function aiErrorMessage(code: AiErrorCode): string {
+  if (code === 'quota') return 'AI limit reached — please try again later.';
+  if (code === 'setup') return 'AI backend is not connected. Set VITE_AI_ENDPOINT and try again.';
+  return 'AI question generation failed. Please try again.';
+}
 let n = 0;
-const RECENT_KEY = 'qr-recent-q';
 function qKey(q: { question: string }): string {
   return q.question.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]+/g, ' ').trim().replace(/\s+/g, ' ');
 }
@@ -23,7 +31,6 @@ function loadKeys(key: string): string[] {
     return [];
   }
 }
-function recentIds(): string[] { return loadKeys(RECENT_KEY); }
 function recentTexts(): Set<string> { return new Set(loadKeys('qr-recent-text')); }
 function sessionTexts(): Set<string> {
   try {
@@ -35,8 +42,6 @@ function sessionTexts(): Set<string> {
 }
 function rememberQuestions(qs: Question[]) {
   try {
-    const ids = qs.map((q) => q.id.split('#')[0]);
-    localStorage.setItem(RECENT_KEY, JSON.stringify([...ids, ...recentIds()].slice(0, 200)));
     const texts = qs.map(qKey);
     localStorage.setItem('qr-recent-text', JSON.stringify([...texts, ...loadKeys('qr-recent-text')].slice(0, 300)));
     const used = sessionTexts();
@@ -52,60 +57,6 @@ function dedupeFresh<T extends Question>(qs: T[]): T[] {
     seen.add(k);
     return true;
   });
-}
-function toTF(q: Question, i: number): Question {
-  const useCorrect = i % 2 === 0;
-  const wrong = q.options.find((o, idx) => idx !== q.correctAnswer) || 'None of these';
-  const statement = `${q.question} — ${useCorrect ? q.options[q.correctAnswer] : wrong}.`;
-  return {
-    ...q, id: `${q.id}#tf${n++}`, question: statement,
-    options: ['True', 'False'], correctAnswer: useCorrect ? 0 : 1,
-    explanation: q.explanation,
-  };
-}
-function fallbackQuestions(cfg: QuizConfig): Question[] {
-  const cat = cfg.category || 'mixed';
-  let pool = SEED_QUESTIONS.filter((q) => {
-    if (cat === 'mixed' || cat === 'all' || cat === 'custom') return true;
-    if (cat === 'india') return q.region === 'india' || q.category === 'gk';
-    return q.category === cat;
-  });
-  if (cfg.difficulty !== 'mixed') pool = pool.filter((q) => q.difficulty === cfg.difficulty);
-  if (!pool.length) pool = [...SEED_QUESTIONS];
-  const region = cfg.focus === 'india' || cfg.region === 'india' ? 'india' : cfg.region || 'global';
-  const isTagged = (q: Question) => region !== 'global' && (q.region === region || (q.region === 'india' && region !== 'india'));
-  const seenIds = new Set(recentIds());
-  const banned = new Set([...recentTexts(), ...sessionTexts()]);
-  const isFresh = (q: Question) => !seenIds.has(q.id) && !banned.has(qKey(q));
-  const fresh = pool.filter(isFresh);
-  const freshOrdered = [...shuffle(fresh.filter(isTagged)), ...shuffle(fresh.filter((q) => !isTagged(q)))];
-  let picked: Question[] = freshOrdered.slice(0, cfg.count);
-  if (picked.length < cfg.count) {
-    const have = new Set(picked.map((q) => q.id));
-    const topUp = shuffle(SEED_QUESTIONS.filter((q) => !have.has(q.id) && !banned.has(qKey(q)) && (cfg.difficulty === 'mixed' || q.difficulty === cfg.difficulty)));
-    picked = [...picked, ...topUp.slice(0, cfg.count - picked.length)];
-  }
-  if (picked.length < cfg.count) {
-    const have = new Set(picked.map((q) => q.id));
-    const haveText = new Set(picked.map(qKey));
-    const rest = shuffle(SEED_QUESTIONS.filter((q) => !have.has(q.id) && !haveText.has(qKey(q))));
-    picked = [...picked, ...rest.slice(0, cfg.count - picked.length)];
-  }
-  let out = dedupeFresh(picked).map((q) => ({ ...q, id: q.id + `#${n++}` }));
-  rememberQuestions(out);
-  if (cfg.randomizeA !== false) {
-    out = out.map((q) => {
-      const order = shuffle(q.options.map((_, i) => i));
-      const opts = order.map((i) => q.options[i]);
-      return { ...q, options: opts, correctAnswer: order.indexOf(q.correctAnswer) };
-    });
-  }
-  const qt = cfg.questionType || 'mcq';
-  if (qt === 'tf') out = out.map((q, i) => toTF(q, i));
-  else if (qt === 'mixed') out = out.map((q, i) => (i % 2 === 1 ? toTF(q, i) : q));
-  const lang = cfg.language || 'en';
-  out = out.map((q) => ({ ...q, language: lang === 'en' ? 'en' : lang === 'ta' ? 'ta' : q.language || 'en' }));
-  return out;
 }
 function coerceIndex(v: unknown): number {
   if (typeof v === 'number' && v >= 0 && v <= 3) return v;
@@ -149,47 +100,55 @@ export async function aiBackendHealth(): Promise<'on' | 'off' | 'unknown'> {
     return 'off';
   }
 }
-export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Question[]; source: 'ai' | 'demo' }> {
+export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Question[]; source: 'ai'; provider: string }> {
   const wantType = cfg.questionType || 'mcq';
   const maxIdx = wantType === 'tf' ? 1 : 3;
   const base = endpoint();
-  if (base) {
-    try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 30000);
-      const res = await fetch(`${base}/api/questions`, {
-        method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category: cfg.category, count: Math.min(40, Math.max(3, cfg.count)),
-          difficulty: cfg.difficulty, region: cfg.focus === 'india' ? 'india' : cfg.region || 'global',
-          language: cfg.language || 'en', questionType: wantType,
-          customTopic: (cfg.customTopic || '').slice(0, 80), focus: cfg.focus || 'global',
-        }),
-      });
-      clearTimeout(t);
-      if (res.ok) {
-        const data = await res.json();
-        const arr = Array.isArray(data) ? data : data.questions;
-        if (Array.isArray(arr)) {
-          const banned = new Set([...recentTexts(), ...sessionTexts()]);
-          const all = arr
-            .map((r: unknown) => normalize(r, cfg.category, maxIdx))
-            .filter((q): q is Question => !!q && validateQuestion(q));
-          const fresh = dedupeFresh(all.filter((q) => !banned.has(qKey(q))));
-          const out = (fresh.length >= Math.min(3, cfg.count) ? fresh : dedupeFresh(all)).slice(0, cfg.count);
-          if (out.length >= Math.min(3, cfg.count)) {
-            rememberQuestions(out);
-            return { questions: out, source: 'ai' };
-          }
-        }
-          console.error('[quizlly] AI endpoint returned too few valid questions');
-      } else {
-        try {
-            console.error('[quizlly] AI endpoint error:', await res.text());
-        } catch { /* ignore */ }
-      }
-    } catch { /* fall through to bank */ }
+  if (!base) throw new AiError('setup', aiErrorMessage('setup'));
+  const count = Math.min(40, Math.max(3, cfg.count));
+  let res: Response;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 45000);
+    res = await fetch(`${base}/api/questions`, {
+      method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category: cfg.category, count,
+        difficulty: cfg.difficulty, region: cfg.focus === 'india' ? 'india' : cfg.region || 'global',
+        language: cfg.language || 'en', questionType: wantType,
+        customTopic: (cfg.customTopic || '').slice(0, 80), focus: cfg.focus || 'global',
+      }),
+    });
+    clearTimeout(t);
+  } catch {
+    throw new AiError('failed', aiErrorMessage('failed'));
   }
-  await new Promise((r) => setTimeout(r, 600));
-  return { questions: fallbackQuestions(cfg), source: 'demo' };
+  if (!res.ok) {
+    let detail = '';
+    try { detail = JSON.stringify(await res.json()); } catch { /* ignore */ }
+    console.error('[quizlly] AI endpoint error:', res.status, detail);
+    if (res.status === 429) throw new AiError('quota', aiErrorMessage('quota'));
+    if (res.status === 503) throw new AiError('setup', aiErrorMessage('setup'));
+    throw new AiError('failed', aiErrorMessage('failed'));
+  }
+  const data = await res.json();
+  const arr = Array.isArray(data) ? data : data.questions;
+  const provider = !Array.isArray(data) && typeof data?.provider === 'string' ? data.provider : 'ai';
+  if (!Array.isArray(arr)) {
+    console.error('[quizlly] AI endpoint returned no question list');
+    throw new AiError('failed', aiErrorMessage('failed'));
+  }
+  const banned = new Set([...recentTexts(), ...sessionTexts()]);
+  const all = arr
+    .map((r: unknown) => normalize(r, cfg.category, maxIdx))
+    .filter((q): q is Question => !!q && validateQuestion(q));
+  const fresh = dedupeFresh(all.filter((q) => !banned.has(qKey(q))));
+  const out = (fresh.length >= Math.min(3, count) ? fresh : dedupeFresh(all)).slice(0, count);
+  if (out.length < Math.min(3, count)) {
+    console.error('[quizlly] AI endpoint returned too few valid questions');
+    throw new AiError('failed', aiErrorMessage('failed'));
+  }
+  rememberQuestions(out);
+  console.log(`[quizlly] ${out.length} questions via ${provider} · ${cfg.category}/${cfg.difficulty}/${wantType}/${cfg.language || 'en'}`);
+  return { questions: out, source: 'ai', provider };
 }

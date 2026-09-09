@@ -23,7 +23,7 @@ export function TimerRing({ left, total }: { left: number; total: number }) {
 }
 export function ScoreTicker({ score }: { score: number }) {
   return (
-    <motion.div key={score} initial={{ scale: 1.25, color: '#FF6B4A' }} animate={{ scale: 1, color: '#211D2E' }} className="font-num text-xl font-extrabold" aria-live="polite">
+    <motion.div key={score} initial={{ scale: 1.25, color: '#2E9BFF' }} animate={{ scale: 1, color: '#211D2E' }} className="font-num text-xl font-extrabold" aria-live="polite">
       {fmt(score)}
     </motion.div>
   );
@@ -70,7 +70,7 @@ export function AnswerButton({ label, text, state, disabled, onPick, index, imag
 export function ProgressBar({ i, total }: { i: number; total: number }) {
   return (
     <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#F1EDFF]" role="progressbar" aria-valuenow={i} aria-valuemax={total}>
-      <motion.div className="h-full rounded-full" animate={{ width: `${(i / total) * 100}%` }} style={{ backgroundImage: 'linear-gradient(90deg,#FF6B4A,#7C5CFF)' }} />
+      <motion.div className="h-full rounded-full" animate={{ width: `${(i / total) * 100}%` }} style={{ backgroundImage: 'linear-gradient(90deg,#2E9BFF,#7C5CFF)' }} />
     </div>
   );
 }

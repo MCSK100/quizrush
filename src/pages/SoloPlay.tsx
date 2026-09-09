@@ -94,7 +94,7 @@ export default function SoloPlay() {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <p className="font-display text-2xl text-ink">Loading questions…</p>
-        <p className="text-sm text-muted">Building the battle…</p>
+        <p className="text-sm text-muted">Dealing fresh questions…</p>
       </div>
     );
   if (phase === 'count')

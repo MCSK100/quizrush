@@ -16,7 +16,7 @@ export default function LeaderboardPage() {
         <div className="qr-surface mt-6 rounded-[24px] p-8 text-center">
           <Crown size={32} className="mx-auto text-sunny" />
           <p className="font-display mt-3 text-xl text-ink">No legends yet.</p>
-          <p className="mt-1 text-sm font-medium text-muted">Play your first battle to claim the top spot.</p>
+          <p className="mt-1 text-sm font-medium text-muted">Play your first quiz to claim the top spot.</p>
           <Link to="/solo" className="qr-btn-primary mt-5 inline-flex px-6 py-3 text-[15px]"><Play size={16} strokeWidth={3} /> Play solo</Link>
         </div>
       ) : (

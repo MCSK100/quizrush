@@ -14,7 +14,7 @@ export const DEPARTURES: Departure[] = [
   { dest: 'SOLO SPRINT', gate: 'A-01', airline: 'GALAXY AIR', status: 'BOARDING', color: '#A3E635', to: '/solo', meta: '10s rounds · AI deck' },
   { dest: 'SCIENCE GALAXY', gate: 'B-07', airline: 'GALAXY AIR', status: 'BOARDING', color: '#22D3EE', to: '/solo?cat=science', meta: '260 questions' },
   { dest: 'MOVIE NEBULA', gate: 'C-03', airline: 'SUNSHINE AIR', status: 'BOARDING', color: '#F472B6', to: '/solo?cat=movies', meta: '180 questions' },
-  { dest: 'FRIENDS ROOM', gate: 'D-21', airline: 'BOOMERANG INTL', status: 'BOARDING', color: '#A78BFA', to: '/multiplayer/create', meta: '4 racers · live' },
+  { dest: 'FRIENDS ROOM', gate: 'D-21', airline: 'BOOMERANG INTL', status: 'BOARDING', color: '#A78BFA', to: '/multiplayer/create', meta: '4 players · live' },
   { dest: 'TAMIL STARPORT', gate: 'E-09', airline: 'SUNSHINE AIR', status: 'DELAYED', color: '#FBBF24', to: '/solo?cat=tamil', meta: '140 questions' },
   { dest: 'SPACE ODYSSEY', gate: 'F-13', airline: 'GALAXY AIR', status: 'FULL', color: '#67E8F9', to: '/categories', meta: '170 questions' },
 ];

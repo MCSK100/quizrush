@@ -33,6 +33,7 @@ function NetPlay({ code }: { code: string }) {
       setPhase('count');
       setCount(Number(m.n ?? 3));
     } else if (m.t === 'question') {
+      if (Number(m.qi ?? 0) === 0) console.log(`[quizlly] room questions via ${String(m.provider || 'ai')}`);
       setQ({
         qi: Number(m.qi ?? 0), total: Number(m.total ?? 1),
         question: String(m.question || ''), options: Array.isArray(m.options) ? (m.options as string[]) : [],
@@ -90,7 +91,7 @@ function NetPlay({ code }: { code: string }) {
           {phase === 'count' ? (
             <AnimatePresence mode="wait"><Countdown key={count} n={count === 0 ? 'GO!' : count} /></AnimatePresence>
           ) : (
-            <p className="font-display text-2xl text-ink">Joining the battle…</p>
+            <p className="font-display text-2xl text-ink">Joining the match…</p>
           )}
           <p className="mt-3 text-[12px] font-extrabold tracking-[0.24em] text-muted">{phase === 'count' ? 'GET READY' : 'CONNECTING…'}</p>
         </div>

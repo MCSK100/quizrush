@@ -19,7 +19,7 @@ export default {
         candy: '#FF7BAC',
         mint: '#00C48C',
         surface: '#FFFFFF',
-        neon: '#FF6B4A',
+        neon: '#2E9BFF',
         royal: '#7C5CFF',
         danger: '#FF4B5C',
         warn: '#FFB020',
@@ -41,11 +41,11 @@ export default {
       },
       boxShadow: {
         soft: '0 20px 50px rgba(80,60,120,0.08)',
-        lift: '0 24px 60px -18px rgba(255,107,74,0.28), 0 18px 44px -20px rgba(124,92,255,0.30)',
+        lift: '0 24px 60px -18px rgba(46,155,255,0.28), 0 18px 44px -20px rgba(124,92,255,0.30)',
         card: '0 20px 50px rgba(80,60,120,0.08)',
         sticker: '0 8px 24px rgba(80,60,120,0.12)',
         'sticker-sm': '0 4px 14px rgba(80,60,120,0.10)',
-        neon: '0 12px 32px -8px rgba(255,107,74,0.45)',
+        neon: '0 12px 32px -8px rgba(46,155,255,0.45)',
       },
       keyframes: {
         floaty: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },

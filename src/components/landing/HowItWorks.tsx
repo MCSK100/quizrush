@@ -5,14 +5,14 @@ import { SectionHead } from './Sections';
 const STEPS = [
   { n: '01', title: 'CREATE', desc: 'Choose category, questions and timer.', icon: <Plus size={22} />, bg: 'linear-gradient(135deg,#FF8A3D,#F04E23)', soft: '#FFF1E8' },
   { n: '02', title: 'CHALLENGE', desc: 'Share your room code.', icon: <Users size={22} />, bg: 'linear-gradient(135deg,#8B5CF6,#5B3DF0)', soft: '#F1EBFF' },
-  { n: '03', title: 'RACE', desc: 'Answer faster.', icon: <Zap size={22} />, bg: 'linear-gradient(135deg,#2E9BFF,#2563EB)', soft: '#E8F4FF' },
+  { n: '03', title: 'PLAY', desc: 'Answer faster, score higher.', icon: <Zap size={22} />, bg: 'linear-gradient(135deg,#2E9BFF,#2563EB)', soft: '#E8F4FF' },
   { n: '04', title: 'WIN', desc: 'Climb the leaderboard.', icon: <Trophy size={22} />, bg: 'linear-gradient(135deg,#FFB020,#FF6B4A)', soft: '#FFF6E3' },
 ];
 
 export default function HowItWorks() {
   return (
     <section className="relative mx-auto w-full min-w-0 max-w-6xl overflow-x-clip px-4 py-12 sm:px-5 sm:py-20">
-      <SectionHead eyebrow="HOW IT WORKS" title={<>From lobby to legend <span className="qr-gradient-text">in seconds.</span></>} sub="A game progression, not a form. Four moves and you're racing." align="center" />
+      <SectionHead eyebrow="HOW IT WORKS" title={<>From lobby to legend <span className="qr-gradient-text">in seconds.</span></>} sub="A game progression, not a form. Four moves and you're playing." align="center" />
       <div className="relative mt-8 sm:mt-12">
         <svg aria-hidden className="absolute left-[12%] top-9 hidden h-10 w-[76%] lg:block" viewBox="0 0 800 40" preserveAspectRatio="none">
           <motion.path d="M10,20 C180,6 340,34 520,18 S700,8 790,20" fill="none" stroke="#C9BFF5" strokeWidth="3" strokeDasharray="1 12" strokeLinecap="round"

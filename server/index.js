@@ -3,7 +3,7 @@ import { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.PORT || 8787);
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
-const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.0-flash,gemini-1.5-flash')
+const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
@@ -204,8 +204,13 @@ function parseJsonArray(text) {
 }
 function isQuotaError(status, snippet) {
   if (status === 429) return true;
+  if (status !== 400 && status !== 403) return false;
   const s = String(snippet || '').toLowerCase();
-  return status === 403 && (s.includes('quota') || s.includes('rate') || s.includes('limit') || s.includes('resource_exhausted'));
+  return s.includes('quota') || s.includes('rate') || s.includes('resource_exhausted') || s.includes('too many requests');
+}
+function isModelNotFound(status, snippet) {
+  if (status !== 404) return false;
+  return /not_found|is not found|not supported/i.test(String(snippet || ''));
 }
 async function callGemini(model, prompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
@@ -222,6 +227,7 @@ async function callGemini(model, prompt) {
     const snippet = (await res.text().catch(() => '')).slice(0, 300);
     const err = new Error(`gemini ${res.status} model=${model} ${snippet}`);
     err.quota = isQuotaError(res.status, snippet);
+    err.notFound = isModelNotFound(res.status, snippet);
     throw err;
   }
   const data = await res.json();
@@ -377,13 +383,19 @@ setInterval(() => {
 
 function attach(ws, room, player) {
   sockets.set(ws, { code: room.code, playerId: player.id });
+  if (player.leaveTimer) { clearTimeout(player.leaveTimer); player.leaveTimer = null; }
   player.ws = ws;
+  const wasGone = !player.connected;
   player.connected = true;
   touch(room);
+  if (wasGone && (room.status === 'LOBBY' || room.status === 'FINISHED')) {
+    cast(room, { t: 'room', room: pubRoom(room) });
+  }
 }
 
 function sweepDisconnected(room) {
   if (!rooms.get(room.code)) return;
+  if (room.status === 'COUNTDOWN' || room.status === 'QUESTION' || room.status === 'REVEAL') return;
   const gone = room.players.filter((p) => !p.connected);
   if (!gone.length) return;
   room.players = room.players.filter((p) => p.connected);
@@ -404,14 +416,22 @@ function detach(ws) {
   const room = rooms.get(ref.code);
   if (!room) return;
   const p = room.players.find((x) => x.id === ref.playerId);
-  if (!p) return;
-  p.connected = false;
+  if (!p || p.ws !== ws) return;
   p.ws = null;
   touch(room);
-  if (room.status === 'LOBBY' || room.status === 'FINISHED') {
-    cast(room, { t: 'room', room: pubRoom(room) });
-  }
-  later(room, 45000, () => sweepDisconnected(room));
+  if (p.leaveTimer) clearTimeout(p.leaveTimer);
+  p.leaveTimer = setTimeout(() => {
+    p.leaveTimer = null;
+    if (!rooms.get(room.code)) return;
+    if (p.ws) return;
+    p.connected = false;
+    touch(room);
+    if (room.status === 'LOBBY' || room.status === 'FINISHED') {
+      cast(room, { t: 'room', room: pubRoom(room) });
+    }
+    later(room, 45000, () => sweepDisconnected(room));
+  }, 8000);
+  if (p.leaveTimer.unref) p.leaveTimer.unref();
 }
 
 function validName(name) {
@@ -437,9 +457,9 @@ async function handleStart(room, byId) {
       cast(room, { t: 'error', msg: 'Custom topic needs a name.' });
       return;
     }
-    const fetched = stub
-      ? JSON.parse(stub)
-      : (await generateAIQuestions({
+    const { questions: fetched, provider } = stub
+      ? { questions: JSON.parse(stub), provider: 'stub' }
+      : await generateAIQuestions({
         category: room.config.category || 'mixed',
         count: want,
         difficulty: room.config.difficulty || 'mixed',
@@ -448,7 +468,8 @@ async function handleStart(room, byId) {
         questionType: cleanQType(room.config.questionType),
         customTopic: String(room.config.customTopic || '').slice(0, 80),
         focus: ALLOWED_FOCUS.has(room.config.focus) ? room.config.focus : 'global',
-      })).questions;
+      });
+    room.provider = provider;
     const qs = fetched.slice(0, want);
     if (qs.length < 3) throw new Error('too few questions');
     if (room.status !== 'COUNTDOWN') return;
@@ -459,10 +480,11 @@ async function handleStart(room, byId) {
     later(room, 1400, () => room.status === 'COUNTDOWN' && cast(room, { t: 'count', n: 1 }, true));
     later(room, 2100, () => room.status === 'COUNTDOWN' && cast(room, { t: 'count', n: 0 }, true));
     later(room, 2600, () => room.status === 'COUNTDOWN' && askQuestion(room));
-  } catch {
+  } catch (e) {
     room.status = 'LOBBY';
     cast(room, { t: 'room', room: pubRoom(room) });
-    cast(room, { t: 'error', msg: 'AI question generation failed. Try again.' });
+    const quota = Boolean(e?.quota) || /(^|\s)429(\s|$)|quota|resource_exhausted|too many requests/i.test(String(e?.message || e));
+    cast(room, { t: 'error', msg: quota ? 'AI limit reached — please try again later.' : 'AI question generation failed. Try again.' });
   }
 }
 
@@ -478,7 +500,7 @@ function askQuestion(room) {
   cast(room, {
     t: 'question', qi: room.qi, total: room.questions.length,
     question: q.question, options: q.options, category: q.category,
-    endsAt: room.endsAt, timer, rows: rowsOf(room),
+    endsAt: room.endsAt, timer, rows: rowsOf(room), provider: room.provider || 'ai',
   }, true);
   later(room, timer * 1000 + 500, () => {
     if (room.status === 'QUESTION') reveal(room);
@@ -519,6 +541,7 @@ function finishRoom(room) {
   room.rows = rowsOf(room);
   touch(room);
   cast(room, { t: 'finished', rows: room.rows }, true);
+  later(room, 60000, () => sweepDisconnected(room));
 }
 
 function onMessage(ws, raw) {
@@ -576,9 +599,9 @@ function onMessage(ws, raw) {
     const room = rooms.get(String(m.code || '').toUpperCase());
     if (!room) return sendWs(ws, { t: 'error', msg: "Couldn't find that room. Check the code." });
     if (!validName(m.name)) return sendWs(ws, { t: 'error', msg: 'Enter a display name (2+ characters).' });
-    if (room.players.length >= (room.config.maxPlayers || 8)) return sendWs(ws, { t: 'error', msg: 'Room is full.' });
-    if (room.status !== 'LOBBY') return sendWs(ws, { t: 'error', msg: 'Game already started. Wait for the next battle.' });
-    if (room.players.some((p) => p.name.toLowerCase() === String(m.name).trim().toLowerCase())) {
+    if (room.players.filter((p) => p.connected).length >= (room.config.maxPlayers || 8)) return sendWs(ws, { t: 'error', msg: 'Room is full.' });
+    if (room.status !== 'LOBBY') return sendWs(ws, { t: 'error', msg: 'Game already started. Wait for the next match.' });
+    if (room.players.some((p) => p.connected && p.name.toLowerCase() === String(m.name).trim().toLowerCase())) {
       return sendWs(ws, { t: 'error', msg: 'Name already taken in this room.' });
     }
     const player = {
@@ -661,19 +684,26 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const stub = process.env.QUIZUSH_STUB_QS;
-      const fetched = stub
-        ? JSON.parse(stub)
-        : (await generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus })).questions;
+      const { questions: fetched, provider } = stub
+        ? { questions: JSON.parse(stub), provider: 'stub' }
+        : await generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus });
       const questions = fetched
         .map((r) => (r && r.id ? r : normalize(r, category, questionType)))
         .filter(Boolean)
         .slice(0, count);
       if (questions.length < Math.min(3, count)) throw new Error('too few valid questions');
-      send(res, 200, { questions });
+      send(res, 200, { questions, provider, model: provider });
     } catch (e) {
       const msg = String(e?.message || e);
-      const quota = msg.includes('429') || /quota|rate|limit|resource_exhausted/i.test(msg);
-      send(res, quota ? 429 : 502, { error: quota ? 'AI quota reached, retry shortly or add OPENROUTER_API_KEY fallback' : 'AI generation failed, use question bank', detail: msg });
+      const quota = Boolean(e?.quota) || /(^|\s)429(\s|$)|quota|resource_exhausted|too many requests/i.test(msg);
+      const notFound = Boolean(e?.notFound) || /not_found|is not found/i.test(msg);
+      const status = quota ? 429 : 502;
+      const error = quota
+        ? 'AI limit reached — please try again later.'
+        : notFound
+          ? 'AI model not found — update GEMINI_MODEL to a current id (e.g. gemini-2.5-flash)'
+          : 'AI generation failed. Please try again.';
+      send(res, status, { error, detail: msg });
     }
     return;
   }

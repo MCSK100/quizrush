@@ -82,7 +82,7 @@ export function FinalCTA() {
         <Reveal>
           <div className="qr-eyebrow mx-auto max-w-full">⚡ <span className="truncate">NO SIGN-UP NEEDED</span></div>
           <h2 className="font-display mt-6 text-balance text-[clamp(2.2rem,10vw,4.5rem)] font-semibold leading-[1.0] tracking-tight text-ink">READY TO TEST<br />YOUR <span className="qr-gradient-text">BRAIN?</span></h2>
-          <p className="mx-auto mt-4 max-w-md text-balance text-[15px] font-medium text-muted sm:text-[16px]">Play solo or challenge your friends. One tap and you're in the arena.</p>
+          <p className="mx-auto mt-4 max-w-md text-balance text-[15px] font-medium text-muted sm:text-[16px]">Play solo or challenge your friends. One tap and you're in the spotlight.</p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[12.5px] font-extrabold text-muted">
             {['No sign-up needed', 'Solo + rooms', 'AI & bank questions'].map((t) => (
               <span key={t} className="rounded-full bg-white px-4 py-2 shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>{t}</span>
@@ -114,11 +114,7 @@ export function SiteFooter() {
             <Link key={l + h} to={h} className="transition-colors hover:text-ink">{l}</Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          {['𝕏', '▶', '◍'].map((s) => (
-            <span key={s} className="grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-[#F8F9FF] text-sm font-bold text-muted transition-transform hover:-translate-y-0.5 hover:text-ink" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>{s}</span>
-          ))}
-        </div>
+        <div className="text-[12.5px] font-bold text-muted">Fresh questions · Every match</div>
       </div>
     </footer>
   );
