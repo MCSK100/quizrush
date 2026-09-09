@@ -1,4 +1,5 @@
 export function calcPoints(timer:number,elapsed:number,streak:number,mode='classic'):number{
+if(timer<=0){let pts=100;if(streak+1>=10)pts+=250;else if(streak+1>=5)pts+=100;else if(streak+1>=3)pts+=50;return pts}
 if(elapsed>=timer)return 0;
 const frac=1-elapsed/timer;let speed=30;
 if(frac>0.85)speed=100;else if(frac>0.5)speed=70;else speed=30;

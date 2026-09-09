@@ -11,7 +11,7 @@ export default function CreateGame() {
   const nav = useNavigate();
   const setRoom = useRoom((s) => s.setRoom);
   const [name, setName] = useState('');
-  const [cfg, setCfg] = useState<QuizConfig>({ category: 'mixed', count: 20, timer: 30, difficulty: 'mixed', region: 'global', mode: 'classic', maxPlayers: 8 });
+  const [cfg, setCfg] = useState<QuizConfig>({ category: 'mixed', count: 20, timer: 30, difficulty: 'mixed', region: 'global', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'global' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   async function create() {
@@ -72,7 +72,7 @@ export default function CreateGame() {
       <button onClick={create} disabled={busy} className="qr-btn-primary group mt-4 w-full justify-center rounded-2xl py-4 font-display text-base tracking-wide disabled:opacity-60">
         <Play size={18} strokeWidth={3} /> {busy ? 'CREATING ROOM…' : 'CREATE ROOM'} {!busy && <ArrowRight size={18} className="arrow-nudge" />}
       </button>
-      <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer}s each · up to {cfg.maxPlayers} players · {regionLabel(cfg.region).toUpperCase()}</p>
+      <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer > 0 ? `${cfg.timer}s each` : 'No timer'} · up to {cfg.maxPlayers} players · {regionLabel(cfg.focus === 'india' ? 'india' : cfg.region).toUpperCase()}</p>
     </div>
   );
 }

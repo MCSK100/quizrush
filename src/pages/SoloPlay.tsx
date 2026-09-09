@@ -83,11 +83,13 @@ export default function SoloPlay() {
     }, 1100);
   }
   lockRef.current = lock;
-  const left = useServerTimer(cfg?.timer ?? 10, phase === 'q', () => lockRef.current(null), t0.current);
+  const timer = cfg?.timer ?? 10;
+  const noTimer = !(timer > 0);
+  const left = useServerTimer(timer, phase === 'q', () => lockRef.current(null), t0.current);
   const ceil = Math.ceil(left);
   useEffect(() => {
-    if (phase === 'q' && left <= 3.2 && left > 0) sound.play('tick');
-  }, [ceil, phase, left]);
+    if (!noTimer && phase === 'q' && left <= 3.2 && left > 0) sound.play('tick');
+  }, [ceil, phase, left, noTimer]);
   if (!data || !qs.length)
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
@@ -128,7 +130,7 @@ export default function SoloPlay() {
         <ProgressBar i={qi} total={qs.length} />
       </div>
       <div className="mt-4 flex items-center justify-center gap-4">
-        <TimerRing left={left} total={cfg!.timer} />
+        {!noTimer && <TimerRing left={left} total={timer} />}
         {streak >= 2 && (
           <div className="rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-4 py-2 font-display text-lg text-black shadow-lift">🔥 ×{streak}</div>
         )}
@@ -138,7 +140,7 @@ export default function SoloPlay() {
           {q.question}
         </motion.h2>
       </AnimatePresence>
-      {q.explanation && phase === 'q' && (
+      {q.explanation && phase === 'q' && !noTimer && (
         <div className="mx-auto mt-3 max-w-2xl rounded-2xl bg-white px-4 py-2.5 text-center text-xs font-bold text-muted shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
           Fastest finger wins bonus. Lock it before the ring burns out.
         </div>

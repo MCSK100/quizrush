@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 export function useServerTimer(duration: number, active: boolean, onExpire: () => void, serverStart?: number) {
+  const disabled = !(duration > 0);
   const [left, setLeft] = useState(duration);
   const fired = useRef(false);
   const cb = useRef(onExpire);
@@ -9,7 +10,7 @@ export function useServerTimer(duration: number, active: boolean, onExpire: () =
     fired.current = false;
   }, [duration, serverStart, active]);
   useEffect(() => {
-    if (!active) return;
+    if (!active || disabled) return;
     const t0 = serverStart ?? Date.now();
     setLeft(Math.max(0, duration - (Date.now() - t0) / 1000));
     const iv = setInterval(() => {
@@ -22,6 +23,6 @@ export function useServerTimer(duration: number, active: boolean, onExpire: () =
       }
     }, 100);
     return () => clearInterval(iv);
-  }, [active, duration, serverStart]);
-  return left;
+  }, [active, duration, serverStart, disabled]);
+  return disabled ? Number.POSITIVE_INFINITY : left;
 }

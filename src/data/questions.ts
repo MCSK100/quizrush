@@ -1,5 +1,5 @@
 import type { Question } from '../types';
-const Q=(id:string,category:string,difficulty:Question['difficulty'],question:string,options:[string,string,string,string],correctAnswer:number,explanation:string,language?:string,region?:string):Question=>({id,category,difficulty,question,options,correctAnswer,explanation,language,region});
+const Q=(id:string,category:string,difficulty:Question['difficulty'],question:string,options:string[],correctAnswer:number,explanation:string,language?:string,region?:string):Question=>({id,category,difficulty,question,options,correctAnswer,explanation,language,region});
 export const SEED_QUESTIONS: Question[] = [
 Q('sp1','sports','easy','Which country won the 2011 Cricket World Cup?',['Australia','India','Sri Lanka','England'],1,'India beat Sri Lanka in the Mumbai final.',undefined,'india'),
 Q('sp2','sports','medium','How many players are on a football (soccer) team on the pitch?',['9','10','11','12'],2,'A full side fields 11 players.'),
@@ -37,7 +37,7 @@ Q('sp6','space','medium','Who was the first person to walk on the Moon?',['Buzz 
 Q('ga1','gaming','easy','Which game features the character Mario?',['Sonic','Zelda','Super Mario','Halo'],2,'Nintendo\'s Super Mario.'),
 Q('wo1','world','easy','Which country has the largest population?',['USA','India','China','Indonesia'],1,'India passed China in 2023.',undefined,'india'),
 Q('wo2','world','medium','Which desert is the largest hot desert?',['Gobi','Kalahari','Sahara','Mojave'],2,'The Sahara.'),
-Q('sc5','science','medium','Who scored the fastest century in international cricket (31 balls)?',['AB de Villiers','Shahid Afridi','Chris Gayle','Virat Kohli'],0,'AB de Villiers, 31 balls vs West Indies 2015.'),
+Q('sp7','sports','medium','Who scored the fastest century in international cricket (31 balls)?',['AB de Villiers','Shahid Afridi','Chris Gayle','Virat Kohli'],0,'AB de Villiers, 31 balls vs West Indies 2015.'),
 Q('hi4','history','easy','The Chola dynasty ruled mainly from which region?',['Ganga plain','Tamil Nadu','Deccan','Bengal'],1,'The Cholas ruled from Tamil Nadu.',undefined,'tamil-nadu'),
 Q('te3','tech','easy','What does AI stand for?',['Auto Input','Artificial Intelligence','Advanced Internet','Analog Interface'],1,'Artificial Intelligence.'),
 Q('gk3','gk','easy','How many days are in a leap year?',['365','366','364','367'],1,'366 days.'),

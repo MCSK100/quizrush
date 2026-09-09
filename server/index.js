@@ -3,16 +3,28 @@ import { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.PORT || 8787);
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
-const MODELS = String(process.env.GEMINI_MODEL || 'gemini-3.6-flash,gemini-2.5-flash,gemini-2.0-flash')
+const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.0-flash,gemini-1.5-flash')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
+const OPENROUTER_API_KEY = (process.env.OPENROUTER_API_KEY || '').trim();
+const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.1-8b-instruct:free,mistralai/mistral-7b-instruct:free,google/gemma-2-9b-it:free')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const OPENROUTER_SITE = (process.env.OPENROUTER_SITE || '').trim();
+function aiConfigured() { return Boolean(GEMINI_API_KEY || OPENROUTER_API_KEY); }
 const ALLOWED_DIFFS = new Set(['easy', 'medium', 'hard', 'mixed']);
 const ALLOWED_CATS = new Set([
   'mixed', 'sports', 'history', 'science', 'geography', 'tech', 'movies',
   'music', 'kids', 'tamil', 'gk', 'maths', 'literature', 'animals', 'space',
-  'gaming', 'world',
+  'gaming', 'world', 'india', 'custom',
 ]);
+const ALLOWED_LANGS = new Set(['en', 'ta', 'both']);
+const ALLOWED_QTYPES = new Set(['mcq', 'tf', 'mixed']);
+const ALLOWED_FOCUS = new Set(['global', 'india', 'topic']);
+function cleanLang(v) { const s = String(v || 'en').toLowerCase(); return ALLOWED_LANGS.has(s) ? s : 'en'; }
+function cleanQType(v) { const s = String(v || 'mcq').toLowerCase(); return ALLOWED_QTYPES.has(s) ? s : 'mcq'; }
 const STATE_IDS = new Set([
   'tamil-nadu', 'kerala', 'karnataka', 'andhra-pradesh', 'telangana',
   'maharashtra', 'gujarat', 'rajasthan', 'punjab', 'delhi',
@@ -91,13 +103,15 @@ function coerceIndex(v) {
   return -1;
 }
 
-function normalize(raw, cat) {
+function normalize(raw, cat, qtype = 'mcq') {
   if (!raw || typeof raw !== 'object') return null;
   const options = Array.isArray(raw.options) ? raw.options.map(String) : [];
-  if (options.length !== 4 || options.some((o) => !o.trim())) return null;
-  if (new Set(options.map((o) => o.trim().toLowerCase())).size !== 4) return null;
+  if (options.length !== 4 && options.length !== 2) return null;
+  if (options.some((o) => !o.trim())) return null;
+  if (new Set(options.map((o) => o.trim().toLowerCase())).size !== options.length) return null;
+  if (qtype === 'tf' && options.length !== 2) return null;
   const correct = coerceIndex(raw.correctAnswer ?? raw.answer ?? raw.correct);
-  if (correct < 0) return null;
+  if (correct < 0 || correct > options.length - 1) return null;
   const diff = String(raw.difficulty || 'medium').toLowerCase();
   if (typeof raw.question !== 'string' || !raw.question.trim()) return null;
   return {
@@ -132,50 +146,158 @@ function roomCode(len = 5) {
   return s;
 }
 
-async function geminiQuestions({ category, count, difficulty, region }) {
-  const catLabel = category === 'mixed' ? 'mixed general knowledge' : category;
-  const tamil = category === 'tamil' ? ' Write questions AND options in Tamil (தமிழ்).' : '';
-  const regionBit = regionPrompt(region || 'global');
-  const prompt =
-    `Generate exactly ${count} ${difficulty === 'mixed' ? 'mixed-difficulty' : difficulty} multiple-choice quiz questions about ${catLabel}.${tamil}${regionBit} ` +
-    `Return ONLY a JSON array, no markdown. Each item: {"question":string,"options":[exactly 4 distinct strings],"correctAnswer":0-3 index of the correct option,"explanation":one short sentence}. ` +
-    `Rules: exactly 4 options, exactly 1 correct, no duplicates, family-friendly, factually correct.`;
-  let lastErr = new Error('no models configured');
-  for (const model of MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: 6000 },
-        }),
-        signal: AbortSignal.timeout(25000),
-      });
-      if (!res.ok) {
-        const snippet = (await res.text().catch(() => '')).slice(0, 200);
-        throw new Error(`gemini ${res.status} model=${model} ${snippet}`);
-      }
-      const data = await res.json();
-      const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
-      if (!text.trim()) throw new Error(`empty gemini response model=${model}`);
-      let parsed;
+const CATEGORY_FOCUS = {
+  sports: 'ONLY sports: cricket, football, Olympics, tennis, athletes, rules, scores, tournaments. NEVER science, history or movies.',
+  history: 'ONLY history: ancient/medieval/modern events, empires (Chola, Mughal, Roman), wars, independence movements, dates, historical figures. NEVER science, physics, chemistry or biology.',
+  science: 'ONLY science: physics, chemistry, biology, human body, elements, experiments. NEVER history or sports.',
+  geography: 'ONLY geography: countries, capitals, rivers, mountains, maps, flags. NEVER history dates or science formulas.',
+  tech: 'ONLY technology: computers, AI, internet, gadgets, programming, inventors. NEVER history or biology.',
+  movies: 'ONLY movies: films, directors, actors, Oscars, blockbusters. NEVER science or history.',
+  music: 'ONLY music: songs, bands, instruments, composers, genres. NEVER sports or science.',
+  kids: 'ONLY fun kid-friendly general questions with very simple words. NEVER hard history or science.',
+  tamil: 'ONLY Tamil Nadu / Tamil language, culture, temples, cinema, literature, festivals. NEVER generic science.',
+  gk: 'general knowledge spanning many topics (one question per topic is fine).',
+  maths: 'ONLY mathematics: arithmetic, algebra, geometry, numbers, logic puzzles with a single numeric answer. NEVER history or science facts.',
+  literature: 'ONLY literature: books, authors, poets, plays, novels. NEVER science or sports.',
+  animals: 'ONLY animals & nature: species, habitats, wildlife facts. NEVER history or tech.',
+  space: 'ONLY space: planets, stars, ISRO/NASA missions, astronauts, universe. NEVER sports or movies.',
+  gaming: 'ONLY video games, esports, consoles, game characters. NEVER history or biology.',
+  world: 'ONLY world cultures, countries, food, festivals, landmarks. NEVER maths formulas or physics.',
+  india: 'ONLY India: states, history, geography, culture, sports, cinema, current affairs. NEVER generic non-India facts.',
+  mixed: 'mixed general knowledge across many topics.',
+};
+function buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus }) {
+  const isCustom = category === 'custom' && String(customTopic || '').trim();
+  const catLabel = isCustom ? `CUSTOM TOPIC "${String(customTopic).trim().toUpperCase()}"` : category === 'mixed' ? 'mixed general knowledge' : category.toUpperCase();
+  const focusRule = isCustom
+    ? `Every question MUST be strictly about "${String(customTopic).trim()}". NEVER drift to other topics.`
+    : (CATEGORY_FOCUS[category] || CATEGORY_FOCUS.mixed);
+  const langBit = language === 'ta' || category === 'tamil'
+    ? ' Write the question AND all options AND explanation in Tamil (தமிழ்).'
+    : language === 'both'
+      ? ' Alternate languages: odd-numbered questions fully in English, even-numbered fully in Tamil (தமிழ்).'
+      : ' Write everything in English.';
+  const regionBit = focus === 'topic' ? '' : regionPrompt(region || 'global');
+  const diffBit = difficulty === 'mixed' ? 'a mix of easy, medium and hard' : `difficulty=${difficulty} for EVERY question`;
+  const typeBit = questionType === 'tf'
+    ? 'TYPE: True/False ONLY. Each item MUST have exactly options ["True","False"] and correctAnswer 0 or 1.'
+    : questionType === 'mixed'
+      ? 'TYPE: alternate — odd questions 4-option MCQ, even questions True/False with options ["True","False"].'
+      : 'TYPE: 4-option multiple choice ONLY. Each item MUST have exactly 4 distinct options, correctAnswer 0-3.';
+  const schema = questionType === 'tf'
+    ? '{"question":string,"options":["True","False"],"correctAnswer":0-1,"explanation":one short sentence}'
+    : '{"question":string,"options":[4 distinct plausible strings, or ["True","False"] for True/False items],"correctAnswer":index of the correct option,"explanation":one short sentence}';
+  return (
+    `You are a strict quiz generator. Generate EXACTLY ${count} quiz questions. ` +
+    `CATEGORY (strict): ${catLabel}. Topic rule: ${focusRule}${langBit}${regionBit} ` +
+    `Difficulty: ${diffBit}. ${typeBit} ` +
+    `CRITICAL: 100% of questions MUST be about ${catLabel}. Off-topic questions are a FAILURE. ` +
+    `Return ONLY a JSON array, no markdown, no commentary. Each item: ${schema}. ` +
+    `Rules: exactly 1 correct answer, no duplicate options, no duplicate questions, family-friendly, factually correct, options shuffled so the correct answer is evenly spread.`
+  );
+}
+function parseJsonArray(text) {
+  try { return JSON.parse(text); } catch { /* fall through */ }
+  const m = String(text || '').match(/\[[\s\S]*\]/);
+  if (!m) throw new Error('unparseable AI response');
+  return JSON.parse(m[0]);
+}
+function isQuotaError(status, snippet) {
+  if (status === 429) return true;
+  const s = String(snippet || '').toLowerCase();
+  return status === 403 && (s.includes('quota') || s.includes('rate') || s.includes('limit') || s.includes('resource_exhausted'));
+}
+async function callGemini(model, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: 6000 },
+    }),
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) {
+    const snippet = (await res.text().catch(() => '')).slice(0, 300);
+    const err = new Error(`gemini ${res.status} model=${model} ${snippet}`);
+    err.quota = isQuotaError(res.status, snippet);
+    throw err;
+  }
+  const data = await res.json();
+  const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
+  if (!text.trim()) throw new Error(`empty gemini response model=${model}`);
+  return parseJsonArray(text);
+}
+async function callOpenRouter(model, prompt) {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      ...(OPENROUTER_SITE ? { 'HTTP-Referer': OPENROUTER_SITE, 'X-Title': 'QuizRush' } : {}),
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: 'You output ONLY valid JSON arrays. No markdown.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 6000,
+      response_format: { type: 'json_object' },
+    }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) {
+    const snippet = (await res.text().catch(() => '')).slice(0, 300);
+    const err = new Error(`openrouter ${res.status} model=${model} ${snippet}`);
+    err.quota = res.status === 429;
+    throw err;
+  }
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content || '';
+  if (!text.trim()) throw new Error(`empty openrouter response model=${model}`);
+  let parsed = parseJsonArray(text);
+  if (!Array.isArray(parsed) && parsed && Array.isArray(parsed.questions)) parsed = parsed.questions;
+  if (!Array.isArray(parsed)) throw new Error(`unparseable openrouter response model=${model}`);
+  return parsed;
+}
+async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus }) {
+  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus });
+  let lastErr = new Error('no AI providers configured (set GEMINI_API_KEY and/or OPENROUTER_API_KEY)');
+  if (GEMINI_API_KEY) {
+    for (const model of GEMINI_MODELS) {
       try {
-        parsed = JSON.parse(text);
-      } catch {
-        const m = text.match(/\[[\s\S]*\]/);
-        if (!m) throw new Error(`unparseable gemini response model=${model}`);
-        parsed = JSON.parse(m[0]);
+        const parsed = await callGemini(model, prompt);
+        const arr = Array.isArray(parsed) ? parsed : parsed.questions;
+        if (!Array.isArray(arr)) throw new Error(`unparseable gemini response model=${model}`);
+        const out = arr.map((r) => normalize(r, category, questionType)).filter(Boolean);
+        if (out.length >= Math.min(3, count)) {
+          console.log(`[ai] gemini ok model=${model} n=${out.length} cat=${category}`);
+          return { questions: out, provider: `gemini:${model}` };
+        }
+        throw new Error(`zero valid questions model=${model}`);
+      } catch (e) {
+        lastErr = e instanceof Error ? e : new Error(String(e));
+        console.error(`[ai] ${lastErr.message}`);
       }
-      const arr = Array.isArray(parsed) ? parsed : parsed.questions;
-      if (!Array.isArray(arr)) throw new Error(`unparseable gemini response model=${model}`);
-      const out = arr.map((r) => normalize(r, category)).filter(Boolean);
-      if (out.length) return out;
-      throw new Error(`zero valid questions model=${model}`);
-    } catch (e) {
-      lastErr = e instanceof Error ? e : new Error(String(e));
-      console.error(`[ai] ${lastErr.message}`);
+    }
+  }
+  if (OPENROUTER_API_KEY) {
+    for (const model of OPENROUTER_MODELS) {
+      try {
+        const arr = await callOpenRouter(model, prompt);
+        const out = arr.map((r) => normalize(r, category, questionType)).filter(Boolean);
+        if (out.length >= Math.min(3, count)) {
+          console.log(`[ai] openrouter ok model=${model} n=${out.length} cat=${category}`);
+          return { questions: out, provider: `openrouter:${model}` };
+        }
+        throw new Error(`zero valid questions model=${model}`);
+      } catch (e) {
+        lastErr = e instanceof Error ? e : new Error(String(e));
+        console.error(`[ai] ${lastErr.message}`);
+      }
     }
   }
   throw lastErr;
@@ -300,7 +422,7 @@ async function handleStart(room, byId) {
   const by = room.players.find((p) => p.id === byId);
   if (!by || !by.isHost) return;
   if (room.status !== 'LOBBY' && room.status !== 'FINISHED') return;
-  if (!GEMINI_API_KEY && !process.env.QUIZUSH_STUB_QS) {
+  if (!aiConfigured() && !process.env.QUIZUSH_STUB_QS) {
     cast(room, { t: 'error', msg: 'AI is not configured on the server yet.' });
     return;
   }
@@ -308,15 +430,26 @@ async function handleStart(room, byId) {
   cast(room, { t: 'room', room: pubRoom(room) });
   try {
     const stub = process.env.QUIZUSH_STUB_QS;
+    const want = Math.max(3, Math.min(40, Number(room.config.count) || 10));
+    if (room.config.category === 'custom' && !String(room.config.customTopic || '').trim()) {
+      room.status = 'LOBBY';
+      cast(room, { t: 'room', room: pubRoom(room) });
+      cast(room, { t: 'error', msg: 'Custom topic needs a name.' });
+      return;
+    }
     const fetched = stub
       ? JSON.parse(stub)
-      : await geminiQuestions({
+      : (await generateAIQuestions({
         category: room.config.category || 'mixed',
-        count: Math.max(3, Math.min(40, Number(room.config.count) || 10)),
+        count: want,
         difficulty: room.config.difficulty || 'mixed',
-        region: room.config.region || 'global',
-      });
-    const qs = fetched.slice(0, Math.max(3, Math.min(40, Number(room.config.count) || 10)));
+        region: room.config.focus === 'india' ? 'india' : room.config.region || 'global',
+        language: cleanLang(room.config.language),
+        questionType: cleanQType(room.config.questionType),
+        customTopic: String(room.config.customTopic || '').slice(0, 80),
+        focus: ALLOWED_FOCUS.has(room.config.focus) ? room.config.focus : 'global',
+      })).questions;
+    const qs = fetched.slice(0, want);
     if (qs.length < 3) throw new Error('too few questions');
     if (room.status !== 'COUNTDOWN') return;
     room.questions = qs;
@@ -333,19 +466,21 @@ async function handleStart(room, byId) {
   }
 }
 
+function roomTimer(room) { const t = Number(room.config.timer); return [10, 20, 30, 60].includes(t) ? t : 10; }
 function askQuestion(room) {
   const q = room.questions[room.qi];
   if (!q) return finishRoom(room);
   room.status = 'QUESTION';
   room.answers = {};
-  room.endsAt = Date.now() + (room.config.timer || 10) * 1000;
+  const timer = roomTimer(room);
+  room.endsAt = Date.now() + timer * 1000;
   touch(room);
   cast(room, {
     t: 'question', qi: room.qi, total: room.questions.length,
     question: q.question, options: q.options, category: q.category,
-    endsAt: room.endsAt, timer: room.config.timer || 10, rows: rowsOf(room),
+    endsAt: room.endsAt, timer, rows: rowsOf(room),
   }, true);
-  later(room, (room.config.timer || 10) * 1000 + 500, () => {
+  later(room, timer * 1000 + 500, () => {
     if (room.status === 'QUESTION') reveal(room);
   });
 }
@@ -358,7 +493,7 @@ function reveal(room) {
   for (const p of room.players) {
     const a = room.answers[p.id];
     if (a && a.pick === q.correctAnswer) {
-      const pts = calcPoints(room.config.timer || 10, a.elapsed, p.streak, room.config.mode);
+      const pts = calcPoints(roomTimer(room), a.elapsed, p.streak, room.config.mode);
       p.score += pts;
       p.correct += 1;
       p.streak += 1;
@@ -407,12 +542,16 @@ function onMessage(ws, raw) {
   if (m.t === 'create') {
     if (!validName(m.name)) return sendWs(ws, { t: 'error', msg: 'Enter a display name (2+ characters).' });
     const count = Math.max(3, Math.min(40, Number(m.config?.count) || 10));
-    const timer = [10, 30, 60].includes(Number(m.config?.timer)) ? Number(m.config.timer) : 10;
+    const timer = [10, 20, 30, 60].includes(Number(m.config?.timer)) ? Number(m.config.timer) : 10;
     const category = ALLOWED_CATS.has(String(m.config?.category)) ? String(m.config.category) : 'mixed';
     const difficulty = ALLOWED_DIFFS.has(String(m.config?.difficulty)) ? String(m.config.difficulty) : 'mixed';
     const mode = ['classic', 'speed', 'elimination'].includes(m.config?.mode) ? m.config.mode : 'classic';
     const maxPlayers = [2, 4, 8, 16, 32].includes(Number(m.config?.maxPlayers)) ? Number(m.config.maxPlayers) : 8;
     const region = cleanRegion(m.config?.region);
+    const language = cleanLang(m.config?.language);
+    const questionType = cleanQType(m.config?.questionType);
+    const focus = ALLOWED_FOCUS.has(m.config?.focus) ? m.config.focus : 'global';
+    const customTopic = String(m.config?.customTopic || '').slice(0, 80);
     let code = roomCode(5);
     while (rooms.has(code)) code = roomCode(5);
     const player = {
@@ -422,7 +561,7 @@ function onMessage(ws, raw) {
       isHost: true, connected: true, ws: null,
     };
     const room = {
-      code, config: { category, count, timer, difficulty, mode, maxPlayers, region },
+      code, config: { category, count, timer, difficulty, mode, maxPlayers, region, language, questionType, customTopic, focus },
       players: [player], hostId: player.id, status: 'LOBBY',
       questions: [], qi: 0, answers: {}, endsAt: 0, timers: [],
       lastMsg: null, rows: [], touchedAt: Date.now(),
@@ -471,8 +610,10 @@ function onMessage(ws, raw) {
     if (room.status !== 'QUESTION') return;
     if (room.answers[me.id]) return;
     const pick = Number(m.pick);
-    if (![0, 1, 2, 3].includes(pick)) return;
-    const elapsed = Math.max(0, (Date.now() - (room.endsAt - (room.config.timer || 10) * 1000)) / 1000);
+    const q = room.questions[room.qi];
+    const maxPick = q && Array.isArray(q.options) ? q.options.length - 1 : 3;
+    if (!Number.isInteger(pick) || pick < 0 || pick > maxPick) return;
+    const elapsed = Math.max(0, (Date.now() - (room.endsAt - roomTimer(room) * 1000)) / 1000);
     room.answers[me.id] = { pick, elapsed };
     sendWs(ws, { t: 'locked' });
     cast(room, { t: 'answered', ids: Object.keys(room.answers) });
@@ -486,13 +627,13 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', 'http://localhost');
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
-    send(res, 200, { ok: true, ai: Boolean(GEMINI_API_KEY), models: MODELS, rooms: rooms.size, multiplayer: true });
+    send(res, 200, { ok: true, ai: aiConfigured(), gemini: Boolean(GEMINI_API_KEY), openrouter: Boolean(OPENROUTER_API_KEY), models: GEMINI_MODELS, orModels: OPENROUTER_MODELS, rooms: rooms.size, multiplayer: true });
     return;
   }
 
   if (req.method === 'POST' && url.pathname === '/api/questions') {
-    if (!GEMINI_API_KEY && !process.env.QUIZUSH_STUB_QS) {
-      send(res, 503, { error: 'AI not configured on server (GEMINI_API_KEY missing)' });
+    if (!aiConfigured() && !process.env.QUIZUSH_STUB_QS) {
+      send(res, 503, { error: 'AI not configured on server (set GEMINI_API_KEY and/or OPENROUTER_API_KEY)' });
       return;
     }
     let body;
@@ -506,23 +647,33 @@ const server = http.createServer(async (req, res) => {
     const difficulty = String(body.difficulty || 'mixed').toLowerCase();
     const region = cleanRegion(body.region);
     const count = Math.max(3, Math.min(40, Number(body.count) || 10));
+    const language = cleanLang(body.language);
+    const questionType = cleanQType(body.questionType);
+    const focus = ALLOWED_FOCUS.has(body.focus) ? body.focus : 'global';
+    const customTopic = String(body.customTopic || '').slice(0, 80);
     if (!ALLOWED_CATS.has(category) || !ALLOWED_DIFFS.has(difficulty)) {
       send(res, 400, { error: 'invalid category or difficulty' });
+      return;
+    }
+    if (category === 'custom' && !customTopic.trim()) {
+      send(res, 400, { error: 'customTopic is required when category=custom' });
       return;
     }
     try {
       const stub = process.env.QUIZUSH_STUB_QS;
       const fetched = stub
         ? JSON.parse(stub)
-        : await geminiQuestions({ category, count, difficulty, region });
+        : (await generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus })).questions;
       const questions = fetched
-        .map((r) => (r && r.id ? r : normalize(r, category)))
+        .map((r) => (r && r.id ? r : normalize(r, category, questionType)))
         .filter(Boolean)
         .slice(0, count);
       if (questions.length < Math.min(3, count)) throw new Error('too few valid questions');
       send(res, 200, { questions });
     } catch (e) {
-      send(res, 502, { error: 'AI generation failed, use question bank', detail: String(e?.message || e) });
+      const msg = String(e?.message || e);
+      const quota = msg.includes('429') || /quota|rate|limit|resource_exhausted/i.test(msg);
+      send(res, quota ? 429 : 502, { error: quota ? 'AI quota reached, retry shortly or add OPENROUTER_API_KEY fallback' : 'AI generation failed, use question bank', detail: msg });
     }
     return;
   }
@@ -538,5 +689,5 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`QuizRush server on :${PORT} (ai=${GEMINI_API_KEY ? 'on' : 'OFF — set GEMINI_API_KEY'}, multiplayer=on)`);
+  console.log(`QuizRush server on :${PORT} (gemini=${GEMINI_API_KEY ? 'on' : 'off'} openrouter=${OPENROUTER_API_KEY ? 'on' : 'off'} multiplayer=on)`);
 });
