@@ -12,18 +12,46 @@ export function validateQuestion(q: unknown): q is Question {
 }
 let n = 0;
 const RECENT_KEY = 'qr-recent-q';
-function recentIds(): string[] {
+function qKey(q: { question: string }): string {
+  return q.question.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]+/g, ' ').trim().replace(/\s+/g, ' ');
+}
+function loadKeys(key: string): string[] {
   try {
-    const a = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    const a = JSON.parse(localStorage.getItem(key) || '[]');
     return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
   } catch {
     return [];
   }
 }
-function rememberIds(ids: string[]) {
+function recentIds(): string[] { return loadKeys(RECENT_KEY); }
+function recentTexts(): Set<string> { return new Set(loadKeys('qr-recent-text')); }
+function sessionTexts(): Set<string> {
   try {
-    localStorage.setItem(RECENT_KEY, JSON.stringify([...ids, ...recentIds()].slice(0, 80)));
+    const a = JSON.parse(sessionStorage.getItem('qr-used-q') || '[]');
+    return new Set(Array.isArray(a) ? a.filter((x) => typeof x === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+function rememberQuestions(qs: Question[]) {
+  try {
+    const ids = qs.map((q) => q.id.split('#')[0]);
+    localStorage.setItem(RECENT_KEY, JSON.stringify([...ids, ...recentIds()].slice(0, 200)));
+    const texts = qs.map(qKey);
+    localStorage.setItem('qr-recent-text', JSON.stringify([...texts, ...loadKeys('qr-recent-text')].slice(0, 300)));
+    const used = sessionTexts();
+    texts.forEach((t) => used.add(t));
+    sessionStorage.setItem('qr-used-q', JSON.stringify([...used].slice(-500)));
   } catch { /* ignore */ }
+}
+function dedupeFresh<T extends Question>(qs: T[]): T[] {
+  const seen = new Set<string>();
+  return qs.filter((q) => {
+    const k = qKey(q);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 }
 function toTF(q: Question, i: number): Question {
   const useCorrect = i % 2 === 0;
@@ -46,14 +74,25 @@ function fallbackQuestions(cfg: QuizConfig): Question[] {
   if (!pool.length) pool = [...SEED_QUESTIONS];
   const region = cfg.focus === 'india' || cfg.region === 'india' ? 'india' : cfg.region || 'global';
   const isTagged = (q: Question) => region !== 'global' && (q.region === region || (q.region === 'india' && region !== 'india'));
-  const seen = new Set(recentIds());
-  const fresh = pool.filter((q) => !seen.has(q.id));
+  const seenIds = new Set(recentIds());
+  const banned = new Set([...recentTexts(), ...sessionTexts()]);
+  const isFresh = (q: Question) => !seenIds.has(q.id) && !banned.has(qKey(q));
+  const fresh = pool.filter(isFresh);
   const freshOrdered = [...shuffle(fresh.filter(isTagged)), ...shuffle(fresh.filter((q) => !isTagged(q)))];
-  const base = fresh.length >= Math.min(cfg.count, pool.length) ? freshOrdered : shuffle(pool);
-  let out = shuffle(base);
-  while (out.length < cfg.count) { out = [...out, ...shuffle(base)] }
-  out = out.slice(0, cfg.count).map((q) => ({ ...q, id: q.id + `#${n++}` }));
-  rememberIds(out.map((q) => q.id.split('#')[0]));
+  let picked: Question[] = freshOrdered.slice(0, cfg.count);
+  if (picked.length < cfg.count) {
+    const have = new Set(picked.map((q) => q.id));
+    const topUp = shuffle(SEED_QUESTIONS.filter((q) => !have.has(q.id) && !banned.has(qKey(q)) && (cfg.difficulty === 'mixed' || q.difficulty === cfg.difficulty)));
+    picked = [...picked, ...topUp.slice(0, cfg.count - picked.length)];
+  }
+  if (picked.length < cfg.count) {
+    const have = new Set(picked.map((q) => q.id));
+    const haveText = new Set(picked.map(qKey));
+    const rest = shuffle(SEED_QUESTIONS.filter((q) => !have.has(q.id) && !haveText.has(qKey(q))));
+    picked = [...picked, ...rest.slice(0, cfg.count - picked.length)];
+  }
+  let out = dedupeFresh(picked).map((q) => ({ ...q, id: q.id + `#${n++}` }));
+  rememberQuestions(out);
   if (cfg.randomizeA !== false) {
     out = out.map((q) => {
       const order = shuffle(q.options.map((_, i) => i));
@@ -132,13 +171,21 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
         const data = await res.json();
         const arr = Array.isArray(data) ? data : data.questions;
         if (Array.isArray(arr)) {
-          const out = arr.map((r: unknown) => normalize(r, cfg.category, maxIdx)).filter((q): q is Question => !!q && validateQuestion(q)).slice(0, cfg.count);
-          if (out.length >= Math.min(3, cfg.count)) return { questions: out, source: 'ai' };
+          const banned = new Set([...recentTexts(), ...sessionTexts()]);
+          const all = arr
+            .map((r: unknown) => normalize(r, cfg.category, maxIdx))
+            .filter((q): q is Question => !!q && validateQuestion(q));
+          const fresh = dedupeFresh(all.filter((q) => !banned.has(qKey(q))));
+          const out = (fresh.length >= Math.min(3, cfg.count) ? fresh : dedupeFresh(all)).slice(0, cfg.count);
+          if (out.length >= Math.min(3, cfg.count)) {
+            rememberQuestions(out);
+            return { questions: out, source: 'ai' };
+          }
         }
-        console.error('[quizrush] AI endpoint returned too few valid questions');
+          console.error('[quizlly] AI endpoint returned too few valid questions');
       } else {
         try {
-          console.error('[quizrush] AI endpoint error:', await res.text());
+            console.error('[quizlly] AI endpoint error:', await res.text());
         } catch { /* ignore */ }
       }
     } catch { /* fall through to bank */ }

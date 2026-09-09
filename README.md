@@ -1,4 +1,4 @@
-# QuizRush — Think Fast. Play Smarter.
+# Quizlly — Think Fast. Play Smarter.
 Real-time solo + multiplayer quiz battles. React + TS + Vite + Tailwind + Zustand + Framer Motion.
 ## Run (frontend)
 npm install

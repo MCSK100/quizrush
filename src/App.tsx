@@ -14,6 +14,10 @@ import Categories from './pages/Categories';
 import LeaderboardPage from './pages/LeaderboardPage';
 import Profile from './pages/Profile';
 import SettingsPage from './pages/SettingsPage';
+import About from './pages/About';
+import Faq from './pages/Faq';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 import { useEffect } from 'react';
 
 function useLenis() {
@@ -45,8 +49,8 @@ function Shell({ children }: { children: React.ReactNode }) {
       <main className="pt-[88px]">{children}</main>
       <footer className="border-t border-line bg-cream py-8">
         <div className="cf-wrap flex flex-col items-center justify-between gap-4 text-[13px] text-muted sm:flex-row">
-          <span className="flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-md bg-ink text-xs text-white">⚡</span><b className="text-ink">QuizRush</b> · Think fast. Play smarter.</span>
-          <span className="flex gap-5 font-medium"><Link className="hover:text-ink" to="/categories">Resources</Link><Link className="hover:text-ink" to="/leaderboard">Pricing</Link><Link className="hover:text-ink" to="/profile">Profile</Link><Link className="hover:text-ink" to="/settings">Settings</Link></span>
+          <span className="flex items-center gap-2"><img src="/quizlly-favicon.png" alt="Quizlly" className="h-6 w-6 rounded-md object-cover" /><b className="text-ink">Quizlly</b> · Think fast. Play smarter.</span>
+          <span className="flex gap-5 font-medium"><Link className="hover:text-ink" to="/about">About</Link><Link className="hover:text-ink" to="/faq">FAQ</Link><Link className="hover:text-ink" to="/privacy">Privacy</Link><Link className="hover:text-ink" to="/terms">Terms</Link></span>
         </div>
       </footer>
     </div>
@@ -63,6 +67,7 @@ export default function App() {
           <Route path="/multiplayer" element={<MultiplayerHome />} /><Route path="/multiplayer/create" element={<CreateGame />} /><Route path="/multiplayer/join" element={<JoinGame />} />
           <Route path="/room/:roomCode" element={<RoomLobby />} /><Route path="/room/:roomCode/play" element={<RoomPlay />} /><Route path="/room/:roomCode/results" element={<RoomResults />} />
           <Route path="/categories" element={<Categories />} /><Route path="/leaderboard" element={<LeaderboardPage />} /><Route path="/profile" element={<Profile />} /><Route path="/settings" element={<SettingsPage />} />
+          <Route path="/about" element={<About />} /><Route path="/faq" element={<Faq />} /><Route path="/privacy" element={<Privacy />} /><Route path="/terms" element={<Terms />} />
           <Route path="*" element={<div className="cf-wrap py-24 text-center"><h1 className="cf-h2">Page not found</h1><p className="cf-sub mt-2">That quiz flew away.</p><Link to="/" className="cf-btn-black mt-5 inline-flex px-6 py-3 text-[15px]">Back home</Link></div>} />
         </Routes>
       </Shell>

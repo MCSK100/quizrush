@@ -103,14 +103,14 @@ export function SiteFooter() {
     <footer className="relative overflow-x-clip bg-white/80 backdrop-blur" style={{ borderTop: '1px solid rgba(120,100,180,0.08)' }}>
       <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col items-center justify-between gap-5 px-4 py-8 text-center sm:flex-row sm:px-5 sm:text-left">
         <div className="flex items-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-[#FF6B4A] to-[#F04E23] text-lg text-white shadow-neon">⚡</span>
+          <img src="/quizlly-favicon.png" alt="Quizlly" className="h-10 w-10 rounded-2xl object-cover shadow-neon" />
           <div>
-            <div className="font-display text-[17px] font-semibold tracking-tight text-ink">QUIZ<span className="qr-gradient-text">RUSH</span></div>
+            <div className="font-display text-[17px] font-semibold tracking-tight text-ink">QUIZ<span className="qr-gradient-text">LLY</span></div>
             <div className="text-[12.5px] font-medium text-muted">Think Fast. Play Smarter.</div>
           </div>
         </div>
         <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[13.5px] font-bold text-muted">
-          {[['/solo', 'Solo Quiz'], ['/multiplayer', 'Multiplayer'], ['/categories', 'Categories'], ['/leaderboard', 'Leaderboard'], ['/settings', 'About'], ['/settings', 'Settings']].map(([h, l]) => (
+          {[['/solo', 'Solo Quiz'], ['/multiplayer', 'Multiplayer'], ['/categories', 'Categories'], ['/leaderboard', 'Leaderboard'], ['/about', 'About'], ['/faq', 'FAQ']].map(([h, l]) => (
             <Link key={l + h} to={h} className="transition-colors hover:text-ink">{l}</Link>
           ))}
         </nav>

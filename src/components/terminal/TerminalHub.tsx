@@ -39,7 +39,7 @@ export default function TerminalHub() {
           <TerminalWindow title="GALACTIC PASSPORT">
             <div className="p-4">
               <div className="gg-ticket rounded-xl p-3 text-center" style={{ border: '1px dashed rgba(251,191,36,0.5)' }}>
-                <div className="gg-split text-[10px] font-bold tracking-[0.24em] text-amber-200">✦ QUIZRUSH PASSPORT ✦</div>
+                <div className="gg-split text-[10px] font-bold tracking-[0.24em] text-amber-200">✦ QUIZLLY PASSPORT ✦</div>
                 <div className="mt-2 flex justify-center gap-1.5 text-2xl">
                   {['🪐', '⭐', '🏆', '⚡'].map((e) => (
                     <span key={e} className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.07]" style={{ border: '1px solid rgba(255,255,255,0.12)' }}>{e}</span>

@@ -27,9 +27,8 @@ export default function Navbar() {
         } backdrop-blur-xl`}
         style={{ border: '1px solid rgba(120,100,180,0.08)' }}
       >
-        <Link to="/" className="flex items-center gap-2" aria-label="QuizRush home">
-          <span className="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-br from-[#FF6B4A] to-[#F04E23] text-lg text-white shadow-neon">⚡</span>
-          <span className="font-display text-[20px] font-semibold tracking-tight text-ink">QUIZ<span className="qr-gradient-text">RUSH</span></span>
+        <Link to="/" className="flex items-center gap-2" aria-label="Quizlly home">
+          <img src="/quizlly-logo.png" alt="Quizlly" className="h-9 w-auto object-contain" />
         </Link>
         <nav className="hidden items-center gap-1 text-[14px] font-bold text-ink/70 lg:flex">
           {LINKS.map(([h, l]) => (

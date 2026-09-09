@@ -235,7 +235,7 @@ async function callOpenRouter(model, prompt) {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      ...(OPENROUTER_SITE ? { 'HTTP-Referer': OPENROUTER_SITE, 'X-Title': 'QuizRush' } : {}),
+      ...(OPENROUTER_SITE ? { 'HTTP-Referer': OPENROUTER_SITE, 'X-Title': 'Quizlly' } : {}),
     },
     body: JSON.stringify({
       model,
@@ -689,5 +689,5 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`QuizRush server on :${PORT} (gemini=${GEMINI_API_KEY ? 'on' : 'off'} openrouter=${OPENROUTER_API_KEY ? 'on' : 'off'} multiplayer=on)`);
+  console.log(`Quizlly server on :${PORT} (gemini=${GEMINI_API_KEY ? 'on' : 'off'} openrouter=${OPENROUTER_API_KEY ? 'on' : 'off'} multiplayer=on)`);
 });

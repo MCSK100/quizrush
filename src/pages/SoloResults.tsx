@@ -1,9 +1,9 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fmt, sound } from '../services/engine';
 import { recordGame } from '../stores/app';
-import { shuffle } from '../services/questions';
+import { generateQuestions } from '../services/questions';
 export default function SoloResults() {
   const nav = useNavigate();
   const data = useMemo(() => {
@@ -22,20 +22,20 @@ export default function SoloResults() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  function rematch() {
+  const [loading, setLoading] = useState(false);
+  async function rematch() {
     try {
       const solo = JSON.parse(sessionStorage.getItem('qr-solo') || 'null');
-      if (solo?.questions?.length) {
-        solo.questions = shuffle(solo.questions).map((q: unknown) => {
-          const qq = q as { options: string[]; correctAnswer: number };
-          const order = shuffle([0, 1, 2, 3]);
-          return { ...qq, options: order.map((i) => qq.options[i]), correctAnswer: order.indexOf(qq.correctAnswer) };
-        });
-        sessionStorage.setItem('qr-solo', JSON.stringify(solo));
-        nav('/solo/play');
-      } else nav('/solo');
+      if (!solo?.cfg) { nav('/solo'); return; }
+      setLoading(true);
+      sound.play('click');
+      const { questions, source } = await generateQuestions(solo.cfg);
+      sessionStorage.setItem('qr-solo', JSON.stringify({ cfg: solo.cfg, questions, source }));
+      nav('/solo/play');
     } catch {
       nav('/solo');
+    } finally {
+      setLoading(false);
     }
   }
   if (!data) return null;
@@ -64,8 +64,8 @@ export default function SoloResults() {
       </div>
       <p className="mt-4 text-sm font-bold text-muted">{acc >= 80 ? 'YOU BEAT THE ARENA. Legendary pace.' : acc >= 50 ? 'Solid run. One more battle?' : 'Warm up done. Run it back.'}</p>
       <div className="mt-6 flex gap-2">
-        <button onClick={rematch} className="qr-btn-primary btn-press flex-1 justify-center rounded-2xl py-3.5 font-display">
-          REMATCH ↻
+        <button onClick={rematch} disabled={loading} className="qr-btn-primary btn-press flex-1 justify-center rounded-2xl py-3.5 font-display disabled:opacity-60">
+          {loading ? 'DEALING…' : 'REMATCH ↻'}
         </button>
         <Link to="/solo" className="qr-btn-ghost btn-press flex-1 justify-center rounded-2xl py-3.5 text-center font-bold">
           NEW QUIZ

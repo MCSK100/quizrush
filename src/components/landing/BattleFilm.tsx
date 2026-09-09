@@ -65,7 +65,7 @@ export default function BattleFilm() {
   if (reduce) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <SectionHead eyebrow="THE FILM" title={<>A battle, <span className="qr-gradient-text">frame by frame.</span></>} sub="Lobby fills, countdown burns, first blood, crowned — the full arc of a QuizRush room." />
+        <SectionHead eyebrow="THE FILM" title={<>A battle, <span className="qr-gradient-text">frame by frame.</span></>} sub="Lobby fills, countdown burns, first blood, crowned — the full arc of a Quizlly room." />
         <div className="qr-surface mt-8 rounded-[28px] p-6 text-center">
           <p className="font-display text-2xl text-ink">Arjun takes the crown with 1,940 pts.</p>
           <p className="mt-2 text-sm font-medium text-muted">Six racers · 20 questions · one winner.</p>

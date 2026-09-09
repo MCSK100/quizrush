@@ -29,7 +29,7 @@ export default function LaunchIntro() {
           <Starfield density={220} />
           <div aria-hidden className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle, #7C3AED, transparent 65%)' }} />
           <div className="relative px-6 text-center">
-            <div className="gg-split text-[11px] font-bold tracking-[0.34em] text-amber-200">QUIZRUSH SPACE TERMINAL</div>
+            <div className="gg-split text-[11px] font-bold tracking-[0.34em] text-amber-200">QUIZLLY SPACE TERMINAL</div>
             <h1 className="font-display mt-3 text-4xl text-white sm:text-6xl">Something is hidden<br />among the <span className="qr-gradient-text">stars.</span></h1>
             <p className="mx-auto mt-3 max-w-sm text-sm font-medium text-slate-400">To begin travel, tap the Launch Star and visit the flight deck.</p>
             <button onClick={enter} aria-label="Click star to enter" className="group mx-auto mt-8 block">
