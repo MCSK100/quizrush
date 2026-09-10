@@ -4,12 +4,12 @@ import { bankQuestions } from './bank.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
-const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.5-flash-lite')
+const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-3.6-flash,gemini-3.5-flash,gemini-flash-latest')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 const OPENROUTER_API_KEY = (process.env.OPENROUTER_API_KEY || '').trim();
-const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,google/gemma-3-27b-it:free')
+const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openrouter/free,google/gemma-4-31b-it:free,openai/gpt-oss-20b:free')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
