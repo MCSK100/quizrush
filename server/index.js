@@ -1,24 +1,32 @@
 import http from 'node:http';
 import { WebSocketServer } from 'ws';
+import { bankQuestions } from './bank.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
-const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash')
+const GEMINI_MODELS = String(process.env.GEMINI_MODEL || 'gemini-2.5-flash,gemini-2.5-flash-lite')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 const OPENROUTER_API_KEY = (process.env.OPENROUTER_API_KEY || '').trim();
-const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,google/gemma-4-31b-it:free')
+const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,google/gemma-3-27b-it:free')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 const OPENROUTER_SITE = (process.env.OPENROUTER_SITE || '').trim();
 const GROQ_API_KEY = (process.env.GROQ_API_KEY || '').trim();
-const GROQ_MODELS = String(process.env.GROQ_MODEL || 'openai/gpt-oss-20b,openai/gpt-oss-120b,llama-3.1-8b-instant')
+const GROQ_MODELS = String(process.env.GROQ_MODEL || 'openai/gpt-oss-20b,openai/gpt-oss-120b,qwen/qwen3-32b')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 function aiConfigured() { return Boolean(GEMINI_API_KEY || OPENROUTER_API_KEY || GROQ_API_KEY); }
+function providerSummary() {
+  const on = [];
+  if (GEMINI_API_KEY) on.push(`gemini(${GEMINI_MODELS.length})`);
+  if (OPENROUTER_API_KEY) on.push(`openrouter(${OPENROUTER_MODELS.length})`);
+  if (GROQ_API_KEY) on.push(`groq(${GROQ_MODELS.length})`);
+  return on.length ? on.join(' + ') : 'none (bank fallback only)';
+}
 const ALLOWED_DIFFS = new Set(['easy', 'medium', 'hard', 'mixed']);
 const ALLOWED_CATS = new Set([
   'mixed', 'sports', 'history', 'science', 'geography', 'tech', 'movies',
@@ -131,6 +139,13 @@ function normalize(raw, cat, qtype = 'mcq') {
 }
 
 function calcPoints(timer, elapsed, streak, mode = 'classic') {
+  if (!(timer > 0)) {
+    let pts = 100;
+    if (streak + 1 >= 10) pts += 250;
+    else if (streak + 1 >= 5) pts += 100;
+    else if (streak + 1 >= 3) pts += 50;
+    return pts;
+  }
   if (elapsed >= timer) return 0;
   const frac = 1 - elapsed / timer;
   let speed = 30;
@@ -226,11 +241,12 @@ async function callGemini(model, prompt) {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: 6000 },
     }),
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) {
     const snippet = (await res.text().catch(() => '')).slice(0, 300);
     const err = new Error(`gemini ${res.status} model=${model} ${snippet}`);
+    err.status = res.status;
     err.quota = isQuotaError(res.status, snippet);
     err.notFound = isModelNotFound(res.status, snippet);
     throw err;
@@ -257,11 +273,12 @@ async function callOpenRouter(model, prompt) {
       temperature: 0.7,
       max_tokens: 6000,
     }),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) {
     const snippet = (await res.text().catch(() => '')).slice(0, 300);
     const err = new Error(`openrouter ${res.status} model=${model} ${snippet}`);
+    err.status = res.status;
     err.quota = res.status === 429;
     throw err;
   }
@@ -300,11 +317,12 @@ async function callGroq(model, prompt) {
       temperature: 0.7,
       max_tokens: 4000,
     }),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) {
     const snippet = (await res.text().catch(() => '')).slice(0, 300);
     const err = new Error(`groq ${res.status} model=${model} ${snippet}`);
+    err.status = res.status;
     err.quota = res.status === 429;
     throw err;
   }
@@ -326,40 +344,66 @@ async function generateAIQuestions({ category, count, difficulty, region, langua
     if (out.length < Math.min(3, count)) throw new Error(`zero valid questions ${tag}`);
     return out;
   };
-  if (GEMINI_API_KEY) {
-    for (const model of GEMINI_MODELS) {
+  // A dead key fails every model the same way — skip the rest of that provider.
+  function deadKey(e) {
+    if (e?.quota) return false;
+    const s = Number(e?.status);
+    return s === 401 || s === 403;
+  }
+  async function tryProvider(label, key, models, caller) {
+    if (!key) return null;
+    for (const model of models) {
       try {
-        const out = tryParse(await callGemini(model, prompt), `gemini:${model}`, questionType);
-        noteOk(`gemini:${model}`, out.length, category);
-        return { questions: out, provider: `gemini:${model}` };
+        const out = tryParse(await caller(model, prompt), `${label}:${model}`, questionType);
+        noteOk(`${label}:${model}`, out.length, category);
+        return { questions: out, provider: `${label}:${model}` };
       } catch (e) {
         lastErr = noteFail(e);
+        if (deadKey(e)) {
+          console.error(`[ai] ${label} key rejected, skipping rest of ${label} models`);
+          return null;
+        }
       }
     }
+    return null;
   }
-  if (OPENROUTER_API_KEY) {
-    for (const model of OPENROUTER_MODELS) {
-      try {
-        const out = tryParse(await callOpenRouter(model, prompt), `openrouter:${model}`, questionType);
-        noteOk(`openrouter:${model}`, out.length, category);
-        return { questions: out, provider: `openrouter:${model}` };
-      } catch (e) {
-        lastErr = noteFail(e);
-      }
+  return (
+    (await tryProvider('gemini', GEMINI_API_KEY, GEMINI_MODELS, callGemini)) ||
+    (await tryProvider('openrouter', OPENROUTER_API_KEY, OPENROUTER_MODELS, callOpenRouter)) ||
+    (await tryProvider('groq', GROQ_API_KEY, GROQ_MODELS, callGroq)) ||
+    (() => { throw lastErr; })()
+  );
+}
+
+// AI first (max ~40s total), offline bank as safety net so a room can ALWAYS start.
+const AI_BUDGET_MS = Number(process.env.AI_BUDGET_MS || 40000);
+function withBudget(promise, ms) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('ai budget exceeded, using bank')), ms);
+    if (timer.unref) timer.unref();
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+async function resolveQuestions(opts) {
+  const stub = process.env.QUIZUSH_STUB_QS;
+  if (stub) {
+    try {
+      return { questions: JSON.parse(stub), provider: 'stub' };
+    } catch (e) {
+      console.error(`[ai] bad QUIZUSH_STUB_QS: ${String(e?.message || e).slice(0, 150)}`);
     }
   }
-  if (GROQ_API_KEY) {
-    for (const model of GROQ_MODELS) {
-      try {
-        const out = tryParse(await callGroq(model, prompt), `groq:${model}`, questionType);
-        noteOk(`groq:${model}`, out.length, category);
-        return { questions: out, provider: `groq:${model}` };
-      } catch (e) {
-        lastErr = noteFail(e);
-      }
+  if (aiConfigured()) {
+    try {
+      return await withBudget(generateAIQuestions(opts), AI_BUDGET_MS);
+    } catch (e) {
+      console.error(`[ai] all providers failed, using bank: ${String(e?.message || e).slice(0, 150)}`);
     }
+  } else {
+    console.log('[ai] no providers configured, using bank');
   }
-  throw lastErr;
+  return bankQuestions({ category: opts.category, count: opts.count, questionType: opts.questionType, difficulty: opts.difficulty });
 }
 
 /* ---------------- realtime rooms ---------------- */
@@ -495,35 +539,31 @@ async function handleStart(room, byId) {
   const by = room.players.find((p) => p.id === byId);
   if (!by || !by.isHost) return;
   if (room.status !== 'LOBBY' && room.status !== 'FINISHED') return;
-  if (!aiConfigured() && !process.env.QUIZUSH_STUB_QS) {
-    cast(room, { t: 'error', msg: 'AI is not configured on the server yet.' });
+  const want = Math.max(3, Math.min(40, Number(room.config.count) || 10));
+  if (room.config.category === 'custom' && !String(room.config.customTopic || '').trim()) {
+    cast(room, { t: 'error', msg: 'Custom topic needs a name.' });
     return;
   }
   room.status = 'COUNTDOWN';
   cast(room, { t: 'room', room: pubRoom(room) });
+  console.log(`[room ${room.code}] start x${want} ${room.config.category}/${room.config.difficulty} players=${room.players.length} via ${providerSummary()}`);
   try {
-    const stub = process.env.QUIZUSH_STUB_QS;
-    const want = Math.max(3, Math.min(40, Number(room.config.count) || 10));
-    if (room.config.category === 'custom' && !String(room.config.customTopic || '').trim()) {
-      room.status = 'LOBBY';
-      cast(room, { t: 'room', room: pubRoom(room) });
-      cast(room, { t: 'error', msg: 'Custom topic needs a name.' });
-      return;
-    }
-    const { questions: fetched, provider } = stub
-      ? { questions: JSON.parse(stub), provider: 'stub' }
-      : await generateAIQuestions({
-        category: room.config.category || 'mixed',
-        count: want,
-        difficulty: room.config.difficulty || 'mixed',
-        region: room.config.focus === 'india' ? 'india' : room.config.region || 'global',
-        language: cleanLang(room.config.language),
-        questionType: cleanQType(room.config.questionType),
-        customTopic: String(room.config.customTopic || '').slice(0, 80),
-        focus: ALLOWED_FOCUS.has(room.config.focus) ? room.config.focus : 'global',
-      });
+    const qOpts = {
+      category: room.config.category || 'mixed',
+      count: want,
+      difficulty: room.config.difficulty || 'mixed',
+      region: room.config.focus === 'india' ? 'india' : room.config.region || 'global',
+      language: cleanLang(room.config.language),
+      questionType: cleanQType(room.config.questionType),
+      customTopic: String(room.config.customTopic || '').slice(0, 80),
+      focus: ALLOWED_FOCUS.has(room.config.focus) ? room.config.focus : 'global',
+    };
+    const { questions: fetched, provider } = await resolveQuestions(qOpts);
     room.provider = provider;
-    const qs = fetched.slice(0, want);
+    const qs = fetched
+      .map((r) => (r && r.id ? r : normalize(r, qOpts.category, qOpts.questionType)))
+      .filter(Boolean)
+      .slice(0, want);
     if (qs.length < 3) throw new Error('too few questions');
     if (room.status !== 'COUNTDOWN') return;
     room.questions = qs;
@@ -706,15 +746,11 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', 'http://localhost');
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
-    send(res, 200, { ok: true, ai: aiConfigured(), gemini: Boolean(GEMINI_API_KEY), openrouter: Boolean(OPENROUTER_API_KEY), groq: Boolean(GROQ_API_KEY), models: GEMINI_MODELS, orModels: OPENROUTER_MODELS, groqModels: GROQ_MODELS, rooms: rooms.size, multiplayer: true, lastOk: aiStats.lastOk, lastFail: aiStats.lastFail });
+    send(res, 200, { ok: true, ai: aiConfigured(), gemini: Boolean(GEMINI_API_KEY), openrouter: Boolean(OPENROUTER_API_KEY), groq: Boolean(GROQ_API_KEY), models: GEMINI_MODELS, orModels: OPENROUTER_MODELS, groqModels: GROQ_MODELS, rooms: rooms.size, multiplayer: true, bank: true, providers: providerSummary(), lastOk: aiStats.lastOk, lastFail: aiStats.lastFail });
     return;
   }
 
   if (req.method === 'POST' && url.pathname === '/api/questions') {
-    if (!aiConfigured() && !process.env.QUIZUSH_STUB_QS) {
-      send(res, 503, { error: 'AI not configured on server (set GEMINI_API_KEY, OPENROUTER_API_KEY and/or GROQ_API_KEY)' });
-      return;
-    }
     let body;
     try {
       body = await readJson(req);
@@ -739,10 +775,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     try {
-      const stub = process.env.QUIZUSH_STUB_QS;
-      const { questions: fetched, provider } = stub
-        ? { questions: JSON.parse(stub), provider: 'stub' }
-        : await generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus });
+      const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus });
       const questions = fetched
         .map((r) => (r && r.id ? r : normalize(r, category, questionType)))
         .filter(Boolean)
@@ -775,5 +808,5 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Quizlly server on :${PORT} (gemini=${GEMINI_API_KEY ? 'on' : 'off'} openrouter=${OPENROUTER_API_KEY ? 'on' : 'off'} multiplayer=on)`);
+  console.log(`Quizlly server on :${PORT} (providers: ${providerSummary()} multiplayer=on bank=on)`);
 });

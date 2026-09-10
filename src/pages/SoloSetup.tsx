@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import SetupForm from '../components/SetupForm';
+import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeTimer } from '../components/SetupForm';
 import { regionLabel } from '../data/regions';
 import type { QuizConfig } from '../types';
 import { AiError, generateQuestions } from '../services/questions';
@@ -9,16 +9,29 @@ import { sound } from '../services/engine';
 export default function SoloSetup() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
-  const [cfg, setCfg] = useState<QuizConfig>({ category: sp.get('cat') || 'mixed', count: 10, timer: 10, difficulty: 'mixed', region: 'global', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'global' });
+  const rawCat = sp.get('cat') || 'mixed';
+  const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) ? rawCat : 'mixed', count: 10, timer: 10, difficulty: 'mixed', region: 'global', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'global' });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   async function start() {
     sound.play('click');
+    const clean: QuizConfig = {
+      ...cfg,
+      category: isAllowedCategory(cfg.category) ? cfg.category : 'mixed',
+      count: sanitizeCount(cfg.count),
+      timer: sanitizeTimer(cfg.timer, true),
+      customTopic: (cfg.customTopic || '').slice(0, 80),
+    };
+    if (clean.category === 'custom' && !clean.customTopic?.trim()) {
+      setErr('Enter a custom topic to continue.');
+      return;
+    }
+    setCfg(clean);
     setLoading(true);
     setErr('');
     try {
-      const { questions, source, provider } = await generateQuestions(cfg);
-      sessionStorage.setItem('qr-solo', JSON.stringify({ cfg, questions, source, provider }));
+      const { questions, source, provider } = await generateQuestions(clean);
+      sessionStorage.setItem('qr-solo', JSON.stringify({ cfg: clean, questions, source, provider }));
       nav('/solo/play');
     } catch (e) {
       setErr(e instanceof AiError ? e.message : 'AI question generation failed. Please try again.');

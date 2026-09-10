@@ -72,13 +72,14 @@ function NetPlay({ code }: { code: string }) {
     if (!loadNetSession() || loadNetSession()?.code !== code) nav(`/room/${code}`, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
-  const timer = q?.timer ?? 10;
+  const rawTimer = q?.timer ?? 10;
+  const timer = [10, 20, 30, 60].includes(Number(rawTimer)) ? Number(rawTimer) : 10;
   const serverStart = q ? q.endsAt - timer * 1000 : 0;
-  const left = useServerTimer(timer, phase === 'q' && !expired && !!q, () => setExpired(true), serverStart);
+  const left = useServerTimer(timer, phase === 'q' && !expired && !!q, () => setExpired(true), serverStart, q ? `${q.qi}-${q.endsAt}` : 'idle');
   const ceil = Math.ceil(left);
   useEffect(() => {
-    if (phase === 'q' && left <= 3.1 && left > 0) sound.play('tick');
-  }, [ceil, phase, left]);
+    if (phase === 'q' && ceil <= 3 && ceil > 0) sound.play('tick');
+  }, [ceil, phase]);
   function choose(i: number) {
     if (phase !== 'q' || expired || picked !== null || !q) return;
     setPicked(i);
@@ -181,7 +182,8 @@ function LocalPlay() {
   const [showBoard, setShowBoard] = useState(false);
   const t0 = useRef(Date.now());
   const lockRef = useRef<(p: number | null) => void>(() => {});
-  const timer = room?.config.timer ?? 10;
+  const rawTimer = room?.config.timer ?? 10;
+  const timer = [0, 10, 20, 30, 60].includes(Number(rawTimer)) ? Number(rawTimer) : 10;
   const meId = useMemo(() => {
     if (!room) return 'me';
     const joined = room.players.find((x) => !x.isHost && !x.id.startsWith('bot') && !x.id.startsWith('rbot-'));
@@ -253,11 +255,12 @@ function LocalPlay() {
     }, 1400);
   }
   lockRef.current = lock;
-  const left = useServerTimer(timer, phase === 'q', () => lockRef.current(null), t0.current);
+  const noTimer = !(timer > 0);
+  const left = useServerTimer(timer, phase === 'q', () => lockRef.current(null), t0.current, qi);
   const ceil = Math.ceil(left);
   useEffect(() => {
-    if (phase === 'q' && left <= 3.1 && left > 0) sound.play('tick');
-  }, [ceil, phase, left]);
+    if (!noTimer && phase === 'q' && ceil <= 3 && ceil > 0) sound.play('tick');
+  }, [ceil, phase, noTimer]);
   if (!room || !qs.length) return <div className="p-10 text-center text-sm font-bold text-muted">Reconnecting…</div>;
   if (phase === 'count')
     return (
@@ -289,7 +292,7 @@ function LocalPlay() {
           <ProgressBar i={qi} total={qs.length} />
         </div>
         <div className="mt-3 flex items-center justify-center gap-4">
-          <TimerRing left={left} total={timer} />
+          {!noTimer && <TimerRing left={left} total={timer} />}
           {meStreak >= 2 && (
             <div className="rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-4 py-2 font-display text-lg text-black shadow-lift">🔥 ×{meStreak}</div>
           )}

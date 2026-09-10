@@ -7,12 +7,12 @@ import Avatar from '../components/Avatar';
 import { regionLabel } from '../data/regions';
 import { useRoom, withoutBots } from '../stores/app';
 import type { Player, Room } from '../types';
-import { AiError, generateQuestions } from '../services/questions';
+import { AiError, aiBackendHealth, generateQuestions } from '../services/questions';
 import { loadNetSession, netEnabled, saveNetSession, useNetSocket, type NetMsg } from '../services/net';
 
-function LobbyShell({ code, players, config, isHost, alone, starting, err, onStart }: {
+function LobbyShell({ code, players, config, isHost, alone, starting, err, onStart, aiNote }: {
   code: string; players: Player[]; config: Room['config']; isHost: boolean; alone: boolean;
-  starting: boolean; err: string; onStart: () => void;
+  starting: boolean; err: string; onStart: () => void; aiNote?: string;
 }) {
   return (
     <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
@@ -26,7 +26,8 @@ function LobbyShell({ code, players, config, isHost, alone, starting, err, onSta
         <button onClick={() => navigator.clipboard?.writeText(location.href)} className="btn-press flex items-center gap-1.5 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-ink shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}><Share2 size={14} /> SHARE</button>
       </div>
       <div className="qr-surface mt-5 rounded-[24px] p-4 sm:p-5">
-        <div className="mb-3 text-[11px] font-extrabold tracking-[0.16em] text-muted">SETTINGS · {config.count} QS · {config.timer}s · {String(config.category).toUpperCase()} · {String(config.difficulty).toUpperCase()} · {regionLabel(config.region).toUpperCase()}</div>
+        <div className="mb-3 text-[11px] font-extrabold tracking-[0.16em] text-muted">SETTINGS · {config.count} QS · {Number(config.timer) > 0 ? `${Number(config.timer)}s` : 'NO TIMER'} · {String(config.category).toUpperCase()} · {String(config.difficulty).toUpperCase()} · {regionLabel(config.region).toUpperCase()}</div>
+        {aiNote && <div className="mb-3 text-[11px] font-bold text-muted">{aiNote}</div>}
         <div className="grid gap-2 sm:grid-cols-2">
           {players.map((p: Player) => (
             <motion.div layout key={p.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2.5 shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
@@ -48,7 +49,7 @@ function LobbyShell({ code, players, config, isHost, alone, starting, err, onSta
         <button onClick={onStart} disabled={starting} className="qr-btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-base disabled:opacity-60"><Play strokeWidth={3} /> {starting ? 'STARTING…' : 'START GAME'}</button>
       ) : (
         <p className="mt-4 rounded-2xl bg-white p-4 text-center text-sm font-bold text-muted shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-          {starting ? 'Host is starting the game…' : `Waiting for host to start… get ready. ${config.timer} seconds. One answer. Zero excuses.`}
+          {starting ? 'Host is starting the game…' : `Waiting for host to start… get ready. ${Number(config.timer) > 0 ? `${Number(config.timer)} seconds` : 'no timer'}. One answer. Zero excuses.`}
         </p>
       )}
     </div>
@@ -61,6 +62,21 @@ function NetLobby({ code }: { code: string }) {
   const [you, setYou] = useState(loadNetSession()?.playerId ?? '');
   const [starting, setStarting] = useState(false);
   const [err, setErr] = useState('');
+  const [aiNote, setAiNote] = useState('Checking question engine…');
+  useEffect(() => {
+    let live = true;
+    aiBackendHealth().then((s) => {
+      if (!live) return;
+      setAiNote(
+        s === 'on'
+          ? 'AI engine: ON — fresh questions for this match.'
+          : s === 'off'
+            ? 'AI engine: unreachable — match will use offline questions.'
+            : 'AI engine: checking…',
+      );
+    });
+    return () => { live = false; };
+  }, []);
   const { send } = useNetSocket(code, (m: NetMsg) => {
     if (m.t === 'room' && m.room) {
       setRoom(m.room as Room);
@@ -95,7 +111,7 @@ function NetLobby({ code }: { code: string }) {
     <LobbyShell
       code={room.code} players={room.players} config={room.config}
       isHost={!!me?.isHost} alone={room.players.length < 2}
-      starting={starting} err={err}
+      starting={starting} err={err} aiNote={aiNote}
       onStart={() => { setErr(''); setStarting(true); send({ t: 'start' }); }}
     />
   );
@@ -120,11 +136,20 @@ function LocalLobby({ code }: { code: string }) {
     const r = room;
     if (!r) return;
     setErr('');
+    const cleanConfig = {
+      ...r.config,
+      count: Math.min(40, Math.max(3, Number(r.config.count) || 10)),
+      timer: [0, 10, 20, 30, 60].includes(Number(r.config.timer)) ? Number(r.config.timer) : 10,
+    };
+    if (cleanConfig.category === 'custom' && !String(cleanConfig.customTopic || '').trim()) {
+      setErr('Custom topic needs a name.');
+      return;
+    }
     setStarting(true);
     try {
-      const { questions } = await generateQuestions(r.config);
+      const { questions } = await generateQuestions(cleanConfig);
       sessionStorage.setItem('qr-room-qs', JSON.stringify(questions));
-      setRoom({ ...r, status: 'COUNTDOWN' });
+      setRoom({ ...r, config: cleanConfig, status: 'COUNTDOWN' });
       nav(`/room/${r.code}/play`);
     } catch (e) {
       setErr(e instanceof AiError ? e.message : 'AI question generation failed. Please try again.');

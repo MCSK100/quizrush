@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play } from 'lucide-react';
-import SetupForm from '../components/SetupForm';
+import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeTimer } from '../components/SetupForm';
 import { regionLabel } from '../data/regions';
 import type { GameMode, QuizConfig } from '../types';
 import { newRoom, useRoom } from '../stores/app';
@@ -17,7 +17,16 @@ export default function CreateGame() {
   const [busy, setBusy] = useState(false);
   async function create() {
     if (name.trim().length < 2) { setErr('Enter a display name (2+ characters).'); return; }
-    const liveCfg = netEnabled() && cfg.timer <= 0 ? { ...cfg, timer: 10 } : cfg;
+    const clean: QuizConfig = {
+      ...cfg,
+      category: isAllowedCategory(cfg.category) ? cfg.category : 'mixed',
+      count: sanitizeCount(cfg.count),
+      timer: sanitizeTimer(cfg.timer, true),
+      customTopic: String(cfg.customTopic || '').slice(0, 80),
+    };
+    if (clean.category === 'custom' && !clean.customTopic?.trim()) { setErr('Enter a custom topic to continue.'); return; }
+    setCfg(clean);
+    const liveCfg = netEnabled() && clean.timer <= 0 ? { ...clean, timer: 10 } : clean;
     if (netEnabled()) {
       setErr('');
       setBusy(true);
@@ -33,9 +42,9 @@ export default function CreateGame() {
       }
       return;
     }
-    const room = newRoom(name.trim(), cfg);
-    room.config.mode = cfg.mode;
-    room.config.maxPlayers = cfg.maxPlayers;
+    const room = newRoom(name.trim(), liveCfg);
+    room.config.mode = liveCfg.mode;
+    room.config.maxPlayers = liveCfg.maxPlayers;
     setRoom(room);
     nav(`/room/${room.code}`, { replace: true });
   }

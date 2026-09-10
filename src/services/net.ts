@@ -114,7 +114,7 @@ export function joinNetRoom(code: string, name: string, avatar: string): Promise
   return new Promise((resolve, reject) => {
     let done = false;
     const ws = new WebSocket(url);
-    const to = setTimeout(() => { if (!done) { done = true; try { ws.close(); } catch { /* ignore */ } reject(new Error('Server is waking up — try again in 30 seconds.')); } }, 30000);
+    const to = setTimeout(() => { if (!done) { done = true; try { ws.close(); } catch { /* ignore */ } reject(new Error('Server is waking up — try again in 30 seconds.')); } }, 45000);
     ws.onopen = () => ws.send(JSON.stringify({ t: 'join', code, name, avatar }));
     ws.onmessage = (e) => {
       try {
@@ -142,7 +142,7 @@ export function createNetRoom(cfg: QuizConfig & { mode?: string; maxPlayers?: nu
   return new Promise((resolve, reject) => {
     let done = false;
     const ws = new WebSocket(url);
-    const to = setTimeout(() => { if (!done) { done = true; try { ws.close(); } catch { /* ignore */ } reject(new Error('Server is waking up — try again in 30 seconds.')); } }, 30000);
+    const to = setTimeout(() => { if (!done) { done = true; try { ws.close(); } catch { /* ignore */ } reject(new Error('Server is waking up — try again in 30 seconds.')); } }, 45000);
     ws.onopen = () => ws.send(JSON.stringify({ t: 'create', name, avatar, config: cfg }));
     ws.onmessage = (e) => {
       try {

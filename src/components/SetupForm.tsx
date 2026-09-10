@@ -2,6 +2,12 @@ import { useState } from 'react';
 import type { Difficulty, QuestionType, QuizConfig, QuizFocus, QuizLanguage } from '../types';
 import { sound } from '../services/engine';
 const SOFT = { border: '1px solid rgba(120,100,180,0.08)' } as const;
+export const ALLOWED_TIMERS = [0, 10, 20, 30, 60] as const;
+export const ALLOWED_CATEGORIES = [
+  'mixed', 'sports', 'science', 'history', 'tech', 'movies',
+  'music', 'gaming', 'geography', 'gk', 'maths', 'literature',
+  'animals', 'space', 'kids', 'tamil', 'india', 'world', 'custom',
+] as const;
 const TOPICS = [
   { id: 'mixed', label: '🎯 Mixed' }, { id: 'sports', label: '🏆 Sports' },
   { id: 'science', label: '🔬 Science' }, { id: 'history', label: '🏛️ History' },
@@ -10,7 +16,8 @@ const TOPICS = [
   { id: 'geography', label: '🌍 Geography' }, { id: 'gk', label: '🧠 General Knowledge' },
   { id: 'maths', label: '➗ Mathematics' }, { id: 'literature', label: '📚 Literature' },
   { id: 'animals', label: '🐾 Animals' }, { id: 'space', label: '🚀 Space' },
-  { id: 'kids', label: '🧒 Kids' }, { id: 'india', label: '🇮🇳 India' },
+  { id: 'kids', label: '🧒 Kids' }, { id: 'tamil', label: '🇮🇳 Tamil' },
+  { id: 'india', label: '🇮🇳 India' },
   { id: 'world', label: '🌐 World' }, { id: 'custom', label: '✨ Custom Topic' },
 ];
 const LANGS: { id: QuizLanguage; label: string }[] = [
@@ -24,12 +31,25 @@ const DIFFS: { id: Difficulty; label: string }[] = [
 const QTYPES: { id: QuestionType; label: string }[] = [
   { id: 'mcq', label: 'Multiple Choice' }, { id: 'tf', label: 'True / False' }, { id: 'mixed', label: 'Mixed' },
 ];
-const TIMERS = [0, 10, 20, 30, 60];
+const TIMERS = [...ALLOWED_TIMERS];
 const FOCUS: { id: QuizFocus; label: string }[] = [
   { id: 'global', label: '🌐 Global' }, { id: 'india', label: '🇮🇳 India' }, { id: 'topic', label: '🎯 Topic-specific' },
 ];
 const ICONS: Record<string, string> = { Trophy: '🏆', Landmark: '🏛️', FlaskConical: '🧪', Globe: '🌍', Cpu: '💻', Clapperboard: '🎬', Music: '🎵', Smile: '😊', Languages: 'த', Brain: '🧠', Sigma: '∑', BookOpen: '📚', PawPrint: '🐾', Rocket: '🚀', Gamepad2: '🎮', Flag: '🌐' };
 export function iconFor(icon: string) { return ICONS[icon] ?? '🎯'; }
+export function isAllowedCategory(c: unknown): boolean {
+  return typeof c === 'string' && (ALLOWED_CATEGORIES as readonly string[]).includes(c);
+}
+export function sanitizeTimer(t: unknown, allowZero = true): number {
+  const n = Number(t);
+  if (allowZero && n === 0) return 0;
+  return ([10, 20, 30, 60] as number[]).includes(n) ? n : 10;
+}
+export function sanitizeCount(n: unknown): number {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return 10;
+  return Math.min(40, Math.max(3, Math.round(v)));
+}
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>

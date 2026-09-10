@@ -83,13 +83,14 @@ export default function SoloPlay() {
     }, 1100);
   }
   lockRef.current = lock;
-  const timer = cfg?.timer ?? 10;
+  const rawTimer = cfg?.timer ?? 10;
+  const timer = [0, 10, 20, 30, 60].includes(Number(rawTimer)) ? Number(rawTimer) : 10;
   const noTimer = !(timer > 0);
-  const left = useServerTimer(timer, phase === 'q', () => lockRef.current(null), t0.current);
+  const left = useServerTimer(timer, phase === 'q', () => lockRef.current(null), t0.current, qi);
   const ceil = Math.ceil(left);
   useEffect(() => {
-    if (!noTimer && phase === 'q' && left <= 3.2 && left > 0) sound.play('tick');
-  }, [ceil, phase, left, noTimer]);
+    if (!noTimer && phase === 'q' && ceil <= 3 && ceil > 0) sound.play('tick');
+  }, [ceil, phase, noTimer]);
   if (!data || !qs.length)
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">

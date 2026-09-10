@@ -2,21 +2,23 @@ import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import { fmt } from '../services/engine';
 export function TimerRing({ left, total }: { left: number; total: number }) {
-  const pct = Math.max(0, left / total);
+  const safeTotal = Number(total) > 0 ? Number(total) : 1;
+  const safeLeft = Number.isFinite(left) ? Math.max(0, Math.min(left, safeTotal)) : safeTotal;
+  const pct = Math.max(0, Math.min(1, safeLeft / safeTotal));
   const R = 34;
   const C = 2 * Math.PI * R;
-  const crit = left <= 3;
-  const warn = left <= Math.max(5, total * 0.3);
+  const crit = safeLeft <= 3;
+  const warn = safeLeft <= Math.max(5, safeTotal * 0.3);
   const col = crit ? '#FF4B5C' : warn ? '#FFB020' : '#7C5CFF';
   return (
-    <div className="relative h-24 w-24" role="timer" aria-label={`${Math.ceil(left)} seconds left`}>
+    <div className="relative h-24 w-24" role="timer" aria-label={`${Math.ceil(safeLeft)} seconds left`}>
       <div aria-hidden className="absolute -inset-3 rounded-full opacity-30 blur-xl" style={{ background: col }} />
       <svg viewBox="0 0 84 84" className="relative h-full w-full -rotate-90">
         <circle cx="42" cy="42" r={R} fill="#FFFFFF" stroke="#F1EDFF" strokeWidth="8" />
         <circle cx="42" cy="42" r={R} fill="none" stroke={col} strokeWidth="8" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} style={{ transition: 'stroke-dashoffset .12s linear, stroke .3s' }} />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="font-num text-3xl font-extrabold text-ink">{Math.ceil(left)}</span>
+        <span className="font-num text-3xl font-extrabold text-ink">{Math.ceil(safeLeft)}</span>
       </div>
     </div>
   );

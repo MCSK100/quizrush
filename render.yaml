@@ -9,11 +9,15 @@ services:
     envVars:
       - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash,gemini-2.5-flash-lite
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
-        value: openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,google/gemma-4-31b-it:free
+        value: openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,google/gemma-3-27b-it:free
       - key: GROQ_API_KEY
         sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b,openai/gpt-oss-120b,qwen/qwen3-32b
       - key: NODE_VERSION
         value: 20
