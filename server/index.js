@@ -15,7 +15,7 @@ const OPENROUTER_MODELS = String(process.env.OPENROUTER_MODEL || 'openai/gpt-oss
   .filter(Boolean);
 const OPENROUTER_SITE = (process.env.OPENROUTER_SITE || '').trim();
 const GROQ_API_KEY = (process.env.GROQ_API_KEY || '').trim();
-const GROQ_MODELS = String(process.env.GROQ_MODEL || 'openai/gpt-oss-20b,openai/gpt-oss-120b,qwen/qwen3-32b')
+const GROQ_MODELS = String(process.env.GROQ_MODEL || 'openai/gpt-oss-20b,openai/gpt-oss-120b')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
@@ -290,14 +290,17 @@ async function callOpenRouter(model, prompt) {
   if (!Array.isArray(parsed)) throw new Error(`unparseable openrouter response model=${model}`);
   return parsed;
 }
-const aiStats = { lastOk: null, lastFail: null };
+const aiStats = { lastOk: null, lastFail: null, recentFails: [] };
 function noteOk(provider, n, cat) {
   aiStats.lastOk = { at: new Date().toISOString(), provider, n, cat };
   console.log(`[ai] ${provider} ok n=${n} cat=${cat}`);
 }
 function noteFail(err) {
   const msg = err instanceof Error ? err.message : String(err);
-  aiStats.lastFail = { at: new Date().toISOString(), message: msg.slice(0, 200) };
+  const entry = { at: new Date().toISOString(), message: msg.slice(0, 200) };
+  aiStats.lastFail = entry;
+  aiStats.recentFails.push(entry);
+  while (aiStats.recentFails.length > 12) aiStats.recentFails.shift();
   console.error(`[ai] ${msg}`);
   return err instanceof Error ? err : new Error(String(err));
 }
@@ -746,7 +749,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', 'http://localhost');
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
-    send(res, 200, { ok: true, ai: aiConfigured(), gemini: Boolean(GEMINI_API_KEY), openrouter: Boolean(OPENROUTER_API_KEY), groq: Boolean(GROQ_API_KEY), models: GEMINI_MODELS, orModels: OPENROUTER_MODELS, groqModels: GROQ_MODELS, rooms: rooms.size, multiplayer: true, bank: true, providers: providerSummary(), lastOk: aiStats.lastOk, lastFail: aiStats.lastFail });
+    send(res, 200, { ok: true, ai: aiConfigured(), gemini: Boolean(GEMINI_API_KEY), openrouter: Boolean(OPENROUTER_API_KEY), groq: Boolean(GROQ_API_KEY), models: GEMINI_MODELS, orModels: OPENROUTER_MODELS, groqModels: GROQ_MODELS, rooms: rooms.size, multiplayer: true, bank: true, providers: providerSummary(), lastOk: aiStats.lastOk, lastFail: aiStats.lastFail, recentFails: aiStats.recentFails });
     return;
   }
 

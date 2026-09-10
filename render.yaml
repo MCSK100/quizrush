@@ -18,6 +18,6 @@ services:
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
-        value: openai/gpt-oss-20b,openai/gpt-oss-120b,qwen/qwen3-32b
+        value: openai/gpt-oss-20b,openai/gpt-oss-120b
       - key: NODE_VERSION
         value: 20
