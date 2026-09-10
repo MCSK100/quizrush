@@ -38,7 +38,13 @@ export default function SoloResults() {
       setLoading(false);
     }
   }
-  if (!data) return null;
+  if (!data)
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <p className="font-display text-2xl text-ink">Loading results…</p>
+        <p className="text-sm text-muted">Tallying your score…</p>
+      </div>
+    );
   const correct = data.answers.filter((a: { correct: boolean }) => a.correct).length;
   const total = data.qs.length;
   const acc = Math.round((correct / total) * 100);

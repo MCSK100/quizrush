@@ -111,7 +111,13 @@ export default function SoloPlay() {
       </div>
     );
   const q = qs[qi];
-  if (!q) return null;
+  if (!q)
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <p className="font-display text-2xl text-ink">Loading questions…</p>
+        <p className="text-sm text-muted">Dealing fresh questions…</p>
+      </div>
+    );
   const banner = (CAT_IMAGES as Record<string, string>)[(q.category || '').toLowerCase()] ?? `https://picsum.photos/seed/quiz-${qi}/1200/320`;
   return (
     <div className="mx-auto max-w-3xl px-4 py-4 pb-10">

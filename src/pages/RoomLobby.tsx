@@ -130,7 +130,13 @@ function LocalLobby({ code }: { code: string }) {
     if (clean !== room) setRoom(clean);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.code]);
-  if (!room) return null;
+  if (!room)
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <p className="font-display text-2xl text-ink">Room not found on this device.</p>
+        <p className="mt-1 text-sm font-bold text-muted">Rejoin with your code to get back in.</p>
+      </div>
+    );
   const isHost = room.players[0]?.isHost;
   async function start() {
     const r = room;

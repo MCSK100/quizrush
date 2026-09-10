@@ -548,6 +548,7 @@ async function handleStart(room, byId) {
     return;
   }
   room.status = 'COUNTDOWN';
+  room.lastMsg = null;
   cast(room, { t: 'room', room: pubRoom(room) });
   console.log(`[room ${room.code}] start x${want} ${room.config.category}/${room.config.difficulty} players=${room.players.length} via ${providerSummary()}`);
   try {

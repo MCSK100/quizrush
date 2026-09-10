@@ -18,6 +18,7 @@ import About from './pages/About';
 import Faq from './pages/Faq';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useEffect } from 'react';
 
 function useLenis() {
@@ -61,6 +62,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Shell>
+        <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/solo" element={<SoloSetup />} /><Route path="/solo/setup" element={<SoloSetup />} /><Route path="/solo/play" element={<SoloPlay />} /><Route path="/solo/results" element={<SoloResults />} />
@@ -70,6 +72,7 @@ export default function App() {
           <Route path="/about" element={<About />} /><Route path="/faq" element={<Faq />} /><Route path="/privacy" element={<Privacy />} /><Route path="/terms" element={<Terms />} />
           <Route path="*" element={<div className="cf-wrap py-24 text-center"><h1 className="cf-h2">Page not found</h1><p className="cf-sub mt-2">That quiz flew away.</p><Link to="/" className="cf-btn-black mt-5 inline-flex px-6 py-3 text-[15px]">Back home</Link></div>} />
         </Routes>
+        </ErrorBoundary>
       </Shell>
     </BrowserRouter>
   );

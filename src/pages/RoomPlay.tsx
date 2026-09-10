@@ -26,6 +26,7 @@ function NetPlay({ code }: { code: string }) {
   const [answeredIds, setAnsweredIds] = useState<string[]>([]);
   const [showBoard, setShowBoard] = useState(false);
   const [err, setErr] = useState('');
+  const [stale, setStale] = useState(false);
   const { send } = useNetSocket(code, (m: NetMsg) => {
     if (m.t === 'room' && m.room) {
       const r = m.room as { players: Player[] };
@@ -72,6 +73,11 @@ function NetPlay({ code }: { code: string }) {
     if (!loadNetSession() || loadNetSession()?.code !== code) nav(`/room/${code}`, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
+  useEffect(() => {
+    if (phase !== 'joining') return;
+    const t = setTimeout(() => setStale(true), 10000);
+    return () => clearTimeout(t);
+  }, [phase]);
   const rawTimer = q?.timer ?? 10;
   const timer = [10, 20, 30, 60].includes(Number(rawTimer)) ? Number(rawTimer) : 10;
   const serverStart = q ? q.endsAt - timer * 1000 : 0;
@@ -97,6 +103,15 @@ function NetPlay({ code }: { code: string }) {
             <p className="font-display text-2xl text-ink">Joining the match…</p>
           )}
           <p className="mt-3 text-[12px] font-extrabold tracking-[0.24em] text-muted">{phase === 'count' ? 'GET READY' : 'CONNECTING…'}</p>
+          {phase === 'joining' && stale && (
+            <div className="mx-auto mt-5 max-w-xs">
+              <p className="text-sm font-bold text-muted">Still connecting? The server may be waking up.</p>
+              <div className="mt-3 flex justify-center gap-2">
+                <button onClick={() => location.reload()} className="qr-btn-primary rounded-2xl px-5 py-2.5 text-sm font-extrabold">RETRY</button>
+                <button onClick={() => nav(`/room/${code}`, { replace: true })} className="rounded-2xl bg-white px-5 py-2.5 text-sm font-extrabold shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>LOBBY</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
