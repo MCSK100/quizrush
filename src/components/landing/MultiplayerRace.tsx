@@ -3,11 +3,12 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Crown } from 'lucide-react';
 import { Reveal, SectionHead } from './Sections';
 
+import { AVATARS } from '../../data/categories';
 const RACERS = [
-  { name: 'Arjun', avatar: '⚡', color: '#2E9BFF', bg: '#E8F4FF' },
-  { name: 'Priya', avatar: '🎯', color: '#7C5CFF', bg: '#F1EBFF' },
-  { name: 'Karthik', avatar: '🔥', color: '#00C48C', bg: '#E4F8EF' },
-  { name: 'Sanjay', avatar: '🏆', color: '#2E9BFF', bg: '#E8F4FF' },
+  { name: 'Arjun', avatar: AVATARS[0], color: '#2E9BFF', bg: '#E8F4FF' },
+  { name: 'Priya', avatar: AVATARS[2], color: '#7C5CFF', bg: '#F1EBFF' },
+  { name: 'Karthik', avatar: AVATARS[4], color: '#00C48C', bg: '#E4F8EF' },
+  { name: 'Sanjay', avatar: AVATARS[6], color: '#2E9BFF', bg: '#E8F4FF' },
 ];
 
 export default function MultiplayerRace() {
@@ -40,7 +41,7 @@ export default function MultiplayerRace() {
               {order.map((p, pos) => (
                 <motion.div key={p.name} layout transition={{ type: 'spring', stiffness: 160, damping: 22 }} className="relative flex items-center gap-3">
                   <span className="font-display z-10 grid h-7 w-7 place-items-center rounded-full bg-white text-[11px] font-semibold text-ink shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.12)' }}>{pos + 1}</span>
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-white bg-white text-xl shadow-sticker-sm" style={{ outline: `2.5px solid ${p.color}` }}>{p.avatar}</span>
+                  <img src={p.avatar} alt={p.name} loading="lazy" className="h-11 w-11 shrink-0 rounded-full border-2 border-white bg-white object-cover shadow-sticker-sm" style={{ outline: `2.5px solid ${p.color}` }} />
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-baseline justify-between gap-2">
                       <span className="flex min-w-0 items-center gap-1.5 truncate text-[14px] font-extrabold text-ink sm:text-[14.5px]">{p.name}{pos === 0 && <Crown size={14} className="shrink-0 text-sunny" />}</span>

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Copy, Share2, Users } from 'lucide-react';
 import { RoomCodeBig } from '../components/board';
+import Avatar from '../components/Avatar';
 import { regionLabel } from '../data/regions';
 import { useRoom, withoutBots } from '../stores/app';
 import type { Player, Room } from '../types';
@@ -29,7 +30,7 @@ function LobbyShell({ code, players, config, isHost, alone, starting, err, onSta
         <div className="grid gap-2 sm:grid-cols-2">
           {players.map((p: Player) => (
             <motion.div layout key={p.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2.5 shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-              <span className="text-2xl" aria-hidden>{p.avatar}</span>
+              <Avatar src={p.avatar} alt={p.name} size={36} />
               <span className="min-w-0 flex-1 truncate font-bold text-ink">{p.name}{!p.connected && <span className="ml-2 text-[11px] font-bold text-muted">(left)</span>}</span>
               {p.isHost ? <span className="qr-btn-primary px-2 py-0.5 text-[10px] font-extrabold">HOST</span> : <span className={`text-xs font-bold ${p.ready ? 'text-[#1E7A38]' : 'text-muted'}`}>{p.ready ? '✓ Ready' : 'Waiting…'}</span>}
             </motion.div>

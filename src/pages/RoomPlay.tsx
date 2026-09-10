@@ -7,6 +7,7 @@ import { useServerTimer } from '../hooks/useTimer';
 import { AnswerButton, Countdown, ProgressBar, TimerRing } from '../components/game';
 import { Leaderboard } from '../components/board';
 import { useRoom, withoutBots } from '../stores/app';
+import { DEFAULT_AVATAR } from '../components/Avatar';
 import { loadNetSession, netEnabled, useNetSocket, type NetMsg } from '../services/net';
 const L = ['A', 'B', 'C', 'D'];
 
@@ -225,10 +226,10 @@ function LocalPlay() {
     setPhase('reveal');
     const prev = room.players.find((x) => x.id === meId);
     const meEntry: Player = {
-      ...(prev ?? { id: meId, name: 'You', avatar: '⚡', ready: true, isHost: false, connected: true } as Player),
+      ...(prev ?? { id: meId, name: 'You', avatar: DEFAULT_AVATAR, ready: true, isHost: false, connected: true } as Player),
       id: meId,
       name: prev?.name ?? 'You',
-      avatar: prev?.avatar ?? '⚡',
+      avatar: prev?.avatar ?? DEFAULT_AVATAR,
       score: me + pts,
       correct: (prev?.correct ?? meCorrect) + (ok ? 1 : 0),
       streak: ok ? (prev?.streak ?? meStreak) + 1 : 0,
@@ -273,7 +274,7 @@ function LocalPlay() {
   const q = qs[Math.min(qi, qs.length - 1)];
   const meBase = room.players.find((x) => x.id === meId);
   const mePlayer = {
-    id: meId, name: meBase?.name ?? 'You', avatar: meBase?.avatar ?? '⚡', score: me, correct: meCorrect,
+    id: meId, name: meBase?.name ?? 'You', avatar: meBase?.avatar ?? DEFAULT_AVATAR, score: me, correct: meCorrect,
     streak: meStreak, bestStreak: 0, rank: 1, ready: true, isHost: false, connected: true,
   } as Player;
   const others = (room?.players ?? []).filter((x) => x.id !== meId && !x.id.startsWith('bot') && !x.id.startsWith('rbot-'));

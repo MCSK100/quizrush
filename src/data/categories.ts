@@ -17,4 +17,5 @@ export const CATEGORIES: Category[] = [
 {id:'gaming',name:'Gaming',slug:'gaming',description:'Esports & classics',icon:'Gamepad2',count:150},
 {id:'world',name:'World',slug:'world',description:'Cultures, flags & food',icon:'Flag',count:180},
 ];
-export const AVATARS=['⚡','🎮','🔥','🎯','🏆','🚀','🦊','🐯','⚔️','👑','💀','🌩️'];
+const dice = (seed: string) => `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}&backgroundColor=ffd5dc,ffdfbf,c0aede,b6e3f4,d1d4f9`;
+export const AVATARS = ['Aria','Leo','Zara','Milo','Nova','Kai','Luna','Felix','Ivy','Omar','Ruby','Theo','Amara','Jasper','Nia','Ravi'].map(dice);

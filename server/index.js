@@ -635,7 +635,7 @@ function onMessage(ws, raw) {
     while (rooms.has(code)) code = roomCode(5);
     const player = {
       id: `p-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
-      name: m.name.trim(), avatar: String(m.avatar || '⚡').slice(0, 4),
+      name: m.name.trim(), avatar: String(m.avatar || 'https://api.dicebear.com/9.x/adventurer/svg?seed=Aria').slice(0, 300),
       score: 0, correct: 0, streak: 0, bestStreak: 0, ready: true,
       isHost: true, connected: true, ws: null,
     };
@@ -662,7 +662,7 @@ function onMessage(ws, raw) {
     }
     const player = {
       id: `p-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
-      name: String(m.name).trim(), avatar: String(m.avatar || '🎯').slice(0, 4),
+      name: String(m.name).trim(), avatar: String(m.avatar || 'https://api.dicebear.com/9.x/adventurer/svg?seed=Leo').slice(0, 300),
       score: 0, correct: 0, streak: 0, bestStreak: 0, ready: true,
       isHost: false, connected: true, ws: null,
     };

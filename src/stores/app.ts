@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Player, QuizConfig, Room } from '../types';
 import { roomCode as genCode } from '../services/engine';
+import { DEFAULT_AVATAR } from '../components/Avatar';
 interface Settings{sound:boolean;setSound:(v:boolean)=>void}
 export const useSettings=create<Settings>(s=>({sound:true,setSound:(sound)=>s({sound})}));
 export function isBotId(id:string){return id.startsWith('bot')||id.startsWith('rbot-')}
@@ -26,7 +27,7 @@ export const useRoom=create<DemoRoom>(s=>({room:loadRoom(),setRoom:(room)=>s(pre
   return {room:next};
 })}));
 export function newRoom(name:string,cfg:QuizConfig):Room{
-const host:Player={id:'host-'+Date.now(),name,avatar:'👑',score:0,correct:0,streak:0,bestStreak:0,rank:1,ready:true,isHost:true,connected:true};
+const host:Player={id:'host-'+Date.now(),name,avatar:DEFAULT_AVATAR,score:0,correct:0,streak:0,bestStreak:0,rank:1,ready:true,isHost:true,connected:true};
 return {code:genCode(5),config:cfg,players:[host],hostId:host.id,status:'LOBBY'};
 }
 export function loadProfile(){try{return JSON.parse(localStorage.getItem('qr-profile')||'{}')}catch{return {}}}

@@ -5,6 +5,7 @@ import { Trophy, X } from 'lucide-react';
 import { sound } from '../services/engine';
 import { useRoom } from '../stores/app';
 import { loadNetSession } from '../services/net';
+import Avatar from '../components/Avatar';
 import type { Player } from '../types';
 
 function rankBadge(i: number) {
@@ -47,7 +48,7 @@ function Board({ rows, meId, code, total, againTo }: { rows: Player[]; meId: str
         {sorted.slice(0, 8).map((p, i) => (
           <motion.div layout key={p.id} className={`flex items-center gap-2 rounded-lg px-3 py-2.5 sm:gap-3 ${i === 0 ? 'bg-warn/10 border border-warn/40' : p.id === meId ? 'bg-[#EDE9FE] border border-neon/40' : 'border border-transparent'}`}>
             <span className="font-num w-6 shrink-0 font-black">{i + 1}</span>
-            <span className="text-xl" aria-hidden>{p.avatar}</span>
+            <Avatar src={p.avatar} alt={p.name} size={28} />
             <span className="min-w-0 flex-1 truncate font-bold">{p.id === meId ? 'You' : p.name}</span>
             {rankBadge(i)}
             {total > 0 && (

@@ -5,6 +5,7 @@ import SetupForm from '../components/SetupForm';
 import { regionLabel } from '../data/regions';
 import type { GameMode, QuizConfig } from '../types';
 import { newRoom, useRoom } from '../stores/app';
+import { AVATARS } from '../data/categories';
 import { createNetRoom, netEnabled, saveNetSession } from '../services/net';
 const SOFT = { border: '1px solid rgba(120,100,180,0.08)' } as const;
 export default function CreateGame() {
@@ -21,7 +22,7 @@ export default function CreateGame() {
       setErr('');
       setBusy(true);
       try {
-        const { room, you } = await createNetRoom(liveCfg, name.trim(), '👑');
+        const { room, you } = await createNetRoom(liveCfg, name.trim(), AVATARS[0]);
         saveNetSession({ code: room.code, playerId: you, name: name.trim() });
         setRoom(room);
         nav(`/room/${room.code}`, { replace: true });
@@ -45,7 +46,7 @@ export default function CreateGame() {
       <p className="mt-2 text-sm font-medium text-muted">Set the stage, share the code, and play live together in real time.</p>
       <div className="qr-surface mt-6 rounded-[24px] p-4 sm:p-6">
         <label className="text-[11px] font-extrabold tracking-[0.16em] text-muted" htmlFor="hname">YOUR NAME</label>
-        <input id="hname" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Arjun" maxLength={16}
+        <input id="hname" value={name} onChange={(e) => setName(e.target.value)} maxLength={16}
           className="mt-2 w-full rounded-2xl bg-white/90 px-4 py-3.5 font-bold text-ink outline-none transition-all placeholder:text-faint focus:bg-white" style={{ ...SOFT, borderWidth: 1.5 }} />
         <div className="mt-6"><SetupForm value={cfg} onChange={setCfg} /></div>
         <div className="mt-6">

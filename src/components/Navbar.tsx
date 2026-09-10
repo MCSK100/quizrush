@@ -24,7 +24,24 @@ export default function Navbar() {
     }
   }
   const loc = useLocation();
+  const isMatch = loc.pathname.endsWith('/play');
+  const isHome = loc.pathname === '/';
   useEffect(() => { setOpen(false); }, [loc.pathname]);
+  if (isMatch) {
+    return (
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
+        <div
+          className="mx-auto flex h-[64px] max-w-6xl items-center justify-between gap-3 rounded-[20px] bg-white/60 px-3 pl-4 pr-2 shadow-sticker-sm backdrop-blur-xl sm:px-4"
+          style={{ border: '1px solid rgba(120,100,180,0.08)' }}
+        >
+          <Link to="/" className="flex items-center gap-2" aria-label="Quizlly home">
+            <img src="/quizlly-logo.png" alt="Quizlly" className="h-9 w-auto object-contain" />
+          </Link>
+          <Link to="/" className="btn-press rounded-full bg-white/80 px-5 py-2.5 text-[14px] font-extrabold text-ink transition-colors hover:bg-white" style={{ border: '1.5px solid rgba(120,100,180,0.16)' }}>HOME</Link>
+        </div>
+      </header>
+    );
+  }
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 16);
     on(); window.addEventListener('scroll', on, { passive: true });
@@ -47,7 +64,7 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
-          {!installed && (
+          {isHome && !installed && (
             <div className="relative">
               <button onClick={onInstall} className="btn-press relative flex items-center gap-1.5 overflow-hidden rounded-full bg-ink px-4 py-2.5 text-[14px] font-extrabold text-white shadow-soft">
                 <span aria-hidden className="animate-shimmer-sweep pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
@@ -78,13 +95,13 @@ export default function Navbar() {
             <Link to="/multiplayer/join" className="qr-btn-ghost justify-center px-4 py-3 text-[14px]">Join Game</Link>
             <Link to="/multiplayer/create" className="qr-btn-primary justify-center px-4 py-3 text-[14px]">Create Game</Link>
           </div>
-          {!installed && (
+          {isHome && !installed && (
             <button onClick={onInstall} className="btn-press relative mt-2 flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-2xl bg-ink px-4 py-3 text-[14px] font-extrabold text-white">
               <span aria-hidden className="animate-shimmer-sweep pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
               <Download size={16} className="relative" /> <span className="relative">Install App</span>
             </button>
           )}
-          {showHelp && (
+          {isHome && showHelp && (
             <p className="mt-2 rounded-xl bg-[#F8F9FF] px-4 py-3 text-[13px] font-medium text-muted" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
               Android: browser menu ⋮ → Install app. iPhone: Share ⎙ → Add to Home Screen.
             </p>
