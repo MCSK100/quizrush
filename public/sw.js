@@ -15,14 +15,7 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
-      // One-time heal: tabs stuck on a stale shell reload into the fresh one.
-      .then(() => self.clients.matchAll({ type: 'window' }))
-      .then((clients) => {
-        for (const c of clients) {
-          try { c.navigate(c.url); } catch { /* ignore */ }
-        }
-      }),
+      .then(() => self.clients.claim()),
   );
 });
 self.addEventListener('fetch', (e) => {
@@ -57,7 +50,7 @@ self.addEventListener('fetch', (e) => {
           caches.open(VERSION).then((c) => c.put(request, copy));
         }
         return res;
-      });
+      }).catch(() => Response.error());
     }),
   );
 });
