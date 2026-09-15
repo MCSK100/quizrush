@@ -14,7 +14,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const { canPrompt, installed, promptInstall } = usePwaInstall();
+  const { canPrompt, installed, promptInstall, showIosHelp } = usePwaInstall();
   async function onInstall() {
     if (canPrompt) {
       await promptInstall();
@@ -23,6 +23,7 @@ export default function Navbar() {
       setShowHelp((s) => !s);
     }
   }
+  const showHelpAuto = showHelp || showIosHelp;
   const loc = useLocation();
   const isMatch = loc.pathname.endsWith('/play');
   const isHome = loc.pathname === '/';
@@ -70,11 +71,11 @@ export default function Navbar() {
                 <span aria-hidden className="animate-shimmer-sweep pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
                 <Download size={16} className="relative" /> <span className="relative">Install App</span>
               </button>
-              {showHelp && (
+              {showHelpAuto && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl bg-white p-4 text-left text-[13px] font-medium text-muted shadow-soft" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>
                   <b className="text-ink">Get the Quizlly app</b>
-                  <p className="mt-1">Android: browser menu ⋮ → Install app / Add to Home screen.</p>
-                  <p className="mt-1">iPhone: Share <b>⎙</b> → Add to Home Screen.</p>
+                  <p className="mt-1">Android / Chrome: browser menu ⋮ → Install app / Add to Home screen.</p>
+                  <p className="mt-1">iPhone / iPad (Safari): Share <b>⎙</b> → Add to Home Screen → Add.</p>
                 </div>
               )}
             </div>
@@ -101,9 +102,9 @@ export default function Navbar() {
               <Download size={16} className="relative" /> <span className="relative">Install App</span>
             </button>
           )}
-          {isHome && showHelp && (
+          {isHome && showHelpAuto && (
             <p className="mt-2 rounded-xl bg-[#F8F9FF] px-4 py-3 text-[13px] font-medium text-muted" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
-              Android: browser menu ⋮ → Install app. iPhone: Share ⎙ → Add to Home Screen.
+              Android: browser menu ⋮ → Install app. iPhone / iPad: Share ⎙ → Add to Home Screen → Add.
             </p>
           )}
         </div>

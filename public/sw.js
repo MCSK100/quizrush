@@ -1,13 +1,25 @@
-// Quizlly service worker v3.
+// Quizlly service worker v4 — Android + Apple (iOS 16.4+ standalone) safe.
 // Rule: the app shell (navigations/index.html) is NETWORK-FIRST so a new
 // deploy can never pair a stale index.html with deleted hashed assets
 // (that frankenbuild white-screens React with invalid-hook errors).
 // Content-hashed build assets are immutable, so cache-first is safe for them.
-const VERSION = 'quizlly-v3';
+//
+// iOS notes:
+// - iOS standalone Safari sometimes issues same-origin doc requests without
+//   request.mode === 'navigate', so detect navigations via the Accept header too.
+// - iOS probes /apple-touch-icon.png on install — keep it precached.
+const VERSION = 'quizlly-v4';
+const PRECACHE = [
+  '/manifest.webmanifest',
+  '/apple-touch-icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/quizlly-favicon.png',
+];
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(VERSION)
-      .then((c) => c.addAll(['/manifest.webmanifest', '/icon-192.png', '/icon-512.png']))
+      .then((c) => c.addAll(PRECACHE))
       .then(() => self.skipWaiting()),
   );
 });
@@ -18,6 +30,16 @@ self.addEventListener('activate', (e) => {
       .then(() => self.clients.claim()),
   );
 });
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+function isNavigation(request) {
+  if (request.mode === 'navigate') return true;
+  if (request.method !== 'GET') return false;
+  if (request.destination === 'document') return true;
+  const accept = request.headers.get('accept') || '';
+  return accept.includes('text/html');
+}
 self.addEventListener('fetch', (e) => {
   const { request } = e;
   if (request.method !== 'GET') return;
@@ -25,7 +47,7 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/socket')) return;
   // SPA navigations: network first, cached shell only when truly offline.
-  if (request.mode === 'navigate') {
+  if (isNavigation(request)) {
     e.respondWith(
       fetch(request).then((res) => {
         if (res.ok) {

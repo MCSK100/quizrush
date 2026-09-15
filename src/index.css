@@ -24,15 +24,30 @@
 }
 
 *{ -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
-html{ scroll-behavior:smooth; overflow-x:clip; }
+html{ scroll-behavior:smooth; overflow-x:clip; height:100%; }
 body{
   background:var(--bg-primary);
   color:var(--text-primary);
   font-family:"Plus Jakarta Sans",Inter,system-ui,-apple-system,sans-serif;
   overflow-x:clip;
   -webkit-font-smoothing:antialiased;
+  min-height:100%;
+  min-height:100dvh;
+  overscroll-behavior-y:none;
+  -webkit-text-size-adjust:100%;
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
 }
-#root{ overflow-x:clip; }
+#root{
+  overflow-x:clip;
+  min-height:100dvh;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+@media (display-mode: standalone){
+  body{ user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  img{ -webkit-touch-callout:none; }
+}
 img,svg,video{ max-width:100%; }
 h1,h2,h3,.font-display{ font-family:Fredoka,"Plus Jakarta Sans",Inter,system-ui,sans-serif; letter-spacing:-0.015em; font-weight:600; }
 .font-num{ font-variant-numeric:tabular-nums; }
