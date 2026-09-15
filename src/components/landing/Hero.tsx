@@ -2,10 +2,46 @@ import { Link } from 'react-router-dom';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Play, Users, ChevronDown, ArrowRight, Hash } from 'lucide-react';
-import AnimatedBackground from './AnimatedBackground';
 import HeroQuizCard from './HeroQuizCard';
-import HeroVideo from './HeroVideo';
 import { CATEGORIES } from '../../data/categories';
+
+const HERO_VIDEO_SRC = '/192292-892475144.mp4';
+
+function HeroBannerVideo() {
+  const vidRef = useRef<HTMLVideoElement>(null);
+  const reduce = useReducedMotion();
+  useEffect(() => {
+    const vid = vidRef.current;
+    if (!vid || reduce) return;
+    const ob = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) vid.play().catch(() => {});
+        else vid.pause();
+      },
+      { threshold: 0.1 },
+    );
+    ob.observe(vid);
+    return () => ob.disconnect();
+  }, [reduce]);
+  return (
+    <>
+      <video
+        ref={vidRef}
+        className="absolute inset-0 h-full w-full object-cover"
+        src={HERO_VIDEO_SRC}
+        muted
+        loop
+        playsInline
+        autoPlay={!reduce}
+        preload="metadata"
+        poster="/quizlly-og-image.png"
+        aria-hidden
+      />
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-cream/90 via-cream/70 to-cream" />
+      <div aria-hidden className="absolute inset-0" style={{ background: 'radial-gradient(min(900px,100vw) 420px at 50% 0%, rgba(255,253,248,0.9), transparent 70%)' }} />
+    </>
+  );
+}
 
 function useCountUp(target: number, start: boolean, duration = 1400) {
   const [v, setV] = useState(0);
@@ -72,7 +108,7 @@ export default function Hero() {
   return (
     <section ref={secRef} className="relative overflow-x-clip overflow-y-visible">
       <motion.div style={{ y: bgY }} className="absolute inset-0">
-        <AnimatedBackground tone="hero" />
+        <HeroBannerVideo />
       </motion.div>
 
       <div className="relative mx-auto grid w-full min-w-0 max-w-6xl items-center gap-6 px-4 pb-12 pt-24 sm:gap-8 sm:px-5 sm:pb-14 sm:pt-36 lg:grid-cols-[1.02fr_.98fr] lg:gap-4 lg:pb-16">
@@ -115,8 +151,6 @@ export default function Hero() {
           <HeroQuizCard />
         </motion.div>
       </div>
-
-      <HeroVideo />
 
       <motion.div style={{ opacity: cueO }} aria-hidden className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 sm:flex">
         <span className="text-[10px] font-extrabold tracking-[0.28em] text-muted">SCROLL FOR MORE FUN</span>
