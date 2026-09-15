@@ -117,6 +117,7 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
         difficulty: cfg.difficulty, region: cfg.focus === 'india' ? 'india' : cfg.region || 'global',
         language: cfg.language || 'en', questionType: wantType,
         customTopic: (cfg.customTopic || '').slice(0, 80), focus: cfg.focus || 'global',
+        jlptLevel: cfg.category === 'japanese' ? (cfg.jlptLevel || 'N5') : undefined,
       }),
     });
     clearTimeout(t);

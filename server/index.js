@@ -31,11 +31,13 @@ const ALLOWED_DIFFS = new Set(['easy', 'medium', 'hard', 'mixed']);
 const ALLOWED_CATS = new Set([
   'mixed', 'sports', 'history', 'science', 'geography', 'tech', 'movies',
   'music', 'kids', 'tamil', 'gk', 'maths', 'literature', 'animals', 'space',
-  'gaming', 'world', 'india', 'custom',
+  'gaming', 'world', 'india', 'japanese', 'custom',
 ]);
 const ALLOWED_LANGS = new Set(['en', 'ta', 'both']);
 const ALLOWED_QTYPES = new Set(['mcq', 'tf', 'mixed']);
 const ALLOWED_FOCUS = new Set(['global', 'india', 'topic']);
+const ALLOWED_JLPT = new Set(['N5', 'N4', 'N3', 'N2', 'N1']);
+function cleanJlpt(v) { const s = String(v || 'N5').toUpperCase(); return ALLOWED_JLPT.has(s) ? s : 'N5'; }
 function cleanLang(v) { const s = String(v || 'en').toLowerCase(); return ALLOWED_LANGS.has(s) ? s : 'en'; }
 function cleanQType(v) { const s = String(v || 'mcq').toLowerCase(); return ALLOWED_QTYPES.has(s) ? s : 'mcq'; }
 const STATE_IDS = new Set([
@@ -184,21 +186,36 @@ const CATEGORY_FOCUS = {
   gaming: 'ONLY video games, esports, consoles, game characters. NEVER history or biology.',
   world: 'ONLY world cultures, countries, food, festivals, landmarks. NEVER maths formulas or physics.',
   india: 'ONLY India: states, history, geography, culture, sports, cinema, current affairs. NEVER generic non-India facts.',
+  japanese: 'ONLY Japanese language ability: vocabulary (語彙), kanji readings and meanings, grammar (文法), particles and everyday expressions. NEVER generic trivia.',
   mixed: 'mixed general knowledge across many topics.',
 };
-function buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus }) {
+const JLPT_DESC = {
+  N5: 'N5 beginner: hiragana, katakana, ~100 basic kanji, simple everyday phrases and basic particles (は、が、を、に).',
+  N4: 'N4 elementary: ~300 kanji, basic verb conjugations (ます/ない/た形), everyday conversations and simple sentences.',
+  N3: 'N3 intermediate: ~650 kanji, intermediate grammar (~ておく、~ば、受身形), longer everyday passages.',
+  N2: 'N2 upper-intermediate: ~1000 kanji, advanced grammar (敬語 basics, ~ざるを得ない、~わけではない), news and essay-style reading.',
+  N1: 'N1 advanced: ~2000 kanji, complex grammar, nuanced expressions, fast natural-speed reading like newspapers and novels.',
+};
+const JLPT_DIFF = { N5: 'easy', N4: 'easy', N3: 'medium', N2: 'hard', N1: 'hard' };
+function buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }) {
   const isCustom = category === 'custom' && String(customTopic || '').trim();
-  const catLabel = isCustom ? `CUSTOM TOPIC "${String(customTopic).trim().toUpperCase()}"` : category === 'mixed' ? 'mixed general knowledge' : category.toUpperCase();
+  const level = cleanJlpt(jlptLevel);
+  const isJapanese = category === 'japanese';
+  const catLabel = isCustom ? `CUSTOM TOPIC "${String(customTopic).trim().toUpperCase()}"` : isJapanese ? `JAPANESE LANGUAGE (JLPT ${level})` : category === 'mixed' ? 'mixed general knowledge' : category.toUpperCase();
   const focusRule = isCustom
     ? `Every question MUST be strictly about "${String(customTopic).trim()}". NEVER drift to other topics.`
-    : (CATEGORY_FOCUS[category] || CATEGORY_FOCUS.mixed);
-  const langBit = language === 'ta' || category === 'tamil'
+    : isJapanese
+      ? `Every question MUST test Japanese at JLPT ${level} level: ${JLPT_DESC[level]} Mix vocabulary, kanji readings/meanings, grammar and particles suited to ${level}.`
+      : (CATEGORY_FOCUS[category] || CATEGORY_FOCUS.mixed);
+  const langBit = isJapanese
+    ? ' Write each question stem in Japanese script (kanji/kana). For N5/N4 add romaji and an English gloss in parentheses; for N3 and above use Japanese with an English gloss only where needed. Keep options in Japanese. The explanation MUST be bilingual: Japanese first, then English.'
+    : language === 'ta' || category === 'tamil'
     ? ' Write the question AND all options AND explanation in Tamil (தமிழ்).'
     : language === 'both'
       ? ' Alternate languages: odd-numbered questions fully in English, even-numbered fully in Tamil (தமிழ்).'
       : ' Write everything in English.';
   const regionBit = focus === 'topic' ? '' : regionPrompt(region || 'global');
-  const diffBit = difficulty === 'mixed' ? 'a mix of easy, medium and hard' : `difficulty=${difficulty} for EVERY question`;
+  const diffBit = isJapanese ? `difficulty=${JLPT_DIFF[level]} for EVERY question (JLPT ${level} standard)` : difficulty === 'mixed' ? 'a mix of easy, medium and hard' : `difficulty=${difficulty} for EVERY question`;
   const typeBit = questionType === 'tf'
     ? 'TYPE: True/False ONLY. Each item MUST have exactly options ["True","False"] and correctAnswer 0 or 1.'
     : questionType === 'mixed'
@@ -337,8 +354,8 @@ async function callGroq(model, prompt) {
   if (!Array.isArray(parsed)) throw new Error(`unparseable groq response model=${model}`);
   return parsed;
 }
-async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus }) {
-  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus });
+async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }) {
+  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel });
   let lastErr = new Error('no AI providers configured (set GEMINI_API_KEY, OPENROUTER_API_KEY and/or GROQ_API_KEY)');
   const tryParse = (parsed, tag, qtype) => {
     const arr = Array.isArray(parsed) ? parsed : parsed.questions;
@@ -561,6 +578,7 @@ async function handleStart(room, byId) {
       questionType: cleanQType(room.config.questionType),
       customTopic: String(room.config.customTopic || '').slice(0, 80),
       focus: ALLOWED_FOCUS.has(room.config.focus) ? room.config.focus : 'global',
+      jlptLevel: cleanJlpt(room.config.jlptLevel),
     };
     const { questions: fetched, provider } = await resolveQuestions(qOpts);
     room.provider = provider;
@@ -675,6 +693,7 @@ function onMessage(ws, raw) {
     const questionType = cleanQType(m.config?.questionType);
     const focus = ALLOWED_FOCUS.has(m.config?.focus) ? m.config.focus : 'global';
     const customTopic = String(m.config?.customTopic || '').slice(0, 80);
+    const jlptLevel = cleanJlpt(m.config?.jlptLevel);
     let code = roomCode(5);
     while (rooms.has(code)) code = roomCode(5);
     const player = {
@@ -684,7 +703,7 @@ function onMessage(ws, raw) {
       isHost: true, connected: true, ws: null,
     };
     const room = {
-      code, config: { category, count, timer, difficulty, mode, maxPlayers, region, language, questionType, customTopic, focus },
+      code, config: { category, count, timer, difficulty, mode, maxPlayers, region, language, questionType, customTopic, focus, jlptLevel },
       players: [player], hostId: player.id, status: 'LOBBY',
       questions: [], qi: 0, answers: {}, endsAt: 0, timers: [],
       lastMsg: null, rows: [], touchedAt: Date.now(),
@@ -770,6 +789,7 @@ const server = http.createServer(async (req, res) => {
     const questionType = cleanQType(body.questionType);
     const focus = ALLOWED_FOCUS.has(body.focus) ? body.focus : 'global';
     const customTopic = String(body.customTopic || '').slice(0, 80);
+    const jlptLevel = cleanJlpt(body.jlptLevel);
     if (!ALLOWED_CATS.has(category) || !ALLOWED_DIFFS.has(difficulty)) {
       send(res, 400, { error: 'invalid category or difficulty' });
       return;
@@ -779,7 +799,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     try {
-      const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus });
+      const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel });
       const questions = fetched
         .map((r) => (r && r.id ? r : normalize(r, category, questionType)))
         .filter(Boolean)

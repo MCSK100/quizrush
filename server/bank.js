@@ -11,6 +11,18 @@ function q(category, difficulty, question, options, correctAnswer, explanation) 
 
 // [category, difficulty, question, options[4], correctIdx, explanation]
 const RAW = [
+['japanese','easy','「ねこ」の意味は何ですか？ (What does “ねこ” mean?)',['Cat','Dog','Bird','Fish'],0,'ねこ (neko) means cat.'],
+['japanese','easy','「みず」の意味は何ですか？ (What does “みず” mean?)',['Water','Fire','Rice','Milk'],0,'みず (mizu) means water.'],
+['japanese','easy','「たべます」の意味は何ですか？ (What does “たべます” mean?)',['To eat','To drink','To sleep','To walk'],0,'たべます (tabemasu) means to eat.'],
+['japanese','easy','数字の「さん」はどれですか？ (Which is the number “さん”?)',['3','5','7','9'],0,'さん (san) is the number 3.'],
+['japanese','easy','「がくせい」の意味は何ですか？ (What does “がくせい” mean?)',['Student','Teacher','Doctor','Shop'],0,'がくせい (gakusei) means student.'],
+['japanese','easy','「あか」の意味は何ですか？ (What does “あか” mean?)',['Red','Blue','White','Black'],0,'あか (aka) means red.'],
+['japanese','easy','「ほん」の意味は何ですか？ (What does “ほん” mean?)',['Book','Pen','Desk','Bag'],0,'ほん (hon) means book.'],
+['japanese','easy','「いぬ」の意味は何ですか？ (What does “いぬ” mean?)',['Dog','Cat','Horse','Cow'],0,'いぬ (inu) means dog.'],
+['japanese','easy','「にほん」の意味は何ですか？ (What does “にほん” mean?)',['Japan','China','Korea','India'],0,'にほん (nihon) means Japan.'],
+['japanese','easy','「おはよう」の意味は何ですか？ (What does “おはよう” mean?)',['Good morning','Good night','Thank you','Goodbye'],0,'おはよう (ohayou) means good morning.'],
+['japanese','easy','「すし」は何ですか？ (What is “すし”?)',['Japanese food','A festival','A city','A song'],0,'すし (sushi) is a famous Japanese food.'],
+['japanese','easy','「でんしゃ」の意味は何ですか？ (What does “でんしゃ” mean?)',['Train','Bus','Car','Bicycle'],0,'でんしゃ (densha) means train.'],
 ['mixed','easy','Which planet is known as the Red Planet?',['Mars','Venus','Jupiter','Mercury'],0,'Mars looks red due to iron oxide dust.'],
 ['mixed','easy','How many days are there in a leap year?',['366','365','364','367'],0,'Leap years add Feb 29.'],
 ['mixed','medium','Which ocean is the largest on Earth?',['Pacific','Atlantic','Indian','Arctic'],0,'The Pacific covers about a third of Earth.'],

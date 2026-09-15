@@ -1,13 +1,24 @@
 import { useState } from 'react';
-import type { Difficulty, QuestionType, QuizConfig, QuizFocus, QuizLanguage } from '../types';
+import type { Difficulty, JlptLevel, QuestionType, QuizConfig, QuizFocus, QuizLanguage } from '../types';
 import { sound } from '../services/engine';
 const SOFT = { border: '1px solid rgba(120,100,180,0.08)' } as const;
 export const ALLOWED_TIMERS = [0, 10, 20, 30, 60] as const;
 export const ALLOWED_CATEGORIES = [
   'mixed', 'sports', 'science', 'history', 'tech', 'movies',
   'music', 'gaming', 'geography', 'gk', 'maths', 'literature',
-  'animals', 'space', 'kids', 'tamil', 'india', 'world', 'custom',
+  'animals', 'space', 'kids', 'tamil', 'india', 'world', 'japanese', 'custom',
 ] as const;
+export const JLPT_LEVELS: { id: JlptLevel; label: string }[] = [
+  { id: 'N5', label: 'N5 · Beginner' },
+  { id: 'N4', label: 'N4 · Elementary' },
+  { id: 'N3', label: 'N3 · Intermediate' },
+  { id: 'N2', label: 'N2 · Advanced' },
+  { id: 'N1', label: 'N1 · Master' },
+];
+export function sanitizeJlpt(v: unknown): JlptLevel {
+  const s = String(v || 'N5').toUpperCase();
+  return (['N5', 'N4', 'N3', 'N2', 'N1'] as const).includes(s as JlptLevel) ? (s as JlptLevel) : 'N5';
+}
 const TOPICS = [
   { id: 'mixed', label: '🎯 Mixed' }, { id: 'sports', label: '🏆 Sports' },
   { id: 'science', label: '🔬 Science' }, { id: 'history', label: '🏛️ History' },
@@ -18,7 +29,7 @@ const TOPICS = [
   { id: 'animals', label: '🐾 Animals' }, { id: 'space', label: '🚀 Space' },
   { id: 'kids', label: '🧒 Kids' }, { id: 'tamil', label: '🇮🇳 Tamil' },
   { id: 'india', label: '🇮🇳 India' },
-  { id: 'world', label: '🌐 World' }, { id: 'custom', label: '✨ Custom Topic' },
+  { id: 'world', label: '🌐 World' }, { id: 'japanese', label: '⛩️ Japanese' }, { id: 'custom', label: '✨ Custom Topic' },
 ];
 const LANGS: { id: QuizLanguage; label: string }[] = [
   { id: 'en', label: '🇬🇧 English' }, { id: 'ta', label: '🇮🇳 Tamil' }, { id: 'both', label: 'Both' },
@@ -35,7 +46,7 @@ const TIMERS = [...ALLOWED_TIMERS];
 const FOCUS: { id: QuizFocus; label: string }[] = [
   { id: 'global', label: '🌐 Global' }, { id: 'india', label: '🇮🇳 India' }, { id: 'topic', label: '🎯 Topic-specific' },
 ];
-const ICONS: Record<string, string> = { Trophy: '🏆', Landmark: '🏛️', FlaskConical: '🧪', Globe: '🌍', Cpu: '💻', Clapperboard: '🎬', Music: '🎵', Smile: '😊', Languages: 'த', Brain: '🧠', Sigma: '∑', BookOpen: '📚', PawPrint: '🐾', Rocket: '🚀', Gamepad2: '🎮', Flag: '🌐' };
+const ICONS: Record<string, string> = { Trophy: '🏆', Landmark: '🏛️', FlaskConical: '🧪', Globe: '🌍', Cpu: '💻', Clapperboard: '🎬', Music: '🎵', Smile: '😊', Languages: 'த', Brain: '🧠', Sigma: '∑', BookOpen: '📚', PawPrint: '🐾', Rocket: '🚀', Gamepad2: '🎮', Flag: '🌐', Torii: '⛩️' };
 export function iconFor(icon: string) { return ICONS[icon] ?? '🎯'; }
 export function isAllowedCategory(c: unknown): boolean {
   return typeof c === 'string' && (ALLOWED_CATEGORIES as readonly string[]).includes(c);
@@ -86,7 +97,7 @@ export default function SetupForm({ value, onChange }: { value: QuizConfig; onCh
       </Section>
       <Section title="TOPIC">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {TOPICS.map((t) => <Pill key={t.id} active={value.category === t.id} onClick={() => set({ category: t.id })}>{t.label}</Pill>)}
+          {TOPICS.map((t) => <Pill key={t.id} active={value.category === t.id} onClick={() => set(t.id === 'japanese' ? { category: t.id, jlptLevel: value.jlptLevel || 'N5' } : { category: t.id })}>{t.label}</Pill>)}
         </div>
         {value.category === 'custom' && (
           <input
@@ -117,6 +128,14 @@ export default function SetupForm({ value, onChange }: { value: QuizConfig; onCh
           {DIFFS.map((d) => <Pill key={d.id} active={value.difficulty === d.id} onClick={() => set({ difficulty: d.id as Difficulty })}>{d.label}</Pill>)}
         </div>
       </Section>
+      {value.category === 'japanese' && (
+        <Section title="JLPT LEVEL">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {JLPT_LEVELS.map((l) => <Pill key={l.id} active={(value.jlptLevel || 'N5') === l.id} onClick={() => set({ jlptLevel: l.id })}>{l.label}</Pill>)}
+          </div>
+          <p className="mt-2 text-[12px] font-bold text-muted">N5 is beginner kanji & everyday phrases · N1 is advanced reading & grammar.</p>
+        </Section>
+      )}
       <Section title="QUESTION TYPE">
         <div className="grid grid-cols-3 gap-2">
           {QTYPES.map((q) => <Pill key={q.id} active={(value.questionType || 'mcq') === q.id} onClick={() => set({ questionType: q.id })}>{q.label}</Pill>)}

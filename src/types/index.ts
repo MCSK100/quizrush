@@ -6,7 +6,8 @@ export type QuizLanguage='en'|'ta'|'both';
 export type QuestionType='mcq'|'tf'|'mixed';
 export type QuizFocus='global'|'india'|'topic';
 export interface Question{id:string;category:string;difficulty:Exclude<Difficulty,'mixed'>;question:string;options:string[];correctAnswer:number;explanation:string;language?:string;region?:string}
-export interface QuizConfig{category:string;count:number;timer:number;difficulty:Difficulty;randomizeQ?:boolean;randomizeA?:boolean;mode?:GameMode;maxPlayers?:number;region?:string;language?:QuizLanguage;questionType?:QuestionType;customTopic?:string;focus?:QuizFocus}
+export interface QuizConfig{category:string;count:number;timer:number;difficulty:Difficulty;randomizeQ?:boolean;randomizeA?:boolean;mode?:GameMode;maxPlayers?:number;region?:string;language?:QuizLanguage;questionType?:QuestionType;customTopic?:string;focus?:QuizFocus;jlptLevel?:JlptLevel}
+export type JlptLevel='N5'|'N4'|'N3'|'N2'|'N1';
 export interface Player{id:string;name:string;avatar:string;score:number;correct:number;streak:number;bestStreak:number;rank:number;ready:boolean;isHost:boolean;connected:boolean;eliminated?:boolean;lastDelta?:number}
 export interface AnswerRecord{questionId:string;picked:number|null;correct:boolean;responseTime:number;points:number}
 export interface Room{code:string;config:QuizConfig;players:Player[];hostId:string;status:GameState}

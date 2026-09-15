@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play } from 'lucide-react';
-import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeTimer } from '../components/SetupForm';
+import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeJlpt, sanitizeTimer } from '../components/SetupForm';
 import { regionLabel } from '../data/regions';
 import type { GameMode, QuizConfig } from '../types';
 import { newRoom, useRoom } from '../stores/app';
@@ -12,7 +12,7 @@ export default function CreateGame() {
   const nav = useNavigate();
   const setRoom = useRoom((s) => s.setRoom);
   const [name, setName] = useState('');
-  const [cfg, setCfg] = useState<QuizConfig>({ category: 'mixed', count: 20, timer: 30, difficulty: 'mixed', region: 'global', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'global' });
+  const [cfg, setCfg] = useState<QuizConfig>({ category: 'mixed', count: 20, timer: 30, difficulty: 'mixed', region: 'global', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'global', jlptLevel: 'N5' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   async function create() {
@@ -22,6 +22,7 @@ export default function CreateGame() {
       category: isAllowedCategory(cfg.category) ? cfg.category : 'mixed',
       count: sanitizeCount(cfg.count),
       timer: sanitizeTimer(cfg.timer, true),
+      jlptLevel: sanitizeJlpt(cfg.jlptLevel),
       customTopic: String(cfg.customTopic || '').slice(0, 80),
     };
     if (clean.category === 'custom' && !clean.customTopic?.trim()) { setErr('Enter a custom topic to continue.'); return; }

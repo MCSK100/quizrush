@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeTimer } from '../components/SetupForm';
+import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeJlpt, sanitizeTimer } from '../components/SetupForm';
 import { regionLabel } from '../data/regions';
 import type { QuizConfig } from '../types';
 import { AiError, generateQuestions } from '../services/questions';
@@ -10,7 +10,7 @@ export default function SoloSetup() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
   const rawCat = sp.get('cat') || 'mixed';
-  const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) ? rawCat : 'mixed', count: 10, timer: 10, difficulty: 'mixed', region: 'global', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'global' });
+  const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) ? rawCat : 'mixed', count: 10, timer: 10, difficulty: 'mixed', region: 'global', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'global', jlptLevel: 'N5' });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   async function start() {
@@ -20,6 +20,7 @@ export default function SoloSetup() {
       category: isAllowedCategory(cfg.category) ? cfg.category : 'mixed',
       count: sanitizeCount(cfg.count),
       timer: sanitizeTimer(cfg.timer, true),
+      jlptLevel: sanitizeJlpt(cfg.jlptLevel),
       customTopic: (cfg.customTopic || '').slice(0, 80),
     };
     if (clean.category === 'custom' && !clean.customTopic?.trim()) {

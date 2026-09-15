@@ -18,6 +18,7 @@ export const CATEGORIES: Category[] = [
 {id:'space',name:'Space',slug:'space',description:'Planets, stars & missions',icon:'Rocket',count:170},
 {id:'gaming',name:'Gaming',slug:'gaming',description:'Esports & classics',icon:'Gamepad2',count:150},
 {id:'world',name:'World',slug:'world',description:'Cultures, flags & food',icon:'Flag',count:180},
+{id:'japanese',name:'Japanese',slug:'japanese',description:'日本語 — JLPT N5 to N1 test prep',icon:'Torii',count:150},
 ];
 const dice = (seed: string) => `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}&backgroundColor=ffd5dc,ffdfbf,c0aede,b6e3f4,d1d4f9`;
 export const AVATARS = ['Aria','Leo','Zara','Milo','Nova','Kai','Luna','Felix','Ivy','Omar','Ruby','Theo','Amara','Jasper','Nia','Ravi'].map(dice);
