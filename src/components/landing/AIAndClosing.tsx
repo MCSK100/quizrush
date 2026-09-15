@@ -82,7 +82,7 @@ export function FinalCTA() {
         <Reveal>
           <div className="qr-eyebrow mx-auto max-w-full">⚡ <span className="truncate">NO SIGN-UP NEEDED</span></div>
           <h2 className="font-display mt-6 text-balance text-[clamp(2.2rem,10vw,4.5rem)] font-semibold leading-[1.0] tracking-tight text-ink">READY TO TEST<br />YOUR <span className="qr-gradient-text">BRAIN?</span></h2>
-          <p className="mx-auto mt-4 max-w-md text-balance text-[15px] font-medium text-muted sm:text-[16px]">Play solo or challenge your friends. One tap and you're in the spotlight.</p>
+          <p className="mx-auto mt-4 max-w-md text-balance text-[15px] font-medium text-muted sm:text-[16px]">Play a free solo trivia quiz or challenge friends in a live multiplayer room — GK, current affairs and 17+ topics. One tap and you&apos;re in the spotlight.</p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[12.5px] font-extrabold text-muted">
             {['No sign-up needed', 'Solo + rooms', 'AI & bank questions'].map((t) => (
               <span key={t} className="rounded-full bg-white px-4 py-2 shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>{t}</span>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AnswerRecord, Question, QuizConfig } from '../types';
@@ -15,13 +15,25 @@ const OPT_IMAGES = [
 ];
 export default function SoloPlay() {
   const nav = useNavigate();
-  const [data] = useState(() => {
+  const [stored] = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem('qr-solo') || 'null') as { cfg: QuizConfig; questions: Question[]; source?: 'ai' | 'demo' } | null;
     } catch {
       return null;
     }
   });
+  const qs = useMemo(() => {
+    const raw = Array.isArray(stored?.questions) ? (stored.questions as Question[]) : [];
+    return raw.filter(
+      (q) =>
+        q &&
+        Array.isArray(q.options) &&
+        q.options.length >= 2 &&
+        typeof q.correctAnswer === 'number' &&
+        q.correctAnswer >= 0 &&
+        q.correctAnswer < q.options.length,
+    );
+  }, [stored]);
   const [qi, setQi] = useState(0);
   const [phase, setPhase] = useState<'count' | 'q' | 'reveal'>('count');
   const [count, setCount] = useState(3);
@@ -31,12 +43,11 @@ export default function SoloPlay() {
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
   const t0 = useRef(Date.now());
   const lockRef = useRef<(p: number | null) => void>(() => {});
-  const cfg = data?.cfg;
-  const qs = data?.questions ?? [];
-  const isAI = data?.source === 'ai';
+  const cfg = stored?.cfg;
+  const isAI = stored?.source === 'ai';
   useEffect(() => {
-    if (!data || !qs.length) nav('/solo', { replace: true });
-  }, [data, qs.length, nav]);
+    if (!stored) nav('/solo', { replace: true });
+  }, [stored, nav]);
   useEffect(() => {
     if (phase !== 'count') return;
     if (count <= 0) {
@@ -46,9 +57,18 @@ export default function SoloPlay() {
       return;
     }
     sound.play('count');
-    const t = setTimeout(() => setCount((c) => c - 1), 700);
+    const t = setTimeout(() => setCount((c) => (Number.isFinite(c) ? c - 1 : 0)), 700);
     return () => clearTimeout(t);
   }, [phase, count]);
+  useEffect(() => {
+    if (phase !== 'count') return;
+    const force = setTimeout(() => {
+      setCount(0);
+      setPhase('q');
+      t0.current = Date.now();
+    }, 6000);
+    return () => clearTimeout(force);
+  }, [phase]);
   function lock(p: number | null) {
     if (phase !== 'q') return;
     const q = qs[qi];
@@ -91,11 +111,22 @@ export default function SoloPlay() {
   useEffect(() => {
     if (!noTimer && phase === 'q' && ceil <= 3 && ceil > 0) sound.play('tick');
   }, [ceil, phase, noTimer]);
-  if (!data || !qs.length)
+  if (!stored)
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <p className="font-display text-2xl text-ink">Loading questions…</p>
         <p className="text-sm text-muted">Dealing fresh questions…</p>
+      </div>
+    );
+  if (!qs.length)
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <p className="font-display text-2xl text-ink">Questions didn&apos;t load.</p>
+        <p className="mt-2 text-sm font-bold text-muted">The quiz data looks incomplete — head back and start a fresh game.</p>
+        <div className="mt-5 flex justify-center gap-2">
+          <button onClick={() => nav('/solo', { replace: true })} className="qr-btn-primary rounded-2xl px-6 py-3 font-display">BACK TO SETUP</button>
+          <button onClick={() => location.reload()} className="rounded-2xl bg-white px-6 py-3 font-display shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>RETRY</button>
+        </div>
       </div>
     );
   if (phase === 'count')
@@ -165,7 +196,7 @@ export default function SoloPlay() {
       </div>
       {phase === 'reveal' && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`mt-4 rounded-2xl px-4 py-3 text-center text-sm font-bold ${picked === q.correctAnswer ? 'bg-[#E7F9E5] text-[#1E7A38]' : 'bg-[#FFE9E9] text-[#C62828]'}`} style={{ border: picked === q.correctAnswer ? '1.5px solid #58CC02' : '1.5px solid #FF4B5C' }}>
-          {picked === q.correctAnswer ? `+${answers[answers.length - 1]?.points ?? 0} Correct! ${q.explanation}` : `${picked === null ? 'Time up! ' : ''}Correct: ${q.options[q.correctAnswer]} · ${q.explanation}`}
+          {picked === q.correctAnswer ? `+${answers[answers.length - 1]?.points ?? 0} Correct! ${q.explanation}` : `${picked === null ? 'Time up! ' : ''}Correct: ${q.options[q.correctAnswer] ?? ''} · ${q.explanation}`}
         </motion.p>
       )}
       <div className="mt-3 text-center font-num text-xs font-bold text-muted">

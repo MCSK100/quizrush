@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Play, Users, ChevronDown, ArrowRight, Hash } from 'lucide-react';
 import AnimatedBackground from './AnimatedBackground';
 import HeroQuizCard from './HeroQuizCard';
+import HeroVideo from './HeroVideo';
 import { CATEGORIES } from '../../data/categories';
 
 function useCountUp(target: number, start: boolean, duration = 1400) {
@@ -92,7 +93,7 @@ export default function Hero() {
           </h1>
           <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
             className="mt-5 max-w-md text-[16px] font-medium leading-relaxed text-muted">
-            Challenge yourself or take on friends in fast-paced quizzes with fresh AI-generated questions every match.
+            Play free online quizzes — solo trivia or live multiplayer rooms with friends. General knowledge, GK, current affairs, science, sports and 17+ topics with fresh AI-generated questions every match.
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="mt-7 flex flex-col items-stretch gap-2.5 min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:items-center sm:gap-3">
@@ -114,6 +115,8 @@ export default function Hero() {
           <HeroQuizCard />
         </motion.div>
       </div>
+
+      <HeroVideo />
 
       <motion.div style={{ opacity: cueO }} aria-hidden className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 sm:flex">
         <span className="text-[10px] font-extrabold tracking-[0.28em] text-muted">SCROLL FOR MORE FUN</span>

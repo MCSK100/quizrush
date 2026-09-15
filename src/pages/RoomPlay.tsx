@@ -182,7 +182,17 @@ function LocalPlay() {
   const setRoom = useRoom((s) => s.setRoom);
   const qs = useMemo(() => {
     try {
-      return JSON.parse(sessionStorage.getItem('qr-room-qs') || '[]') as Question[];
+      const raw = JSON.parse(sessionStorage.getItem('qr-room-qs') || '[]') as Question[];
+      if (!Array.isArray(raw)) return [];
+      return raw.filter(
+        (q) =>
+          q &&
+          Array.isArray(q.options) &&
+          q.options.length >= 2 &&
+          typeof q.correctAnswer === 'number' &&
+          q.correctAnswer >= 0 &&
+          q.correctAnswer < q.options.length,
+      );
     } catch {
       return [];
     }
@@ -224,9 +234,18 @@ function LocalPlay() {
       return;
     }
     sound.play('count');
-    const t = setTimeout(() => setCount((c) => c - 1), 700);
+    const t = setTimeout(() => setCount((c) => (Number.isFinite(c) ? c - 1 : 0)), 700);
     return () => clearTimeout(t);
   }, [phase, count]);
+  useEffect(() => {
+    if (phase !== 'count') return;
+    const force = setTimeout(() => {
+      setCount(0);
+      setPhase('q');
+      t0.current = Date.now();
+    }, 6000);
+    return () => clearTimeout(force);
+  }, [phase]);
   function lock(p: number | null) {
     if (phase !== 'q' || !room) return;
     const q = qs[qi];
@@ -276,7 +295,14 @@ function LocalPlay() {
   useEffect(() => {
     if (!noTimer && phase === 'q' && ceil <= 3 && ceil > 0) sound.play('tick');
   }, [ceil, phase, noTimer]);
-  if (!room || !qs.length) return <div className="p-10 text-center text-sm font-bold text-muted">Reconnecting…</div>;
+  if (!room || !qs.length)
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <p className="font-display text-2xl text-ink">{!room ? 'Reconnecting…' : 'Questions didn’t load.'}</p>
+        <p className="mt-2 text-sm font-bold text-muted">{!room ? 'Getting your room back…' : 'The quiz data looks incomplete — head back to the lobby and start again.'}</p>
+        <button onClick={() => nav(`/room/${roomCode}`, { replace: true })} className="qr-btn-primary mt-5 rounded-2xl px-6 py-3 font-display">BACK TO LOBBY</button>
+      </div>
+    );
   if (phase === 'count')
     return (
       <div className="relative grid min-h-[70vh] place-items-center overflow-hidden">

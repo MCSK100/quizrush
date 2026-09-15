@@ -6,6 +6,15 @@ function clampDuration(d: unknown): number {
   return n;
 }
 
+function clampStart(s: unknown): number {
+  const now = Date.now();
+  const n = Number(s);
+  if (!Number.isFinite(n) || n <= 0) return now;
+  if (n > now + 5000) return now;
+  if (now - n > 24 * 3600 * 1000) return now;
+  return n;
+}
+
 export function useServerTimer(
   duration: number,
   active: boolean,
@@ -19,10 +28,10 @@ export function useServerTimer(
   const fired = useRef(false);
   const cb = useRef(onExpire);
   cb.current = onExpire;
-  const startRef = useRef<number>(serverStart ?? Date.now());
+  const startRef = useRef<number>(clampStart(serverStart));
 
   useEffect(() => {
-    startRef.current = serverStart ?? Date.now();
+    startRef.current = clampStart(serverStart);
     fired.current = false;
     setLeft(total);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -30,10 +39,9 @@ export function useServerTimer(
 
   useEffect(() => {
     if (!active || disabled) return;
-    const t0 = startRef.current;
     const tick = () => {
-      const el = (Date.now() - t0) / 1000;
-      const l = Math.max(0, total - el);
+      const el = (Date.now() - startRef.current) / 1000;
+      const l = Math.max(0, total - Math.max(0, el));
       setLeft(l);
       if (l <= 0 && !fired.current) {
         fired.current = true;
@@ -42,7 +50,14 @@ export function useServerTimer(
     };
     tick();
     const iv = setInterval(tick, 100);
-    return () => clearInterval(iv);
+    const onVis = () => {
+      if (document.visibilityState === 'visible') tick();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      clearInterval(iv);
+      document.removeEventListener('visibilitychange', onVis);
+    };
   }, [active, total, disabled, key]);
 
   return disabled ? Number.POSITIVE_INFINITY : left;
