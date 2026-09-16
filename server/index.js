@@ -118,25 +118,45 @@ function coerceIndex(v) {
   return -1;
 }
 
-function normalize(raw, cat, qtype = 'mcq') {
+let aiN = 0;
+function qTextKey(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9\u0b80-\u0bff]+/g, ' ').trim().replace(/\s+/g, ' ');
+}
+function dedupeQs(qs) {
+  const seen = new Set();
+  return (qs || []).filter((x) => {
+    if (!x || typeof x.question !== 'string') return false;
+    const k = qTextKey(x.question);
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+function normalize(raw, cat, qtype = 'mcq', lang = 'en') {
   if (!raw || typeof raw !== 'object') return null;
-  const options = Array.isArray(raw.options) ? raw.options.map(String) : [];
+  const options = Array.isArray(raw.options) ? raw.options.map((o) => String(o ?? '').trim()) : [];
   if (options.length !== 4 && options.length !== 2) return null;
-  if (options.some((o) => !o.trim())) return null;
-  if (new Set(options.map((o) => o.trim().toLowerCase())).size !== options.length) return null;
+  if (options.some((o) => !o)) return null;
+  if (options.some((o) => o.length > 140)) return null;
+  if (new Set(options.map((o) => o.toLowerCase())).size !== options.length) return null;
   if (qtype === 'tf' && options.length !== 2) return null;
   const correct = coerceIndex(raw.correctAnswer ?? raw.answer ?? raw.correct);
   if (correct < 0 || correct > options.length - 1) return null;
   const diff = String(raw.difficulty || 'medium').toLowerCase();
-  if (typeof raw.question !== 'string' || !raw.question.trim()) return null;
+  if (typeof raw.question !== 'string') return null;
+  const stem = raw.question.trim();
+  // Reject malformed / empty / irrelevant stubs before they reach players.
+  if (stem.length < 8 || stem.length > 320) return null;
+  if (/^(question|q\d+|test|undefined|null)\b/i.test(stem)) return null;
   return {
-    id: `ai-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+    id: `ai-${Date.now()}-${(aiN++ % 1e6).toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`,
     category: cat,
     difficulty: ['easy', 'medium', 'hard'].includes(diff) ? diff : 'medium',
-    question: raw.question.trim(),
+    language: ['en', 'ta', 'both'].includes(String(lang)) ? String(lang) : 'en',
+    question: stem,
     options,
     correctAnswer: correct,
-    explanation: String(raw.explanation || ''),
+    explanation: String(raw.explanation || '').slice(0, 400),
   };
 }
 
@@ -360,7 +380,7 @@ async function generateAIQuestions({ category, count, difficulty, region, langua
   const tryParse = (parsed, tag, qtype) => {
     const arr = Array.isArray(parsed) ? parsed : parsed.questions;
     if (!Array.isArray(arr)) throw new Error(`unparseable ${tag} response`);
-    const out = arr.map((r) => normalize(r, category, qtype)).filter(Boolean);
+    const out = dedupeQs(arr.map((r) => normalize(r, category, qtype, language)).filter(Boolean));
     if (out.length < Math.min(3, count)) throw new Error(`zero valid questions ${tag}`);
     return out;
   };
@@ -423,7 +443,7 @@ async function resolveQuestions(opts) {
   } else {
     console.log('[ai] no providers configured, using bank');
   }
-  return bankQuestions({ category: opts.category, count: opts.count, questionType: opts.questionType, difficulty: opts.difficulty });
+  return bankQuestions({ category: opts.category, count: opts.count, questionType: opts.questionType, difficulty: opts.difficulty, language: opts.language || 'en' });
 }
 
 /* ---------------- realtime rooms ---------------- */
@@ -582,10 +602,11 @@ async function handleStart(room, byId) {
     };
     const { questions: fetched, provider } = await resolveQuestions(qOpts);
     room.provider = provider;
-    const qs = fetched
-      .map((r) => (r && r.id ? r : normalize(r, qOpts.category, qOpts.questionType)))
-      .filter(Boolean)
-      .slice(0, want);
+    const qs = dedupeQs(
+      fetched
+        .map((r) => (r && r.id && Array.isArray(r.options) ? r : normalize(r, qOpts.category, qOpts.questionType, qOpts.language)))
+        .filter(Boolean),
+    ).slice(0, want);
     if (qs.length < 3) throw new Error('too few questions');
     if (room.status !== 'COUNTDOWN') return;
     room.questions = qs;
@@ -800,10 +821,11 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel });
-      const questions = fetched
-        .map((r) => (r && r.id ? r : normalize(r, category, questionType)))
-        .filter(Boolean)
-        .slice(0, count);
+      const questions = dedupeQs(
+        fetched
+          .map((r) => (r && r.id && Array.isArray(r.options) ? r : normalize(r, category, questionType, language)))
+          .filter(Boolean),
+      ).slice(0, count);
       if (questions.length < Math.min(3, count)) throw new Error('too few valid questions');
       send(res, 200, { questions, provider, model: provider });
     } catch (e) {

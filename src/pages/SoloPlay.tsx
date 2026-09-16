@@ -17,7 +17,7 @@ export default function SoloPlay() {
   const nav = useNavigate();
   const [stored] = useState(() => {
     try {
-      return JSON.parse(sessionStorage.getItem('qr-solo') || 'null') as { cfg: QuizConfig; questions: Question[]; source?: 'ai' | 'demo' } | null;
+      return JSON.parse(sessionStorage.getItem('qr-solo') || 'null') as { cfg: QuizConfig; questions: Question[]; source?: 'ai' | 'bank' | 'demo' } | null;
     } catch {
       return null;
     }
@@ -34,17 +34,31 @@ export default function SoloPlay() {
         q.correctAnswer < q.options.length,
     );
   }, [stored]);
-  const [qi, setQi] = useState(0);
-  const [phase, setPhase] = useState<'count' | 'q' | 'reveal'>('count');
+  const PROG_KEY = 'qr-solo-progress';
+  const [qi, setQi] = useState<number>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(PROG_KEY) || 'null') as { qi?: unknown }; return typeof p?.qi === 'number' && (p.qi as number) >= 0 ? (p.qi as number) : 0; } catch { return 0; }
+  });
+  const [phase, setPhase] = useState<'count' | 'q' | 'reveal'>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(PROG_KEY) || 'null'); return p?.phase === 'q' || p?.phase === 'reveal' ? 'q' as const : 'count' as const; } catch { return 'count'; }
+  });
   const [count, setCount] = useState(3);
   const [picked, setPicked] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [answers, setAnswers] = useState<AnswerRecord[]>([]);
+  const [score, setScore] = useState<number>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(PROG_KEY) || 'null') as { score?: unknown }; return typeof p?.score === 'number' ? (p.score as number) : 0; } catch { return 0; }
+  });
+  const [streak, setStreak] = useState<number>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(PROG_KEY) || 'null') as { streak?: unknown }; return typeof p?.streak === 'number' ? (p.streak as number) : 0; } catch { return 0; }
+  });
+  const [answers, setAnswers] = useState<AnswerRecord[]>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(PROG_KEY) || 'null') as { answers?: unknown }; return Array.isArray(p?.answers) ? (p.answers as AnswerRecord[]) : []; } catch { return []; }
+  });
   const t0 = useRef(Date.now());
   const lockRef = useRef<(p: number | null) => void>(() => {});
   const cfg = stored?.cfg;
   const isAI = stored?.source === 'ai';
+  useEffect(() => {
+    try { sessionStorage.setItem(PROG_KEY, JSON.stringify({ qi, score, streak, answers })); } catch { /* ignore */ }
+  }, [qi, score, streak, answers]);
   useEffect(() => {
     if (!stored) nav('/solo', { replace: true });
   }, [stored, nav]);
@@ -92,7 +106,10 @@ export default function SoloPlay() {
     const finalScore = score + pts;
     setTimeout(() => {
       if (qi + 1 >= qs.length) {
-        sessionStorage.setItem('qr-result', JSON.stringify({ cfg, answers: nextAnswers, score: finalScore, qs }));
+        try {
+          sessionStorage.setItem('qr-result', JSON.stringify({ cfg, answers: nextAnswers, score: finalScore, qs }));
+          sessionStorage.removeItem('qr-solo-progress');
+        } catch { /* ignore */ }
         nav('/solo/results', { replace: true });
       } else {
         setQi((i) => i + 1);
@@ -125,7 +142,7 @@ export default function SoloPlay() {
         <p className="mt-2 text-sm font-bold text-muted">The quiz data looks incomplete — head back and start a fresh game.</p>
         <div className="mt-5 flex justify-center gap-2">
           <button onClick={() => nav('/solo', { replace: true })} className="qr-btn-primary rounded-2xl px-6 py-3 font-display">BACK TO SETUP</button>
-          <button onClick={() => location.reload()} className="rounded-2xl bg-white px-6 py-3 font-display shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>RETRY</button>
+          <button onClick={() => { try { sessionStorage.removeItem('qr-solo'); sessionStorage.removeItem('qr-solo-progress'); } catch { /* ignore */ } nav('/solo', { replace: true }); }} className="rounded-2xl bg-white px-6 py-3 font-display shadow-sticker-sm" style={{ border: '1px solid rgba(120,100,180,0.10)' }}>RETRY</button>
         </div>
       </div>
     );

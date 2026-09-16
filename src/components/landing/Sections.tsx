@@ -5,8 +5,8 @@ export function Reveal({ children, delay = 0, className = '' }: { children: Reac
   const reduce = useReducedMotion();
   if (reduce) return <div className={className}>{children}</div>;
   return (
-    <motion.div className={className} initial={{ opacity: 0, y: 26, scale: 0.985 }} whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.div className={`parallax-will-change ${className}`} initial={{ opacity: 0, y: 34, rotateX: 9, scale: 0.98 }} whileInView={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }} style={{ transformPerspective: 1100, transformStyle: 'preserve-3d' }}>
       {children}
     </motion.div>
   );

@@ -157,6 +157,12 @@ h1,h2,h3,.font-display{ font-family:Fredoka,"Plus Jakarta Sans",Inter,system-ui,
 
 .no-scrollbar::-webkit-scrollbar{ display:none; }
 .no-scrollbar{ scrollbar-width:none; }
+/* 3D parallax smooth-scroll helpers */
+.parallax-stage{ transform-style:preserve-3d; }
+.parallax-will-change{ will-change:transform; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+@media (prefers-reduced-motion: reduce){
+  .parallax-will-change{ will-change:auto; }
+}
 html.lenis, html.lenis body{ height:auto; }
 .lenis.lenis-smooth{ scroll-behavior:auto !important; }
 :focus-visible{ outline:2px solid #2E9BFF; outline-offset:2px; }

@@ -26,7 +26,7 @@ function HeroBannerVideo() {
     <>
       <video
         ref={vidRef}
-        className="absolute inset-0 h-full w-full scale-105 object-cover"
+        className="absolute inset-0 block h-full w-full scale-105 object-cover"
         src={HERO_VIDEO_SRC}
         muted
         loop
@@ -36,9 +36,16 @@ function HeroBannerVideo() {
         poster="/quizlly-og-image.png"
         aria-hidden
       />
-      {/* Light cinematic wash — video stays clearly visible, text stays readable */}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-cream/60 via-cream/30 to-cream" />
-      <div aria-hidden className="absolute inset-0" style={{ background: 'radial-gradient(min(1000px,110vw) 480px at 50% 38%, transparent 30%, rgba(255,253,248,0.55) 100%)' }} />
+      {/* Darker cinematic blue grade — deepens blues, keeps subject visible */}
+      <div aria-hidden className="absolute inset-0 bg-[#0A1C38]/30" />
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(180deg, rgba(10,28,56,0.42) 0%, rgba(29,78,216,0.22) 28%, rgba(255,253,248,0.12) 60%, rgba(255,253,248,0.92) 88%, #FFFDF8 100%)' }}
+      />
+      <div aria-hidden className="absolute inset-0" style={{ background: 'radial-gradient(min(1000px,110vw) 480px at 50% 38%, transparent 30%, rgba(10,28,56,0.28) 100%)' }} />
+      {/* Seam cover — melts the video edge into the next section, no hairline */}
+      <div aria-hidden className="absolute inset-x-0 bottom-[-2px] h-10 bg-gradient-to-b from-transparent to-cream" />
     </>
   );
 }
@@ -121,7 +128,8 @@ export default function Hero() {
   return (
     <section
       ref={secRef}
-      className="relative overflow-x-clip overflow-y-visible [perspective:1400px]"
+      className="relative overflow-hidden bg-cream [perspective:1400px]"
+      style={{ marginBottom: -2 }}
       onMouseMove={(e) => {
         if (reduce) return;
         const r = secRef.current?.getBoundingClientRect();
@@ -130,7 +138,8 @@ export default function Hero() {
         my.set((e.clientY - r.top) / r.height);
       }}
     >
-      <motion.div style={{ y: bgY, scale: bgScale }} className="absolute inset-0">
+      {/* Extended 4px past the bottom edge so the seam never shows a hairline */}
+      <motion.div style={{ y: bgY, scale: bgScale }} className="absolute inset-x-0 bottom-[-4px] top-0">
         <HeroBannerVideo />
       </motion.div>
 

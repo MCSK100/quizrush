@@ -27,20 +27,28 @@ function NetPlay({ code }: { code: string }) {
   const [showBoard, setShowBoard] = useState(false);
   const [err, setErr] = useState('');
   const [stale, setStale] = useState(false);
+  const pickedRef = useRef<number | null>(null);
+  const rowsRef = useRef<Player[]>([]);
+  const qRef = useRef<{ qi: number; total: number } | null>(null);
   const { send } = useNetSocket(code, (m: NetMsg) => {
     if (m.t === 'room' && m.room) {
       const r = m.room as { players: Player[] };
-      setRows([...r.players].sort((a, b) => b.score - a.score));
+      const sorted = [...r.players].sort((a, b) => b.score - a.score);
+      rowsRef.current = sorted;
+      setRows(sorted);
     } else if (m.t === 'count') {
       setPhase('count');
       setCount(Number(m.n ?? 3));
     } else if (m.t === 'question') {
       if (Number(m.qi ?? 0) === 0) console.log(`[quizlly] room questions via ${String(m.provider || 'ai')}`);
-      setQ({
+      const nq = {
         qi: Number(m.qi ?? 0), total: Number(m.total ?? 1),
         question: String(m.question || ''), options: Array.isArray(m.options) ? (m.options as string[]) : [],
         category: String(m.category || ''), endsAt: Number(m.endsAt || 0), timer: Number(m.timer || 10),
-      });
+      };
+      qRef.current = nq;
+      setQ(nq);
+      pickedRef.current = null;
       setPicked(null);
       setExpired(false);
       setCorrect(null);
@@ -50,19 +58,23 @@ function NetPlay({ code }: { code: string }) {
     } else if (m.t === 'answered') {
       setAnsweredIds(Array.isArray(m.ids) ? (m.ids as string[]) : []);
     } else if (m.t === 'reveal') {
-      setCorrect(typeof m.correct === 'number' ? m.correct : null);
+      const corr = typeof m.correct === 'number' ? m.correct : null;
+      setCorrect(corr);
       setExplanation(String(m.explanation || ''));
       const gains = (m.rows as Player[] | undefined) ?? [];
       const sorted = [...gains].sort((a, b) => b.score - a.score);
+      rowsRef.current = sorted;
       setRows(sorted);
       const mine = sorted.find((p) => p.id === you);
       if (mine) setScore(mine.score);
       setPhase('reveal');
-      if (mine && picked !== null && picked === (typeof m.correct === 'number' ? m.correct : -1)) sound.play('correct');
+      if (mine && pickedRef.current !== null && pickedRef.current === corr) sound.play('correct');
       else sound.play('wrong');
     } else if (m.t === 'finished') {
-      const finalRows = Array.isArray(m.rows) ? (m.rows as Player[]) : rows;
-      sessionStorage.setItem('qr-net-result', JSON.stringify({ rows: finalRows, code, you, total: Number(m.total ?? q?.total ?? finalRows.length) }));
+      const finalRows = Array.isArray(m.rows) ? (m.rows as Player[]) : rowsRef.current;
+      try {
+        sessionStorage.setItem('qr-net-result', JSON.stringify({ rows: finalRows, code, you, total: Number(m.total ?? qRef.current?.total ?? finalRows.length) }));
+      } catch { /* ignore */ }
       nav(`/room/${code}/results`, { replace: true });
     } else if (m.t === 'error') {
       console.error('[quizlly] room error:', String(m.msg || ''), String(m.detail || ''));
@@ -87,10 +99,11 @@ function NetPlay({ code }: { code: string }) {
     if (phase === 'q' && ceil <= 3 && ceil > 0) sound.play('tick');
   }, [ceil, phase]);
   function choose(i: number) {
-    if (phase !== 'q' || expired || picked !== null || !q) return;
+    if (phase !== 'q' || expired || pickedRef.current !== null || !q) return;
+    pickedRef.current = i;
     setPicked(i);
     sound.play('click');
-    send({ t: 'answer', pick: i });
+    if (!send({ t: 'answer', pick: i })) setErr('Connection lost — answer may not count. Rejoining…');
   }
   if (phase === 'joining' || phase === 'count') {
     return (
@@ -197,13 +210,25 @@ function LocalPlay() {
       return [];
     }
   }, []);
-  const [qi, setQi] = useState(0);
+  const RP_KEY = 'qr-room-progress';
+  const [qi, setQi] = useState<number>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(RP_KEY) || 'null') as { qi?: unknown }; return typeof p?.qi === 'number' && (p.qi as number) >= 0 ? (p.qi as number) : 0; } catch { return 0; }
+  });
   const [phase, setPhase] = useState<'count' | 'q' | 'reveal'>('count');
   const [count, setCount] = useState(3);
   const [picked, setPicked] = useState<number | null>(null);
-  const [me, setMe] = useState(0);
-  const [meCorrect, setMeCorrect] = useState(0);
-  const [meStreak, setMeStreak] = useState(0);
+  const [me, setMe] = useState<number>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(RP_KEY) || 'null') as { me?: unknown }; return typeof p?.me === 'number' ? (p.me as number) : 0; } catch { return 0; }
+  });
+  const [meCorrect, setMeCorrect] = useState<number>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(RP_KEY) || 'null') as { meCorrect?: unknown }; return typeof p?.meCorrect === 'number' ? (p.meCorrect as number) : 0; } catch { return 0; }
+  });
+  const [meStreak, setMeStreak] = useState<number>(() => {
+    try { const p = JSON.parse(sessionStorage.getItem(RP_KEY) || 'null') as { meStreak?: unknown }; return typeof p?.meStreak === 'number' ? (p.meStreak as number) : 0; } catch { return 0; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem(RP_KEY, JSON.stringify({ qi, me, meCorrect, meStreak })); } catch { /* ignore */ }
+  }, [qi, me, meCorrect, meStreak]);
   const [showBoard, setShowBoard] = useState(false);
   const t0 = useRef(Date.now());
   const lockRef = useRef<(p: number | null) => void>(() => {});
@@ -278,7 +303,10 @@ function LocalPlay() {
     const finalMe = me + pts;
     setTimeout(() => {
       if (qi + 1 >= qs.length) {
-        sessionStorage.setItem('qr-room-result', JSON.stringify({ me: finalMe, meId, total: qs.length }));
+        try {
+          sessionStorage.setItem('qr-room-result', JSON.stringify({ me: finalMe, meId, total: qs.length }));
+          sessionStorage.removeItem('qr-room-progress');
+        } catch { /* ignore */ }
         nav(`/room/${roomCode}/results`, { replace: true });
       } else {
         setQi((i) => i + 1);

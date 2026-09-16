@@ -1,4 +1,5 @@
 import type { Question, QuizConfig } from '../types';
+import { getBackupQuestions } from '../data/bank';
 export function shuffle<T>(arr: T[]): T[] { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
 export function validateQuestion(q: unknown): q is Question {
   if (!q || typeof q !== 'object') return false; const o = q as Record<string, unknown>;
@@ -64,20 +65,35 @@ function coerceIndex(v: unknown): number {
   if (typeof v === 'string') { const t = v.trim().toUpperCase(); const li = 'ABCD'.indexOf(t); if (li >= 0) return li; const num = parseInt(t, 10); if (num >= 1 && num <= 4) return num - 1 }
   return -1;
 }
-function normalize(raw: unknown, cat: string, maxIdx = 3): Question | null {
+function normalize(raw: unknown, cat: string, maxIdx = 3, lang = 'en'): Question | null {
   if (!raw || typeof raw !== 'object') return null; const o = raw as Record<string, unknown>;
-  const options = Array.isArray(o.options) ? o.options.map(String) : [];
+  const options = Array.isArray(o.options) ? o.options.map((x) => String(x ?? '').trim()) : [];
   if (options.length !== 4 && options.length !== 2) return null;
+  if (options.some((x) => !x || x.length > 140)) return null;
+  if (new Set(options.map((s) => s.toLowerCase())).size !== options.length) return null;
   const correct = coerceIndex(o.correctAnswer ?? o.answer ?? o.correct);
   if (correct < 0 || correct > options.length - 1) return null;
   if (maxIdx === 1 && options.length !== 2) return null;
   if (maxIdx === 3 && options.length !== 4 && options.length !== 2) return null;
+  const stem = String(o.question || '').trim();
+  if (stem.length < 8 || stem.length > 320) return null;
+  if (/^(question|q\d+|test|undefined|null)\b/i.test(stem)) return null;
   const diff = String(o.difficulty || 'medium').toLowerCase();
   return {
     id: `ai-${Date.now()}-${n++}`, category: cat, difficulty: (['easy', 'medium', 'hard'].includes(diff) ? diff : 'medium') as Question['difficulty'],
-    question: String(o.question || '').trim(), options, correctAnswer: correct,
-    explanation: String(o.explanation || ''), language: o.language ? String(o.language) : undefined,
+    question: stem, options, correctAnswer: correct,
+    explanation: String(o.explanation || '').slice(0, 400), language: ['en', 'ta', 'both'].includes(String(o.language || lang)) ? String(o.language || lang) : lang,
   };
+}
+function bankFallback(cfg: QuizConfig, count: number, reason: string): { questions: Question[]; source: 'bank'; provider: string } {
+  const banned = new Set([...recentTexts(), ...sessionTexts()]);
+  const pool = getBackupQuestions(cfg).filter(validateQuestion);
+  const fresh = dedupeFresh(pool.filter((q) => !banned.has(qKey(q))));
+  const out = (fresh.length >= Math.min(3, count) ? fresh : dedupeFresh(pool)).slice(0, count);
+  if (out.length < Math.min(3, count)) throw new AiError('failed', aiErrorMessage('failed'));
+  rememberQuestions(out);
+  console.log(`[quizlly] ${out.length} backup questions (${reason}) · ${cfg.category}/${cfg.difficulty}/${cfg.questionType || 'mcq'}/${cfg.language || 'en'}`);
+  return { questions: out, source: 'bank', provider: 'bank' };
 }
 function endpoint(): string {
   return ((import.meta as unknown as { env: Record<string, string | undefined> }).env.VITE_AI_ENDPOINT || '').trim().replace(/\/$/, '');
@@ -100,12 +116,14 @@ export async function aiBackendHealth(): Promise<'on' | 'off' | 'unknown'> {
     return 'off';
   }
 }
-export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Question[]; source: 'ai'; provider: string }> {
+export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Question[]; source: 'ai' | 'bank'; provider: string }> {
   const wantType = cfg.questionType || 'mcq';
   const maxIdx = wantType === 'tf' ? 1 : 3;
   const base = endpoint();
-  if (!base) throw new AiError('setup', aiErrorMessage('setup'));
   const count = Math.min(40, Math.max(3, cfg.count));
+  // Full chain: Primary AI (backend, which itself tries gemini→openrouter→groq)
+  // → local backup pool → graceful error. Never leave the user on a blank screen.
+  if (!base) return bankFallback(cfg, count, 'no-backend');
   let res: Response;
   try {
     const ctrl = new AbortController();
@@ -121,33 +139,53 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
       }),
     });
     clearTimeout(t);
-  } catch {
-    throw new AiError('failed', aiErrorMessage('failed'));
+  } catch (e) {
+    console.error('[quizlly] AI request failed, using backup:', e);
+    return bankFallback(cfg, count, 'network-timeout');
   }
   if (!res.ok) {
     let detail = '';
     try { detail = JSON.stringify(await res.json()); } catch { /* ignore */ }
     console.error('[quizlly] AI endpoint error:', res.status, detail);
-    if (res.status === 429) throw new AiError('quota', aiErrorMessage('quota'));
-    if (res.status === 503) throw new AiError('setup', aiErrorMessage('setup'));
-    throw new AiError('failed', aiErrorMessage('failed'));
+    // Rate-limited / failing backend still yields a playable quiz via backup.
+    return bankFallback(cfg, count, `http-${res.status}`);
   }
-  const data = await res.json();
-  const arr = Array.isArray(data) ? data : data.questions;
-  const provider = !Array.isArray(data) && typeof data?.provider === 'string' ? data.provider : 'ai';
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    console.error('[quizlly] AI endpoint returned invalid JSON, using backup');
+    return bankFallback(cfg, count, 'bad-json');
+  }
+  const arr = Array.isArray(data) ? data : (data as { questions?: unknown }).questions;
+  const provider = !Array.isArray(data) && data && typeof (data as { provider?: unknown }).provider === 'string' ? String((data as { provider: string }).provider) : 'ai';
+  // Backend may already have fallen back to its bank — honor it as AI-success.
+  if (provider === 'bank' && Array.isArray(arr)) {
+    const bannedB = new Set([...recentTexts(), ...sessionTexts()]);
+    const allB = (arr as unknown[])
+      .map((r) => normalize(r, cfg.category, maxIdx, cfg.language || 'en'))
+      .filter((q): q is Question => !!q && validateQuestion(q));
+    const freshB = dedupeFresh(allB.filter((q) => !bannedB.has(qKey(q))));
+    const outB = (freshB.length >= Math.min(3, count) ? freshB : dedupeFresh(allB)).slice(0, count);
+    if (outB.length >= Math.min(3, count)) {
+      rememberQuestions(outB);
+      return { questions: outB, source: 'bank', provider: 'bank' };
+    }
+    return bankFallback(cfg, count, 'bank-too-few');
+  }
   if (!Array.isArray(arr)) {
     console.error('[quizlly] AI endpoint returned no question list');
-    throw new AiError('failed', aiErrorMessage('failed'));
+    return bankFallback(cfg, count, 'no-list');
   }
   const banned = new Set([...recentTexts(), ...sessionTexts()]);
-  const all = arr
-    .map((r: unknown) => normalize(r, cfg.category, maxIdx))
+  const all = (arr as unknown[])
+    .map((r: unknown) => normalize(r, cfg.category, maxIdx, cfg.language || 'en'))
     .filter((q): q is Question => !!q && validateQuestion(q));
   const fresh = dedupeFresh(all.filter((q) => !banned.has(qKey(q))));
   const out = (fresh.length >= Math.min(3, count) ? fresh : dedupeFresh(all)).slice(0, count);
   if (out.length < Math.min(3, count)) {
     console.error('[quizlly] AI endpoint returned too few valid questions');
-    throw new AiError('failed', aiErrorMessage('failed'));
+    return bankFallback(cfg, count, 'too-few-valid');
   }
   rememberQuestions(out);
   console.log(`[quizlly] ${out.length} questions via ${provider} · ${cfg.category}/${cfg.difficulty}/${wantType}/${cfg.language || 'en'}`);

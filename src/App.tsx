@@ -30,7 +30,7 @@ function useLenis() {
     (async () => {
       const { default: Lenis } = await import('lenis');
       if (dead) return;
-      lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+      lenis = new Lenis({ lerp: 0.09, smoothWheel: true, wheelMultiplier: 1.02, touchMultiplier: 1.4 });
       const loop = (t: number) => { lenis?.raf(t); raf = requestAnimationFrame(loop); };
       raf = requestAnimationFrame(loop);
     })();

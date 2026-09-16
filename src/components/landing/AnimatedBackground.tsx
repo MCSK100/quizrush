@@ -1,5 +1,5 @@
-import { motion, useReducedMotion } from 'framer-motion';
-import { useMemo } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { useMemo, useRef } from 'react';
 import { Brain } from 'lucide-react';
 
 export function GradientOrb({ className = '', color = '#E9E2FF', style = {} as React.CSSProperties, anim = 'orbA' }: { className?: string; color?: string; style?: React.CSSProperties; anim?: 'orbA' | 'orbB' }) {
@@ -40,8 +40,19 @@ export function FloatingQuizIcon({ glyph, className = '', size = 22, delay = 0, 
   );
 }
 
-export function ParallaxLayer({ children, className = '' }: { speed?: number; children: React.ReactNode; className?: string }) {
-  return <div aria-hidden className={className}>{children}</div>;
+export function ParallaxLayer({ children, className = '', speed = 0.5 }: { speed?: number; children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], [60 * speed, -60 * speed]);
+  if (reduce) return <div className={className}>{children}</div>;
+  return (
+    <div ref={ref} className={className} style={{ perspective: 1200 }}>
+      <motion.div style={{ y, transformPerspective: 1000 }} className="will-change-transform">
+        {children}
+      </motion.div>
+    </div>
+  );
 }
 
 function StarField({ count = 42, mobileCount = 16 }: { count?: number; mobileCount?: number }) {

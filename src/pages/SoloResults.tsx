@@ -13,11 +13,15 @@ export default function SoloResults() {
       return null;
     }
   }, []);
+  const recorded = useState(() => false);
   useEffect(() => {
     if (!data) nav('/solo', { replace: true });
     else {
-      const c = data.answers.filter((a: { correct: boolean }) => a.correct).length;
-      recordGame(data.score, c, data.qs.length, c >= data.qs.length * 0.6, data.cfg.category);
+      if (!recorded[0]) {
+        recorded[1](true);
+        const c = data.answers.filter((a: { correct: boolean }) => a.correct).length;
+        recordGame(data.score, c, data.qs.length, c >= data.qs.length * 0.6, data.cfg.category);
+      }
       sound.play('fanfare');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

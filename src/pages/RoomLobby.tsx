@@ -153,12 +153,16 @@ function LocalLobby({ code }: { code: string }) {
     }
     setStarting(true);
     try {
-      const { questions } = await generateQuestions(cleanConfig);
-      sessionStorage.setItem('qr-room-qs', JSON.stringify(questions));
+      const { questions, source } = await generateQuestions(cleanConfig);
+      try {
+        sessionStorage.removeItem('qr-room-result');
+        sessionStorage.setItem('qr-room-qs', JSON.stringify(questions));
+        sessionStorage.setItem('qr-room-src', JSON.stringify({ source }));
+      } catch { /* ignore */ }
       setRoom({ ...r, config: cleanConfig, status: 'COUNTDOWN' });
       nav(`/room/${r.code}/play`);
     } catch (e) {
-      setErr(e instanceof AiError ? e.message : 'AI question generation failed. Please try again.');
+      setErr(e instanceof AiError ? e.message : 'Could not build questions. Check your connection and retry.');
       setStarting(false);
     }
   }

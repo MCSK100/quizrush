@@ -359,6 +359,7 @@ function genScience(k) {
 // half the time assert a wrong option.
 function toTF(item, idx) {
   const useTruth = idx % 2 === 0;
+  const isTa = item.language === 'ta';
   const statement = useTruth
     ? `${item.question} — ${item.options[item.correctAnswer]}.`
     : `${item.question} — ${item.options[(item.correctAnswer + 1) % item.options.length]}.`;
@@ -366,22 +367,74 @@ function toTF(item, idx) {
     id: `bank-${Date.now()}-${n++}`,
     category: item.category,
     difficulty: item.difficulty,
-    question: `${statement} True or false?`,
-    options: ['True', 'False'],
+    language: item.language || 'en',
+    question: isTa ? `${statement} சரியா தவறா?` : `${statement} True or false?`,
+    options: isTa ? ['சரி', 'தவறு'] : ['True', 'False'],
     correctAnswer: useTruth ? 0 : 1,
     explanation: item.explanation,
   };
 }
+function tamilMath(g) {
+  // Numbers are universal; render the stem in Tamil so language=ta is honored.
+  const m = String(g.question || '').match(/^What is (.+)\?$/);
+  if (m) g.question = `${m[1]} எவ்வளவு?`;
+  return g;
+}
+
+/* ---------- Tamil-language backup pool (used when language=ta/both) ---------- */
+// [category, difficulty, question(Tamil), options[4], correctIdx, explanation]
+const TA_RAW = [
+['mixed','easy','சிவப்பு கிரகம் என்று அழைக்கப்படுவது எது?',['செவ்வாய்','வெள்ளி','வியாழன்','புதன்'],0,'இரும்பு தூசியால் செவ்வாய் சிவப்பாகத் தெரிகிறது.'],
+['mixed','easy','லீப் ஆண்டில் எத்தனை நாட்கள்?',['366','365','364','367'],0,'லீப் ஆண்டில் பிப்ரவரி 29 சேரும்.'],
+['mixed','medium','பூமியின் மிகப்பெரிய பெருங்கடல் எது?',['பசிபிக்','அட்லாண்டிக்','இந்திய','ஆர்க்டிக்'],0,'பசிபிக் பெருங்கடல் மிகப்பெரியது.'],
+['mixed','easy','சிலந்திக்கு எத்தனை கால்கள்?',['8','6','10','4'],0,'சிலந்திகளுக்கு 8 கால்கள்.'],
+['sports','easy','கிரிக்கெட் அணியில் ஒரே நேரத்தில் களமிறங்கும் வீரர்கள் எத்தனை?',['11','9','10','12'],0,'கிரிக்கெட் அணியில் 11 வீரர்கள்.'],
+['sports','medium','ஒலிம்பிக் எத்தனை ஆண்டுகளுக்கு ஒருமுறை நடக்கும்?',['4','2','5','3'],0,'ஒலிம்பிக் 4 ஆண்டுகளுக்கு ஒருமுறை.'],
+['history','easy','ஆக்ராவில் ஷாஜகான் கட்டிய நினைவுச்சின்னம் எது?',['தாஜ் மகால்','செங்கோட்டை','குதுப் மினார்','இந்தியா கேட்'],0,'மும்தாஜ் நினைவாக தாஜ் கட்டப்பட்டது.'],
+['history','medium','இந்தியா எந்த ஆண்டு சுதந்திரம் பெற்றது?',['1947','1950','1935','1962'],0,'15 ஆகஸ்ட் 1947.'],
+['science','easy','H2O என்பது பொதுவாக எது?',['நீர்','உப்பு','ஆக்சிஜன்','ஹைட்ரஜன்'],0,'H2O என்பது நீர்.'],
+['science','medium','ஒளிச்சேர்க்கைக்கு தாவரங்கள் உறிஞ்சும் வாயு எது?',['கார்பன் டை ஆக்சைடு','ஆக்சிஜன்','நைட்ரஜன்','ஹீலியம்'],0,'தாவரங்கள் CO2-ஐ உறிஞ்சும்.'],
+['geography','easy','பிரான்ஸ் தலைநகரம் எது?',['பாரிஸ்','ரோம்','மாட்ரிட்','பெர்லின்'],0,'பாரிஸ் தலைநகரம்.'],
+['tech','easy','CPU என்பதன் விரிவாக்கம் என்ன?',['மத்திய செயலாக்க அலகு','கணினி தனிப்பட்ட அலகு','மத்திய நிரல் பயன்','மைய செயலாக்க பயன்'],0,'CPU வழிமுறைகளை இயக்கும்.'],
+['movies','easy','டைட்டானிக் (1997) படத்தை இயக்கியவர் யார்?',['ஜேம்ஸ் கேமரூன்','ஸ்பீல்பெர்க்','நோலன்','ஹிரானி'],0,'கேமரூன் இயக்கினார்.'],
+['music','easy','சாதாரண கிதாரில் எத்தனை தந்திகள்?',['6','4','5','7'],0,'சாதாரண கிதாரில் 6 தந்திகள்.'],
+['kids','easy','நீலமும் மஞ்சளும் கலந்தால் வரும் நிறம்?',['பச்சை','ஆரஞ்சு','ஊதா','பழுப்பு'],0,'நீலம் + மஞ்சள் = பச்சை.'],
+['kids','easy','2 + 3 எவ்வளவு?',['5','4','6','7'],0,'2 + 3 = 5.'],
+['tamil','easy','தமிழ்நாட்டின் தலைநகரம் எது?',['சென்னை','மதுரை','கோவை','திருச்சி'],0,'சென்னை தலைநகரம்.'],
+['tamil','medium','தஞ்சை பெரிய கோவில் எந்த நகரில் உள்ளது?',['தஞ்சாவூர்','மதுரை','காஞ்சிபுரம்','சிதம்பரம்'],0,'ராஜராஜ சோழன் கட்டினார்.'],
+['tamil','medium','பொங்கல் முதன்மையாக எதைக் கொண்டாடும் விழா?',['அறுவடை','புத்தாண்டு','வெற்றி','பருவமழை'],0,'சூரியனுக்கு நன்றி சொல்லும் அறுவடை விழா.'],
+['tamil','hard','சிலப்பதிகாரம் எழுதியவர் யார்?',['இளங்கோ அடிகள்','திருவள்ளுவர்','கம்பர்','ஔவையார்'],0,'இளங்கோ அடிகள் எழுதினார்.'],
+['gk','easy','இந்தியாவின் தேசியப் பறவை எது?',['மயில்','கிளி','கழுகு','அன்னம்'],0,'மயில் தேசியப் பறவை.'],
+['gk','easy','சூரியன் எந்த திசையில் உதிக்கும்?',['கிழக்கு','மேற்கு','வடக்கு','தெற்கு'],0,'சூரியன் கிழக்கில் உதிக்கும்.'],
+['maths','easy','7 × 8 எவ்வளவு?',['56','54','48','63'],0,'7 × 8 = 56.'],
+['maths','medium','144-இன் வர்க்கமூலம் என்ன?',['12','14','11','16'],0,'12 × 12 = 144.'],
+['india','easy','இந்தியாவின் தேசிய நாணயம் எது?',['ரூபாய்','டாலர்','யூரோ','யென்'],0,'ரூபாய் (INR) நாணயம்.'],
+['india','medium','இந்தியாவின் இளஞ்சிவப்பு நகரம் என அழைக்கப்படுவது?',['ஜெய்ப்பூர்','ஜோத்பூர்','உதய்ப்பூர்','ஆக்ரா'],0,'ஜெய்ப்பூர் இளஞ்சிவப்பு நகரம்.'],
+['space','easy','வளையங்களுக்கு புகழ்பெற்ற கிரகம் எது?',['சனி','செவ்வாய்','வெள்ளி','புதன்'],0,'சனியின் வளையங்கள் புகழ்பெற்றவை.'],
+['geography','medium','உலகின் மிகச்சிறிய நாடு எது?',['வத்திக்கான் நகரம்','மொனாக்கோ','மாலத்தீவு','சிங்கப்பூர்'],0,'வத்திக்கான் மிகச்சிறியது.'],
+['world','easy','ஈபிள் கோபுரம் எந்த நாட்டில் உள்ளது?',['பிரான்ஸ்','இத்தாலி','ஸ்பெயின்','ஜெர்மனி'],0,'பாரிஸில் உள்ளது.'],
+['literature','medium','திருக்குறள் எழுதியவர் யார்?',['திருவள்ளுவர்','கம்பர்','பாரதியார்','ஔவையார்'],0,'திருவள்ளுவர் எழுதினார்.'],
+];
 
 /* ---------- cross-game no-repeat memory (LRU, 20000 keys ≈ 500+ games) ---------- */
 const servedKeys = new Set();
-function keyOf(it) { return `${it.category}|${it.question}`; }
+function keyOf(it) { return `${it.category}|${it.language || 'en'}|${it.question}`; }
 function markServed(items) {
   for (const it of items) servedKeys.add(keyOf(it));
   while (servedKeys.size > 20000) {
     const first = servedKeys.values().next().value;
     servedKeys.delete(first);
   }
+}
+
+// Shuffle MCQ options so the correct answer is evenly spread (static RAW
+// entries all store correct=0). Returns a fresh item.
+function withShuffledOptions(item) {
+  if (!item || !Array.isArray(item.options) || item.options.length !== 4) return item;
+  const opts = [...item.options];
+  const correctText = opts[item.correctAnswer];
+  shuffleInPlace(opts);
+  return { ...item, options: opts, correctAnswer: opts.indexOf(correctText) };
 }
 
 function genFor(cat, k, difficulty) {
@@ -391,22 +444,84 @@ function genFor(cat, k, difficulty) {
   return [];
 }
 
-export function bankQuestions({ category = 'mixed', count = 10, questionType = 'mcq', difficulty = 'mixed' } = {}) {
+function cleanBankLang(v) {
+  const s = String(v || 'en').toLowerCase();
+  return s === 'ta' || s === 'both' ? s : 'en';
+}
+
+// Build a candidate item from a RAW row, tagged with language + shuffled options.
+function fromRow(r, labelCat, lang) {
+  const item = q(labelCat, r[1], r[2], [...r[3]], r[4], r[5]);
+  item.language = lang;
+  return withShuffledOptions(item);
+}
+
+export function bankQuestions({ category = 'mixed', count = 10, questionType = 'mcq', difficulty = 'mixed', language = 'en' } = {}) {
   const cat = String(category || 'mixed').toLowerCase();
   const want = Math.max(3, Math.min(40, Number(count) || 10));
   const diff = ['easy', 'medium', 'hard', 'mixed'].includes(String(difficulty).toLowerCase()) ? String(difficulty).toLowerCase() : 'mixed';
-  const staticPool = ALL_RAW.filter((r) => r[0] === cat);
-  const mixedPool = ALL_RAW.filter((r) => r[0] === 'mixed' || r[0] === 'gk');
-  const firstPool = cat === 'custom' ? mixedPool : staticPool.length >= 3 ? staticPool : [...staticPool, ...mixedPool];
+  const lang = cleanBankLang(language);
+  const labelCat = cat === 'custom' ? 'mixed' : cat;
+
+  // Strict pools: NEVER pull other categories (that was the "category ignored"
+  // bug — ALL_RAW fallback injected sports/history/etc into e.g. tamil games).
+  // Only requested category + neutral mixed/gk supplement.
+  const enCatRows = ALL_RAW.filter((r) => r[0] === (cat === 'custom' ? '__none__' : cat));
+  const enNeutralRows = ALL_RAW.filter((r) => r[0] === 'mixed' || r[0] === 'gk');
+  const taCatRows = TA_RAW.filter((r) => r[0] === (cat === 'custom' ? '__none__' : cat));
+  const taNeutralRows = TA_RAW.filter((r) => r[0] === 'mixed' || r[0] === 'gk' || r[0] === 'tamil' || r[0] === 'india' || r[0] === 'gk');
+
+  const tier = (rows, l) => {
+    const match = [];
+    const rest = [];
+    for (const r of shuffle(rows)) {
+      (diff === 'mixed' || r[1] === diff ? match : rest).push(fromRow(r, l === 'ta' ? labelCat : (cat === 'custom' ? 'mixed' : r[0]), l));
+    }
+    return [...match, ...shuffle(rest)];
+  };
+
   const candidates = [];
-  for (const r of shuffle(firstPool)) candidates.push(q(cat === 'custom' ? 'mixed' : r[0], r[1], r[2], [...r[3]], r[4], r[5]));
-  // Over-request generative pools 3x: collisions get filtered by the LRU,
-  // and this keeps maths/geo/science games from eating other categories' static pools.
-  for (const g of genFor(cat === 'custom' ? 'mixed' : cat, want * 3 + 20, diff)) candidates.push(g);
-  for (const r of shuffle(mixedPool)) candidates.push(q(r[0], r[1], r[2], [...r[3]], r[4], r[5]));
-  for (const r of shuffle(ALL_RAW)) candidates.push(q(r[0], r[1], r[2], [...r[3]], r[4], r[5]));
+  const pushGen = (n, l) => {
+    for (const g of genFor(cat === 'custom' ? 'mixed' : cat, n, diff)) {
+      g.language = l;
+      // Generative pools are already shuffled; tag category strictly.
+      if (cat !== 'custom') g.category = labelCat;
+      if (l === 'ta' && g.category === 'maths') tamilMath(g);
+      candidates.push(g);
+    }
+  };
+
+  if (lang === 'en') {
+    // Difficulty-matching questions first, then rest of same category.
+    candidates.push(...tier(enCatRows, 'en'));
+    pushGen(want * 3 + 20, 'en');
+    // Neutral supplement only if the category pool is thin (keeps on-topic ratio high).
+    if (candidates.length < want * 2) candidates.push(...tier(enNeutralRows, 'en'));
+  } else if (lang === 'ta') {
+    candidates.push(...tier(taCatRows, 'ta'));
+    candidates.push(...tier(taNeutralRows, 'ta'));
+    pushGen(0, 'ta');
+    // Last resort: English category questions (better than breaking the quiz).
+    if (candidates.length < want) candidates.push(...tier(enCatRows, 'en'));
+    if (candidates.length < want) candidates.push(...tier(enNeutralRows, 'en'));
+  } else {
+    // both: interleave Tamil + English so the language toggle is visible in backup too.
+    const ta = [...tier(taCatRows, 'ta'), ...tier(taNeutralRows, 'ta')];
+    const en = [...tier(enCatRows, 'en')];
+    pushGen(0, 'en');
+    const merged = [];
+    const m = Math.max(ta.length, en.length);
+    for (let i = 0; i < m; i++) {
+      if (i < ta.length) merged.push(ta[i]);
+      if (i < en.length) merged.push(en[i]);
+    }
+    candidates.push(...merged);
+    if (candidates.length < want) candidates.push(...tier(enNeutralRows, 'en'));
+  }
+
   // Prefer questions never served before (also de-dupes within this game).
   // If the whole pool is exhausted, reshuffle so consecutive games don't align.
+  // NOTE: no ALL_RAW sweep — that reintroduced off-topic duplicates.
   const picked = [];
   const local = new Set();
   const order = [...candidates];
@@ -424,13 +539,14 @@ export function bankQuestions({ category = 'mixed', count = 10, questionType = '
   }
   markServed(picked);
   const qt = String(questionType).toLowerCase();
-  if (qt === 'tf') return { questions: picked.map(toTF), provider: 'bank' };
-  if (qt === 'mixed') return { questions: picked.map((it, i) => (i % 2 === 1 ? toTF(it, i) : it)), provider: 'bank' };
-  return { questions: picked, provider: 'bank' };
+  const finalize = (list) => list.map((it, i) => ({ ...it, language: it.language || 'en' }));
+  if (qt === 'tf') return { questions: finalize(picked).map(toTF), provider: 'bank' };
+  if (qt === 'mixed') return { questions: finalize(picked).map((it, i) => (i % 2 === 1 ? toTF(it, i) : it)), provider: 'bank' };
+  return { questions: finalize(picked), provider: 'bank' };
 }
 
 export function bankStats() {
   const cats = {};
   for (const r of ALL_RAW) cats[r[0]] = (cats[r[0]] || 0) + 1;
-  return { static: ALL_RAW.length, generative: 'maths/geography/science unlimited', perCategory: cats, recentServed: servedKeys.size };
+  return { static: ALL_RAW.length, tamil: TA_RAW.length, generative: 'maths/geography/science unlimited', perCategory: cats, recentServed: servedKeys.size };
 }

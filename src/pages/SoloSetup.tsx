@@ -13,6 +13,7 @@ export default function SoloSetup() {
   const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) ? rawCat : 'mixed', count: 10, timer: 10, difficulty: 'mixed', region: 'global', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'global', jlptLevel: 'N5' });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [note, setNote] = useState('');
   async function start() {
     sound.play('click');
     const clean: QuizConfig = {
@@ -30,12 +31,19 @@ export default function SoloSetup() {
     setCfg(clean);
     setLoading(true);
     setErr('');
+    setNote('Generating questions…');
     try {
       const { questions, source, provider } = await generateQuestions(clean);
-      sessionStorage.setItem('qr-solo', JSON.stringify({ cfg: clean, questions, source, provider }));
+      try {
+        sessionStorage.removeItem('qr-result');
+        sessionStorage.removeItem('qr-solo-progress');
+        sessionStorage.setItem('qr-solo', JSON.stringify({ cfg: clean, questions, source, provider }));
+      } catch { /* storage unavailable */ }
+      if (source === 'bank') setNote('AI unavailable — using offline questions.');
       nav('/solo/play');
     } catch (e) {
-      setErr(e instanceof AiError ? e.message : 'AI question generation failed. Please try again.');
+      setNote('');
+      setErr(e instanceof AiError ? e.message : 'Could not build a quiz. Check your connection and retry.');
     } finally {
       setLoading(false);
     }
@@ -50,7 +58,13 @@ export default function SoloSetup() {
       <button onClick={start} disabled={loading} className="qr-btn-primary group mt-4 w-full justify-center rounded-2xl py-4 font-display text-base tracking-wide disabled:opacity-60">
         {loading ? 'ASKING THE AI…' : <>START QUIZ <ArrowRight size={18} className="arrow-nudge" /></>}
       </button>
-      {err && <p role="alert" className="mt-3 rounded-2xl bg-[#FFE9E9] px-4 py-3 text-center text-sm font-bold text-[#C62828]" style={{ border: '1.5px solid #FF4B5C' }}>{err}</p>}
+      {err && (
+        <div role="alert" className="mt-3 rounded-2xl bg-[#FFE9E9] px-4 py-3 text-center" style={{ border: '1.5px solid #FF4B5C' }}>
+          <p className="text-sm font-bold text-[#C62828]">{err}</p>
+          <button onClick={start} disabled={loading} className="mt-2 rounded-xl bg-[#C62828] px-5 py-2 text-sm font-extrabold text-white disabled:opacity-60">RETRY</button>
+        </div>
+      )}
+      {!err && note && loading && <p aria-live="polite" className="mt-3 text-center text-[12px] font-bold text-muted">{note}</p>}
       <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer > 0 ? `${cfg.timer}s each` : 'No timer'} · {String(cfg.difficulty).toUpperCase()} · {(cfg.questionType || 'mcq').toUpperCase()} · {(cfg.language || 'en').toUpperCase()} · {regionLabel(cfg.focus === 'india' ? 'india' : cfg.region).toUpperCase()}</p>
     </div>
   );
