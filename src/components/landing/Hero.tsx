@@ -124,7 +124,7 @@ function Stat({ target, prefix, suffix, label, start }: { target: number; prefix
   const v = useCountUp(target, start);
   return (
     <div className="text-center">
-      <div className="font-display text-[22px] font-semibold text-ink drop-shadow-[0_2px_12px_rgba(255,253,248,0.9)] sm:text-[32px]">{prefix}{v}{suffix}</div>
+      <div className="font-display text-[22px] font-semibold text-ink drop-shadow-[0_2px_10px_rgba(30,20,60,0.30)] sm:text-[32px]">{prefix}{v}{suffix}</div>
       <div className="mt-0.5 text-[9.5px] font-extrabold tracking-[0.14em] text-muted sm:text-[10.5px] sm:tracking-[0.18em]">{label}</div>
     </div>
   );
@@ -204,7 +204,7 @@ export default function Hero() {
               <span className="flex shrink-0 gap-1.5 text-[11px]"><span className="text-electric">●</span><span className="text-grape">●</span><span className="text-electric">●</span></span>
               <span className="truncate">PLAY • THINK • COMPETE</span>
             </motion.div>
-            <h1 className="font-display mt-5 text-balance text-[clamp(2.8rem,11vw,5.75rem)] font-semibold leading-[0.95] tracking-tight text-ink drop-shadow-[0_2px_20px_rgba(255,253,248,0.95)] sm:text-[clamp(3.2rem,8vw,5.75rem)]" style={{ transform: 'translateZ(110px)' }}>
+            <h1 className="font-display mt-5 text-balance text-[clamp(2.8rem,11vw,5.75rem)] font-semibold leading-[0.95] tracking-tight text-ink drop-shadow-[0_6px_28px_rgba(30,20,60,0.35)] sm:text-[clamp(3.2rem,8vw,5.75rem)]" style={{ transform: 'translateZ(110px)' }}>
               <span className="block overflow-hidden pb-[0.06em]">
                 <motion.span className="block" initial={{ y: '110%' }} animate={{ y: 0 }} transition={{ duration: 0.9, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}>THINK FAST.</motion.span>
               </span>
