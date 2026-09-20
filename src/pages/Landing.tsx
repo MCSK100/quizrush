@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import Hero from '../components/landing/Hero';
-import HowItWorks from '../components/landing/HowItWorks';
-import CategoryExplorer from '../components/landing/CategoryExplorer';
-import LiveQuizDemo from '../components/landing/LiveQuizDemo';
-import MultiplayerRace from '../components/landing/MultiplayerRace';
-import { AIQuestionSection, FinalCTA, SiteFooter } from '../components/landing/AIAndClosing';
 import AnimatedBackground from '../components/landing/AnimatedBackground';
 import ParallaxSection from '../components/landing/ParallaxSection';
+
+// Below-fold sections are lazy so first paint only pays for the Hero.
+const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
+const CategoryExplorer = lazy(() => import('../components/landing/CategoryExplorer'));
+const LiveQuizDemo = lazy(() => import('../components/landing/LiveQuizDemo'));
+const MultiplayerRace = lazy(() => import('../components/landing/MultiplayerRace'));
+const AIQuestionSection = lazy(() => import('../components/landing/AIAndClosing').then((m) => ({ default: m.AIQuestionSection })));
+const FinalCTA = lazy(() => import('../components/landing/AIAndClosing').then((m) => ({ default: m.FinalCTA })));
+const SiteFooter = lazy(() => import('../components/landing/AIAndClosing').then((m) => ({ default: m.SiteFooter })));
+
+function BelowFoldFallback() {
+  return <div className="mx-auto w-full max-w-6xl px-4 py-10" aria-hidden><div className="cf-card h-40 animate-pulse" /></div>;
+}
 
 export default function Landing() {
   const [glow, setGlow] = useState('');
@@ -15,6 +23,7 @@ export default function Landing() {
       <div className="flex-1">
       <Hero />
       {/* Overlaps hero by 2px + top fade so the video edge melts seamlessly in */}
+      <Suspense fallback={<BelowFoldFallback />}>
       <div className="relative -mt-[2px] overflow-x-clip bg-cream pt-[2px]">
         <AnimatedBackground tone="soft" />
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-12 bg-gradient-to-b from-cream to-transparent" />
@@ -39,8 +48,11 @@ export default function Landing() {
       <ParallaxSection depth={0.6}>
         <FinalCTA />
       </ParallaxSection>
+      </Suspense>
       </div>
+      <Suspense fallback={null}>
       <SiteFooter />
+      </Suspense>
     </div>
   );
 }

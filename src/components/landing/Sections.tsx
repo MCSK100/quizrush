@@ -4,9 +4,12 @@ import { Link } from 'react-router-dom';
 export function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const reduce = useReducedMotion();
   if (reduce) return <div className={className}>{children}</div>;
+  // Opacity + small rise only (no rotateX/scale/preserve-3d): cheap to
+  // composite, and `amount` (not a negative margin) works reliably with
+  // smooth-scroll so content can't get stuck invisible.
   return (
-    <motion.div className={`parallax-will-change ${className}`} initial={{ opacity: 0, y: 34, rotateX: 9, scale: 0.98 }} whileInView={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
-      viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }} style={{ transformPerspective: 1100, transformStyle: 'preserve-3d' }}>
+    <motion.div className={className} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.55, delay: Math.min(delay, 0.15), ease: [0.22, 1, 0.36, 1] }}>
       {children}
     </motion.div>
   );

@@ -8,10 +8,59 @@ const HERO_VIDEO_SRC = '/192292-892475144.mp4';
 
 function HeroBannerVideo() {
   const vidRef = useRef<HTMLVideoElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  // The 21MB hero video must NEVER compete with first paint:
+  // - no poster (the 679KB og image was fetched eagerly as poster)
+  // - no src until window load + idle AND hero visible
+  // - skipped entirely on mobile / save-data / slow networks
+  const [src, setSrc] = useState<string | undefined>(undefined);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (reduce) return;
+    try {
+      const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+      if (conn?.saveData) return;
+      if (conn?.effectiveType && /2g|slow-2g/i.test(conn.effectiveType)) return;
+      if (window.innerWidth < 640) return;
+      if (window.matchMedia('(prefers-reduced-data: reduce)').matches) return;
+    } catch { /* allow video */ }
+    let done = false;
+    const load = () => { if (!done) { done = true; setSrc(HERO_VIDEO_SRC); } };
+    const el = wrapRef.current;
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: object) => number }).requestIdleCallback;
+    const onLoaded = () => {
+      if (ric) ric(load, { timeout: 4000 });
+      else window.setTimeout(load, 2500);
+    };
+    if (document.readyState === 'complete') onLoaded();
+    else window.addEventListener('load', onLoaded, { once: true });
+    let timer = 0;
+    let ob: IntersectionObserver | null = null;
+    if (el && 'IntersectionObserver' in window) {
+      ob = new IntersectionObserver(
+        ([e]) => {
+          if (!e.isIntersecting) return;
+          ob?.disconnect();
+          // Even when visible, wait for idle so LCP/FCP go first.
+          if (ric) ric(load, { timeout: 4000 });
+          else timer = window.setTimeout(load, 2500);
+        },
+        { threshold: 0 },
+      );
+      ob.observe(el);
+    } else {
+      timer = window.setTimeout(load, 5000);
+    }
+    return () => {
+      window.removeEventListener('load', onLoaded);
+      ob?.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [reduce]);
   useEffect(() => {
     const vid = vidRef.current;
-    if (!vid || reduce) return;
+    if (!vid || reduce || !src) return;
     const ob = new IntersectionObserver(
       ([e]) => {
         if (e.isIntersecting) vid.play().catch(() => {});
@@ -21,21 +70,25 @@ function HeroBannerVideo() {
     );
     ob.observe(vid);
     return () => ob.disconnect();
-  }, [reduce]);
+  }, [reduce, src]);
   return (
-    <>
+    <div ref={wrapRef} className="absolute inset-0 bg-gradient-to-b from-[#DCEBFF] via-[#F1EBFF] to-cream">
+      {src && (
       <video
         ref={vidRef}
-        className="absolute inset-0 block h-full w-full scale-105 object-cover"
-        src={HERO_VIDEO_SRC}
+        className={`absolute inset-0 block h-full w-full scale-105 object-cover transition-opacity duration-700 ${ready ? 'opacity-100' : 'opacity-0'}`}
+        src={src}
         muted
         loop
         playsInline
         autoPlay={!reduce}
-        preload="metadata"
-        poster="/quizlly-og-image.png"
+        preload="none"
+        disablePictureInPicture
         aria-hidden
+        onLoadedData={() => setReady(true)}
+        onCanPlay={() => setReady(true)}
       />
+      )}
       {/* Darker cinematic blue grade — deepens blues, keeps subject visible */}
       <div aria-hidden className="absolute inset-0 bg-[#0A1C38]/30" />
       <div
@@ -46,7 +99,7 @@ function HeroBannerVideo() {
       <div aria-hidden className="absolute inset-0" style={{ background: 'radial-gradient(min(1000px,110vw) 480px at 50% 38%, transparent 30%, rgba(10,28,56,0.28) 100%)' }} />
       {/* Seam cover — melts the video edge into the next section, no hairline */}
       <div aria-hidden className="absolute inset-x-0 bottom-[-2px] h-10 bg-gradient-to-b from-transparent to-cream" />
-    </>
+    </div>
   );
 }
 
@@ -108,22 +161,24 @@ export default function Hero() {
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: secRef, offset: ['start start', 'end start'] });
 
-  // 3D parallax scroll: backdrop dives + zooms, content lifts toward the viewer and fades
-  const bgY = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.22]);
-  const textY = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const textScale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
+  // Cheap scroll parallax: vertical drift + fade only (no scale/zoom —
+  // zooming a full-bleed video layer every scroll frame janks mobile GPUs).
+  const bgY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const textY = useTransform(scrollYProgress, [0, 1], [0, 110]);
   const textO = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  const textRX = useTransform(scrollYProgress, [0, 1], [0, 12]);
-  const chipNearY = useTransform(scrollYProgress, [0, 1], [0, 230]);
-  const chipFarY = useTransform(scrollYProgress, [0, 1], [0, 90]);
+  const chipNearY = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const chipFarY = useTransform(scrollYProgress, [0, 1], [0, 70]);
   const cueO = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
 
-  // Gentle mouse tilt for 3D depth on desktop
+  // Gentle mouse tilt for depth on fine-pointer desktops only
   const mx = useMotionValue(0.5);
   const my = useMotionValue(0.5);
   const tiltX = useSpring(useTransform(my, [0, 1], [4, -4]), { stiffness: 60, damping: 18 });
   const tiltY = useSpring(useTransform(mx, [0, 1], [-5, 5]), { stiffness: 60, damping: 18 });
+  const finePointer = useRef(false);
+  useEffect(() => {
+    try { finePointer.current = window.matchMedia('(pointer: fine)').matches && window.innerWidth >= 1024; } catch { finePointer.current = false; }
+  }, []);
 
   return (
     <section
@@ -131,7 +186,7 @@ export default function Hero() {
       className="relative overflow-hidden bg-cream [perspective:1400px]"
       style={{ marginBottom: -2 }}
       onMouseMove={(e) => {
-        if (reduce) return;
+        if (reduce || !finePointer.current) return;
         const r = secRef.current?.getBoundingClientRect();
         if (!r) return;
         mx.set((e.clientX - r.left) / r.width);
@@ -139,13 +194,13 @@ export default function Hero() {
       }}
     >
       {/* Extended 4px past the bottom edge so the seam never shows a hairline */}
-      <motion.div style={{ y: bgY, scale: bgScale }} className="absolute inset-x-0 bottom-[-4px] top-0">
+      <motion.div style={{ y: bgY }} className="absolute inset-x-0 bottom-[-4px] top-0">
         <HeroBannerVideo />
       </motion.div>
 
       <div className="relative mx-auto w-full min-w-0 max-w-4xl px-4 pb-16 pt-28 text-center sm:px-5 sm:pb-20 sm:pt-40">
-        <motion.div style={{ y: textY, opacity: textO, scale: textScale, rotateX: reduce ? 0 : textRX, transformPerspective: 1000 }}>
-          <motion.div style={reduce ? undefined : { rotateX: tiltX, rotateY: tiltY, transformPerspective: 900, transformStyle: 'preserve-3d' }}>
+        <motion.div style={{ y: textY, opacity: textO }}>
+          <motion.div style={reduce || !finePointer.current ? undefined : { rotateX: tiltX, rotateY: tiltY, transformPerspective: 900 }}>
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="qr-eyebrow mx-auto max-w-full" style={{ transform: 'translateZ(60px)' }}>
               <span className="flex shrink-0 gap-1.5 text-[11px]"><span className="text-electric">●</span><span className="text-grape">●</span><span className="text-electric">●</span></span>
               <span className="truncate">PLAY • THINK • COMPETE</span>

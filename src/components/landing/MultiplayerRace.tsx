@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Crown } from 'lucide-react';
 import { Reveal, SectionHead } from './Sections';
@@ -15,19 +15,28 @@ export default function MultiplayerRace() {
   const [tick, setTick] = useState(0);
   const [scores, setScores] = useState([1820, 1690, 1540, 1310]);
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    if (reduce) return;
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const ob = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.15 });
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
+  useEffect(() => {
+    if (reduce || !visible) return;
     const iv = setInterval(() => {
       setTick((t) => t + 1);
       setScores((s) => s.map((v) => v + [120, 80, 150, 60][Math.floor(Math.random() * 4)]));
     }, 2200);
     return () => clearInterval(iv);
-  }, [reduce]);
+  }, [reduce, visible]);
 
   const order = RACERS.map((r, i) => ({ ...r, score: scores[i], i })).sort((a, b) => b.score - a.score);
 
   return (
-    <section className="relative overflow-x-clip py-12 sm:py-20">
+    <section ref={ref} className="relative overflow-x-clip py-12 sm:py-20">
       <div className="absolute inset-0" style={{ background: 'radial-gradient(720px 320px at 50% 50%, rgba(124,92,255,0.10), transparent 70%)' }} />
       <div className="relative mx-auto grid w-full min-w-0 max-w-6xl items-center gap-8 px-4 sm:px-5 lg:grid-cols-[1.05fr_.95fr] lg:gap-10">
         <Reveal className="min-w-0">

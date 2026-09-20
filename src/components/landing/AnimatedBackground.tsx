@@ -6,7 +6,7 @@ export function GradientOrb({ className = '', color = '#E9E2FF', style = {} as R
   return <div aria-hidden className={`qr-blob ${anim === 'orbA' ? 'animate-orbA' : 'animate-orbB'} ${className}`} style={{ background: color, ...style }} />;
 }
 
-export function FloatingParticles({ count = 18, mobileCount = 8 }: { count?: number; mobileCount?: number }) {
+export function FloatingParticles({ count = 10, mobileCount = 4 }: { count?: number; mobileCount?: number }) {
   const reduce = useReducedMotion();
   const n = typeof window !== 'undefined' && window.innerWidth < 640 ? mobileCount : count;
   const dots = useMemo(() => Array.from({ length: reduce ? 0 : n }).map((_, i) => ({
@@ -55,7 +55,7 @@ export function ParallaxLayer({ children, className = '', speed = 0.5 }: { speed
   );
 }
 
-function StarField({ count = 42, mobileCount = 16 }: { count?: number; mobileCount?: number }) {
+function StarField({ count = 20, mobileCount = 8 }: { count?: number; mobileCount?: number }) {
   const reduce = useReducedMotion();
   const n = typeof window !== 'undefined' && window.innerWidth < 640 ? mobileCount : count;
   const stars = useMemo(() => Array.from({ length: reduce ? 0 : n }).map((_, i) => ({
@@ -144,14 +144,14 @@ export default function AnimatedBackground({ tone = 'hero' }: { tone?: 'hero' | 
             : 'linear-gradient(180deg,#FFFDF8 0%,#FFFAF2 45%,#F8F9FF 100%)',
       }} />
       {isHero && !reduce && (
-        <div className="absolute left-1/2 top-[38%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 opacity-50 sm:h-[900px] sm:w-[900px]">
-          <div className="animate-spin-slower h-full w-full rounded-full" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(46,155,255,0.10) 40deg, transparent 90deg, rgba(124,92,255,0.12) 150deg, transparent 200deg, rgba(46,155,255,0.10) 260deg, transparent 310deg)' }} />
+        <div className="absolute left-1/2 top-[38%] hidden h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 opacity-50 sm:block sm:h-[900px] sm:w-[900px]">
+          <div className="animate-spin-slower hidden h-full w-full rounded-full lg:block" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(46,155,255,0.10) 40deg, transparent 90deg, rgba(124,92,255,0.12) 150deg, transparent 200deg, rgba(46,155,255,0.10) 260deg, transparent 310deg)' }} />
         </div>
       )}
       <GradientOrb color="#E9E2FF" anim="orbA" className="h-[280px] w-[280px] -left-32 -top-32 opacity-80 sm:h-[440px] sm:w-[440px]" />
       <GradientOrb color="#FFE3D3" anim="orbB" className="h-[260px] w-[260px] right-[-110px] top-[6%] opacity-80 sm:h-[400px] sm:w-[400px]" />
-      <GradientOrb color="#D6F5E3" anim="orbA" className="h-[260px] w-[260px] left-[32%] bottom-[-120px] opacity-70" />
-      <GradientOrb color="#D6EBFF" anim="orbB" className="h-[300px] w-[300px] left-[55%] top-[30%] opacity-60" />
+      <GradientOrb color="#D6F5E3" anim="orbA" className="hidden h-[260px] w-[260px] left-[32%] bottom-[-120px] opacity-70 sm:block" />
+      <GradientOrb color="#D6EBFF" anim="orbB" className="hidden h-[300px] w-[300px] left-[55%] top-[30%] opacity-60 sm:block" />
       {isHero && (
         <>
           <GradientOrb color="#FFE0EC" anim="orbA" className="left-[8%] top-[42%] hidden h-[220px] w-[220px] opacity-60 sm:block" />
@@ -173,9 +173,9 @@ export default function AnimatedBackground({ tone = 'hero' }: { tone?: 'hero' | 
         </div>
       )}
       {isHero && !reduce && (
-        <div className="animate-shimmer-sweep absolute inset-y-0 w-[38%] opacity-60" style={{ background: 'linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)' }} />
+        <div className="animate-shimmer-sweep absolute inset-y-0 hidden w-[38%] opacity-60 lg:block" style={{ background: 'linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)' }} />
       )}
-      <FloatingParticles count={isHero ? 22 : 12} />
+      <FloatingParticles count={isHero ? 10 : 6} />
     </div>
   );
 }

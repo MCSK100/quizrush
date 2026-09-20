@@ -1,7 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Timer, Check, Flame } from 'lucide-react';
 import { Reveal, SectionHead } from './Sections';
+
+function useVisible<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const ob = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.15 });
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
+  return { ref, visible };
+}
 
 const QS = [
   { q: 'Which planet is known as the Red Planet?', opts: ['Earth', 'Mars', 'Jupiter', 'Venus'], a: 1 },
@@ -15,18 +28,20 @@ export function AnimatedQuestion() {
   const [tick, setTick] = useState(7);
   const [score, setScore] = useState(1240);
   const reduce = useReducedMotion();
+  const { ref, visible } = useVisible<HTMLDivElement>();
   useEffect(() => {
     if (reduce) { setPick(QS[qi].a); return; }
+    if (!visible) return; // pause the demo loop offscreen — saves CPU/battery
     setPick(null); setTick(7);
     const to = setTimeout(() => { setPick(QS[qi].a); setScore((s) => s + 120); }, 1500);
     const iv = setInterval(() => setTick((t) => Math.max(0, t - 1)), 1000);
     const nx = setTimeout(() => setQi((q) => (q + 1) % QS.length), 4400);
     return () => { clearTimeout(to); clearTimeout(nx); clearInterval(iv); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qi, reduce]);
+  }, [qi, reduce, visible]);
   const cur = QS[qi];
   return (
-    <div className="relative min-w-0 overflow-hidden rounded-[24px] bg-white shadow-soft sm:rounded-[28px]" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
+    <div ref={ref} className="relative min-w-0 overflow-hidden rounded-[24px] bg-white shadow-soft sm:rounded-[28px]" style={{ border: '1px solid rgba(120,100,180,0.08)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-[#E8F4FF] via-[#F1EBFF] to-[#E8F4FF] px-4 py-3 sm:px-6 sm:py-3.5">
         <span className="rounded-full bg-ink px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-white sm:text-[11px]">QUESTION {String(qi + 7).padStart(2, '0')} / 20</span>
         <span className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-display text-[14px] font-semibold sm:text-[15px] ${tick <= 3 ? 'bg-[#FF4B5C] text-white' : 'bg-white text-ink shadow-sticker-sm'}`}>

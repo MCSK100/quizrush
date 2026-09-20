@@ -11,13 +11,12 @@
 // - iOS standalone Safari sometimes issues same-origin doc requests without
 //   request.mode === 'navigate', so detect navigations via the Accept header too.
 // - iOS probes /apple-touch-icon.png on install — keep it precached.
-const VERSION = 'quizlly-v5';
+const VERSION = 'quizlly-v7';
 const PRECACHE = [
   '/manifest.webmanifest',
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
-  '/quizlly-favicon.png',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Play, Users, Sparkles, ArrowDown } from 'lucide-react';
@@ -15,14 +15,23 @@ const SAMPLES = [
 export function AIQuestionSection() {
   const [i, setI] = useState(0);
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    if (reduce) return;
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const ob = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.15 });
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
+  useEffect(() => {
+    if (reduce || !visible) return;
     const iv = setInterval(() => setI((v) => (v + 1) % SAMPLES.length), 2600);
     return () => clearInterval(iv);
-  }, [reduce]);
+  }, [reduce, visible]);
   const s = SAMPLES[i];
   return (
-    <section className="relative overflow-x-clip py-12 sm:py-20">
+    <section ref={ref} className="relative overflow-x-clip py-12 sm:py-20">
       <div className="mx-auto grid w-full min-w-0 max-w-6xl items-center gap-8 px-4 sm:px-5 lg:grid-cols-2 lg:gap-10">
         <div>
           <SectionHead eyebrow="AI POWERED" title={<>Fresh questions. <span className="qr-gradient-text">Every game.</span></>} sub="Pick a category and the AI builds a brand-new set — no repeats, no stale decks." />
