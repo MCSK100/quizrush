@@ -10,9 +10,9 @@ import type { Player, Room } from '../types';
 import { AiError, aiBackendHealth, generateQuestions } from '../services/questions';
 import { loadNetSession, netEnabled, saveNetSession, useNetSocket, type NetMsg } from '../services/net';
 
-function LobbyShell({ code, players, config, isHost, alone, starting, err, onStart, aiNote }: {
+function LobbyShell({ code, players, config, isHost, alone, starting, err, onStart, aiNote, note }: {
   code: string; players: Player[]; config: Room['config']; isHost: boolean; alone: boolean;
-  starting: boolean; err: string; onStart: () => void; aiNote?: string;
+  starting: boolean; err: string; onStart: () => void; aiNote?: string; note?: string;
 }) {
   return (
     <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
@@ -52,6 +52,7 @@ function LobbyShell({ code, players, config, isHost, alone, starting, err, onSta
           {starting ? 'Host is starting the game…' : `Waiting for host to start… get ready. ${Number(config.timer) > 0 ? `${Number(config.timer)} seconds` : 'no timer'}. One answer. Zero excuses.`}
         </p>
       )}
+      {starting && note && <p aria-live="polite" className="mt-3 text-center text-[12px] font-bold text-muted">{note}</p>}
     </div>
   );
 }
@@ -123,6 +124,7 @@ function LocalLobby({ code }: { code: string }) {
   const setRoom = useRoom((s) => s.setRoom);
   const [err, setErr] = useState('');
   const [starting, setStarting] = useState(false);
+  const [note, setNote] = useState('');
   useEffect(() => { if (!room || room.code !== code) nav('/multiplayer/join', { replace: true }); }, [room, code, nav]);
   useEffect(() => {
     if (!room) return;
@@ -152,6 +154,14 @@ function LocalLobby({ code }: { code: string }) {
       return;
     }
     setStarting(true);
+    setNote('');
+    const t0 = Date.now();
+    const stage = () => {
+      const s = (Date.now() - t0) / 1000;
+      setNote(s < 7 ? 'Waking the AI engine…' : s < 18 ? 'Writing fresh questions…' : 'Almost there — polishing the set…');
+    };
+    stage();
+    const stageTimer = setInterval(stage, 1200);
     try {
       const { questions, source } = await generateQuestions(cleanConfig);
       try {
@@ -160,17 +170,21 @@ function LocalLobby({ code }: { code: string }) {
         sessionStorage.setItem('qr-room-src', JSON.stringify({ source }));
       } catch { /* ignore */ }
       setRoom({ ...r, config: cleanConfig, status: 'COUNTDOWN' });
+      setNote('');
       nav(`/room/${r.code}/play`);
     } catch (e) {
       setErr(e instanceof AiError ? e.message : 'Could not build questions. Check your connection and retry.');
+      setNote('');
       setStarting(false);
+    } finally {
+      clearInterval(stageTimer);
     }
   }
   return (
     <LobbyShell
       code={room.code} players={room.players} config={room.config}
       isHost={!!isHost} alone={room.players.length < 2}
-      starting={starting} err={err}
+      starting={starting} err={err} note={note}
       onStart={start}
     />
   );

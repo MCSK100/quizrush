@@ -242,8 +242,8 @@ function buildPrompt({ category, count, difficulty, region, language, questionTy
       ? 'TYPE: alternate — odd questions 4-option MCQ, even questions True/False with options ["True","False"].'
       : 'TYPE: 4-option multiple choice ONLY. Each item MUST have exactly 4 distinct options, correctAnswer 0-3.';
   const schema = questionType === 'tf'
-    ? '{"question":string,"options":["True","False"],"correctAnswer":0-1,"explanation":one short sentence}'
-    : '{"question":string,"options":[4 distinct plausible strings, or ["True","False"] for True/False items],"correctAnswer":index of the correct option,"explanation":one short sentence}';
+    ? '{"question":string,"options":["True","False"],"correctAnswer":0-1,"explanation":short, max 15 words}'
+    : '{"question":string,"options":[4 distinct plausible strings, or ["True","False"] for True/False items],"correctAnswer":index of the correct option,"explanation":short, max 15 words}';
   return (
     `You are a strict quiz generator. Generate EXACTLY ${count} quiz questions. ` +
     `CATEGORY (strict): ${catLabel}. Topic rule: ${focusRule}${langBit}${regionBit} ` +
@@ -269,14 +269,20 @@ function isModelNotFound(status, snippet) {
   if (status !== 404) return false;
   return /not_found|is not found|not supported/i.test(String(snippet || ''));
 }
-async function callGemini(model, prompt) {
+// Output budget scales with the request: a 5-question set needs far fewer
+// tokens than a 25-question one, and smaller responses generate faster.
+function outTokensFor(count) {
+  const n = Math.max(3, Math.min(40, Number(count) || 10));
+  return Math.min(4000, Math.max(1500, n * 300));
+}
+async function callGemini(model, prompt, count) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: 6000 },
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: outTokensFor(count) },
     }),
     signal: AbortSignal.timeout(15000),
   });
@@ -293,7 +299,7 @@ async function callGemini(model, prompt) {
   if (!text.trim()) throw new Error(`empty gemini response model=${model}`);
   return parseJsonArray(text);
 }
-async function callOpenRouter(model, prompt) {
+async function callOpenRouter(model, prompt, count) {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -308,7 +314,7 @@ async function callOpenRouter(model, prompt) {
         { role: 'user', content: prompt },
       ],
       temperature: 0.7,
-      max_tokens: 6000,
+      max_tokens: outTokensFor(count),
     }),
     signal: AbortSignal.timeout(15000),
   });
@@ -341,7 +347,7 @@ function noteFail(err) {
   console.error(`[ai] ${msg}`);
   return err instanceof Error ? err : new Error(String(err));
 }
-async function callGroq(model, prompt) {
+async function callGroq(model, prompt, count) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -355,7 +361,7 @@ async function callGroq(model, prompt) {
         { role: 'user', content: prompt },
       ],
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: outTokensFor(count),
     }),
     signal: AbortSignal.timeout(15000),
   });
@@ -374,16 +380,78 @@ async function callGroq(model, prompt) {
   if (!Array.isArray(parsed)) throw new Error(`unparseable groq response model=${model}`);
   return parsed;
 }
-async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }) {
-  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel });
+function tryParseQuestions(parsed, tag, qtype, category, language, count) {
+  const arr = Array.isArray(parsed) ? parsed : parsed.questions;
+  if (!Array.isArray(arr)) throw new Error(`unparseable ${tag} response`);
+  const out = dedupeQs(arr.map((r) => normalize(r, category, qtype, language)).filter(Boolean));
+  if (out.length < Math.min(3, count)) throw new Error(`zero valid questions ${tag}`);
+  return out;
+}
+// Race the fastest model of every configured provider in parallel — the
+// first sufficiently-valid response wins, cutting tail latency to the
+// fastest provider instead of the sum of all of them.
+async function raceProviders(prompt, { category, count, questionType, language }) {
+  const contenders = [];
+  if (GEMINI_API_KEY && GEMINI_MODELS.length) contenders.push(['gemini', GEMINI_MODELS[0], callGemini]);
+  if (OPENROUTER_API_KEY && OPENROUTER_MODELS.length) contenders.push(['openrouter', OPENROUTER_MODELS[0], callOpenRouter]);
+  if (GROQ_API_KEY && GROQ_MODELS.length) contenders.push(['groq', GROQ_MODELS[0], callGroq]);
+  if (contenders.length < 2) return null; // nothing to race — use the sequential path below
+  const need = Math.min(3, count);
+  const settled = await Promise.allSettled(
+    contenders.map(async ([label, model, caller]) => {
+      const out = tryParseQuestions(await caller(model, prompt, count), `${label}:${model}`, questionType, category, language, count);
+      return { questions: out, provider: `${label}:${model}` };
+    }),
+  );
+  const wins = [];
+  for (const r of settled) {
+    if (r.status === 'fulfilled' && r.value.questions.length >= need) wins.push(r.value);
+    else if (r.status === 'rejected') noteFail(r.reason);
+  }
+  if (!wins.length) return null;
+  wins.sort((a, b) => b.questions.length - a.questions.length);
+  const win = wins[0];
+  noteOk(win.provider, win.questions.length, category);
+  return win;
+}
+// Large sets generate far faster as parallel ~10-question chunks than as
+// one giant completion (output tokens dominate latency).
+async function generateChunked(opts, prompt, count) {
+  const parts = Math.min(4, Math.ceil(count / 10));
+  const per = Math.ceil(count / parts);
+  const settled = await Promise.allSettled(
+    Array.from({ length: parts }, (_, i) => {
+      const n = Math.min(per, count - i * per);
+      const chunkPrompt = `${prompt} Batch ${i + 1} of ${parts}: pick different questions than other batches.`;
+      return generateSmall({ ...opts, count: n }, chunkPrompt, n);
+    }),
+  );
+  const merged = [];
+  const providers = new Set();
+  let firstErr = null;
+  for (const r of settled) {
+    if (r.status === 'fulfilled') {
+      merged.push(...r.value.questions);
+      providers.add(r.value.provider);
+    } else if (!firstErr) {
+      firstErr = r.reason;
+    }
+  }
+  const out = dedupeQs(merged).slice(0, count);
+  if (out.length < Math.min(3, count)) throw firstErr || new Error('too few valid questions from chunked race');
+  const provider = `race(${[...providers].join('+')})`;
+  noteOk(provider, out.length, opts.category);
+  return { questions: out, provider };
+}
+// Single small request: parallel race first, full sequential fallback after.
+async function generateSmall(opts, prompt, count) {
+  const raced = await raceProviders(prompt, { ...opts, count });
+  if (raced) return raced;
+  return generateSequential(opts, prompt, count);
+}
+async function generateSequential({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }, prompt) {
   let lastErr = new Error('no AI providers configured (set GEMINI_API_KEY, OPENROUTER_API_KEY and/or GROQ_API_KEY)');
-  const tryParse = (parsed, tag, qtype) => {
-    const arr = Array.isArray(parsed) ? parsed : parsed.questions;
-    if (!Array.isArray(arr)) throw new Error(`unparseable ${tag} response`);
-    const out = dedupeQs(arr.map((r) => normalize(r, category, qtype, language)).filter(Boolean));
-    if (out.length < Math.min(3, count)) throw new Error(`zero valid questions ${tag}`);
-    return out;
-  };
+  const tryParse = (parsed, tag, qtype) => tryParseQuestions(parsed, tag, qtype, category, language, count);
   // A dead key fails every model the same way — skip the rest of that provider.
   function deadKey(e) {
     if (e?.quota) return false;
@@ -394,7 +462,7 @@ async function generateAIQuestions({ category, count, difficulty, region, langua
     if (!key) return null;
     for (const model of models) {
       try {
-        const out = tryParse(await caller(model, prompt), `${label}:${model}`, questionType);
+        const out = tryParse(await caller(model, prompt, count), `${label}:${model}`, questionType);
         noteOk(`${label}:${model}`, out.length, category);
         return { questions: out, provider: `${label}:${model}` };
       } catch (e) {
@@ -414,9 +482,16 @@ async function generateAIQuestions({ category, count, difficulty, region, langua
     (() => { throw lastErr; })()
   );
 }
+async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }) {
+  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel });
+  const opts = { category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel };
+  if (count > 10) return generateChunked(opts, prompt, count);
+  return generateSmall(opts, prompt, count);
+}
 
-// AI first (max ~40s total), offline bank as safety net so a room can ALWAYS start.
-const AI_BUDGET_MS = Number(process.env.AI_BUDGET_MS || 40000);
+// AI first (max ~30s total — providers race in parallel, so the tail is
+// short), offline bank as safety net so a room can ALWAYS start.
+const AI_BUDGET_MS = Number(process.env.AI_BUDGET_MS || 30000);
 function withBudget(promise, ms) {
   let timer = null;
   const timeout = new Promise((_, reject) => {

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import SetupForm, { categoryLabel, isAllowedCategory, sanitizeCount, sanitizeJlpt, sanitizeTimer } from '../components/SetupForm';
 import type { QuizConfig } from '../types';
-import { AiError, generateQuestions } from '../services/questions';
+import { AiError, aiBackendHealth, generateQuestions } from '../services/questions';
 import { sound } from '../services/engine';
 export default function SoloSetup() {
   const [sp] = useSearchParams();
@@ -13,6 +13,9 @@ export default function SoloSetup() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
+  // Pre-warm the AI backend while the user configures the quiz, so a cold
+  // server is already awake by the time they hit START.
+  useEffect(() => { aiBackendHealth().catch(() => {}); }, []);
   async function start() {
     sound.play('click');
     const clean: QuizConfig = {
@@ -30,7 +33,14 @@ export default function SoloSetup() {
     setCfg(clean);
     setLoading(true);
     setErr('');
-    setNote('Generating questions…');
+    // Staged feedback so a slow network still feels alive.
+    const t0 = Date.now();
+    const stage = () => {
+      const s = (Date.now() - t0) / 1000;
+      setNote(s < 7 ? 'Waking the AI engine…' : s < 18 ? 'Writing fresh questions…' : 'Almost there — polishing the set…');
+    };
+    stage();
+    const stageTimer = setInterval(stage, 1200);
     try {
       const { questions, source, provider } = await generateQuestions(clean);
       try {
@@ -44,6 +54,7 @@ export default function SoloSetup() {
       setNote('');
       setErr(e instanceof AiError ? e.message : 'Could not build a quiz. Check your connection and retry.');
     } finally {
+      clearInterval(stageTimer);
       setLoading(false);
     }
   }

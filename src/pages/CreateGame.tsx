@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play } from 'lucide-react';
 import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeJlpt, sanitizeTimer } from '../components/SetupForm';
+import { aiBackendHealth } from '../services/questions';
 import { regionLabel } from '../data/regions';
 import type { GameMode, QuizConfig } from '../types';
 import { newRoom, useRoom } from '../stores/app';
@@ -15,6 +16,9 @@ export default function CreateGame() {
   const [cfg, setCfg] = useState<QuizConfig>({ category: 'mixed', count: 20, timer: 30, difficulty: 'mixed', region: 'global', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'global', jlptLevel: 'N5' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
+  // Pre-warm the backend while the host configures, hiding cold-start latency.
+  useEffect(() => { aiBackendHealth().catch(() => {}); }, []);
   async function create() {
     if (name.trim().length < 2) { setErr('Enter a display name (2+ characters).'); return; }
     const clean: QuizConfig = {
@@ -28,6 +32,13 @@ export default function CreateGame() {
     if (clean.category === 'custom' && !clean.customTopic?.trim()) { setErr('Enter a custom topic to continue.'); return; }
     setCfg(clean);
     const liveCfg = netEnabled() && clean.timer <= 0 ? { ...clean, timer: 10 } : clean;
+    const t0 = Date.now();
+    const stage = () => {
+      const s = (Date.now() - t0) / 1000;
+      setNote(s < 7 ? 'Waking the game server…' : s < 18 ? 'Reserving your room…' : 'Almost there…');
+    };
+    stage();
+    const stageTimer = setInterval(stage, 1200);
     if (netEnabled()) {
       setErr('');
       setBusy(true);
@@ -35,14 +46,19 @@ export default function CreateGame() {
         const { room, you } = await createNetRoom(liveCfg, name.trim(), AVATARS[0]);
         saveNetSession({ code: room.code, playerId: you, name: name.trim() });
         setRoom(room);
+        setNote('');
         nav(`/room/${room.code}`, { replace: true });
       } catch (e) {
         setErr(e instanceof Error ? e.message : 'Could not reach the game server. Try again.');
+        setNote('');
       } finally {
+        clearInterval(stageTimer);
         setBusy(false);
       }
       return;
     }
+    clearInterval(stageTimer);
+    setNote('');
     const room = newRoom(name.trim(), liveCfg);
     room.config.mode = liveCfg.mode;
     room.config.maxPlayers = liveCfg.maxPlayers;
@@ -82,6 +98,7 @@ export default function CreateGame() {
       <button onClick={create} disabled={busy} className="qr-btn-primary group mt-4 w-full justify-center rounded-2xl py-4 font-display text-base tracking-wide disabled:opacity-60">
         <Play size={18} strokeWidth={3} /> {busy ? 'CREATING ROOM…' : 'CREATE ROOM'} {!busy && <ArrowRight size={18} className="arrow-nudge" />}
       </button>
+      {busy && note && <p aria-live="polite" className="mt-3 text-center text-[12px] font-bold text-muted">{note}</p>}
       <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer > 0 ? `${cfg.timer}s each` : 'No timer'} · up to {cfg.maxPlayers} players · {regionLabel(cfg.focus === 'india' ? 'india' : cfg.region).toUpperCase()}</p>
     </div>
   );
