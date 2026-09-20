@@ -217,7 +217,7 @@ const JLPT_DESC = {
   N1: 'N1 advanced: ~2000 kanji, complex grammar, nuanced expressions, fast natural-speed reading like newspapers and novels.',
 };
 const JLPT_DIFF = { N5: 'easy', N4: 'easy', N3: 'medium', N2: 'hard', N1: 'hard' };
-function buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }) {
+function buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid }) {
   const isCustom = category === 'custom' && String(customTopic || '').trim();
   const level = cleanJlpt(jlptLevel);
   const isJapanese = category === 'japanese';
@@ -249,6 +249,9 @@ function buildPrompt({ category, count, difficulty, region, language, questionTy
     `CATEGORY (strict): ${catLabel}. Topic rule: ${focusRule}${langBit}${regionBit} ` +
     `Difficulty: ${diffBit}. ${typeBit} ` +
     `CRITICAL: 100% of questions MUST be about ${catLabel}. Off-topic questions are a FAILURE. ` +
+    (Array.isArray(avoid) && avoid.length
+      ? `Never repeat these already-asked questions or close paraphrases of them: ${avoid.map((x) => `"${String(x).slice(0, 120)}"`).join('; ')}. `
+      : '') +
     `Return ONLY a JSON array, no markdown, no commentary. Each item: ${schema}. ` +
     `Rules: exactly 1 correct answer, no duplicate options, no duplicate questions, family-friendly, factually correct, options shuffled so the correct answer is evenly spread.`
   );
@@ -482,9 +485,9 @@ async function generateSequential({ category, count, difficulty, region, languag
     (() => { throw lastErr; })()
   );
 }
-async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }) {
-  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel });
-  const opts = { category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel };
+async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid }) {
+  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid });
+  const opts = { category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid };
   if (count > 10) return generateChunked(opts, prompt, count);
   return generateSmall(opts, prompt, count);
 }
@@ -886,6 +889,9 @@ const server = http.createServer(async (req, res) => {
     const focus = ALLOWED_FOCUS.has(body.focus) ? body.focus : 'global';
     const customTopic = String(body.customTopic || '').slice(0, 80);
     const jlptLevel = cleanJlpt(body.jlptLevel);
+    const avoid = Array.isArray(body.avoid)
+      ? body.avoid.filter((x) => typeof x === 'string').map((s) => s.slice(0, 120)).slice(0, 12)
+      : [];
     if (!ALLOWED_CATS.has(category) || !ALLOWED_DIFFS.has(difficulty)) {
       send(res, 400, { error: 'invalid category or difficulty' });
       return;
@@ -895,7 +901,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     try {
-      const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel });
+      const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid });
       const questions = dedupeQs(
         fetched
           .map((r) => (r && r.id && Array.isArray(r.options) ? r : normalize(r, category, questionType, language)))

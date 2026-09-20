@@ -124,6 +124,8 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
   // Full chain: Primary AI (backend, which itself tries gemini→openrouter→groq)
   // → local backup pool → graceful error. Never leave the user on a blank screen.
   if (!base) return bankFallback(cfg, count, 'no-backend');
+  // Recently-seen question texts so the model avoids repeating them.
+  const avoid = [...sessionTexts()].slice(-12).map((s) => s.slice(0, 120));
   let res: Response;
   try {
     const ctrl = new AbortController();
@@ -136,6 +138,7 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
         language: cfg.language || 'en', questionType: wantType,
         customTopic: (cfg.customTopic || '').slice(0, 80), focus: cfg.focus || 'global',
         jlptLevel: cfg.category === 'japanese' ? (cfg.jlptLevel || 'N5') : undefined,
+        avoid,
       }),
     });
     clearTimeout(t);
@@ -190,4 +193,11 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
   rememberQuestions(out);
   console.log(`[quizlly] ${out.length} questions via ${provider} · ${cfg.category}/${cfg.difficulty}/${wantType}/${cfg.language || 'en'}`);
   return { questions: out, source: 'ai', provider };
+}
+
+// Instant offline quiz from the local pool — the "taking too long" escape
+// hatch when AI is slow. Same shape as generateQuestions success.
+export function localBankQuiz(cfg: QuizConfig): { questions: Question[]; source: 'bank'; provider: string } {
+  const count = Math.min(40, Math.max(3, Number(cfg.count) || 10));
+  return bankFallback(cfg, count, 'user-skip');
 }

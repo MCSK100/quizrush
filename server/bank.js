@@ -198,6 +198,147 @@ const RAW2 = [
 
 const ALL_RAW = [...RAW, ...RAW2];
 
+/* ---------- RAW3: breadth top-up so every static category clears 20+ ---------- */
+const RAW3 = [
+['movies','easy','Dangal was directed by whom?',['Nitesh Tiwari','Anurag Kashyap','Imtiaz Ali','Kabir Khan'],0,'Nitesh Tiwari directed Dangal.'],
+['movies','medium','Which film won the Oscar for Best Picture for 2023 (Oppenheimer year)?',['Oppenheimer','Barbie','Killers of the Flower Moon','Poor Things'],0,'Oppenheimer won Best Picture.'],
+['movies','medium','Avengers: Endgame was directed by whom?',['Russo Brothers','Joss Whedon','James Gunn','Taika Waititi'],0,'Anthony and Joe Russo directed it.'],
+['movies','easy','3 Idiots was directed by whom?',['Rajkumar Hirani','Farhan Akhtar','Zoya Akhtar','Karan Johar'],0,'Rajkumar Hirani directed 3 Idiots.'],
+['movies','easy','Which film features the pirate Jack Sparrow?',['Pirates of the Caribbean','Treasure Island','Hook','Cutthroat Island'],0,'Jack Sparrow sails in Pirates of the Caribbean.'],
+['movies','medium','Avatar (2009) was directed by whom?',['James Cameron','Ridley Scott','Peter Jackson','George Lucas'],0,'James Cameron directed Avatar.'],
+['movies','easy','Baahubali was directed by whom?',['S. S. Rajamouli','Shankar','Mani Ratnam','Prashanth Neel'],0,'Rajamouli directed Baahubali.'],
+['movies','easy','Pushpa stars whom in the lead role?',['Allu Arjun','Ram Charan','N. T. Rama Rao Jr.','Mahesh Babu'],0,'Allu Arjun plays Pushpa Raj.'],
+['movies','easy','KGF stars whom in the lead role?',['Yash','Prabhas','Vijay','Ajith Kumar'],0,'Yash plays Rocky.'],
+['movies','medium','Jawan (2023) stars whom?',['Shah Rukh Khan','Salman Khan','Aamir Khan','Hrithik Roshan'],0,'Shah Rukh Khan leads Jawan.'],
+['movies','hard','Inception was directed by whom?',['Christopher Nolan','Denis Villeneuve','David Fincher','Martin Scorsese'],0,'Christopher Nolan directed Inception.'],
+['movies','medium','Chennai Express stars which pair?',['Shah Rukh Khan and Deepika Padukone','Salman Khan and Katrina Kaif','Ranveer Singh and Alia Bhatt','Ajay Devgn and Kajol'],0,'SRK and Deepika star in Chennai Express.'],
+['music','medium','A. R. Rahman won Oscars for which film\u2019s music?',['Slumdog Millionaire','Lagaan','Rang De Basanti','Bombay'],0,'Slumdog Millionaire won Rahman two Oscars.'],
+['music','easy','Ustad Zakir Hussain is famous for which instrument?',['Tabla','Sitar','Flute','Veena'],0,'Zakir Hussain is a tabla legend.'],
+['music','medium','Queen\u2019s lead singer was whom?',['Freddie Mercury','Elton John','David Bowie','Mick Jagger'],0,'Freddie Mercury fronted Queen.'],
+['music','easy','Who sang Shape of You?',['Ed Sheeran','Justin Bieber','Shawn Mendes','Charlie Puth'],0,'Shape of You is by Ed Sheeran.'],
+['music','medium','Pandit Ravi Shankar is famous for which instrument?',['Sitar','Sarod','Santoor','Veena'],0,'Ravi Shankar was a sitar maestro.'],
+['music','easy','How many strings does a violin have?',['4','6','5','8'],0,'A violin has four strings.'],
+['music','medium','Which singer is called the Nightingale of India?',['Lata Mangeshkar','Asha Bhosle','Shreya Ghoshal','Sunidhi Chauhan'],0,'Lata Mangeshkar earned that title.'],
+['music','easy','BTS is a band from which country?',['South Korea','Japan','China','Thailand'],0,'BTS debuted in South Korea.'],
+['music','medium','The mridangam is what kind of instrument?',['Percussion','String','Wind','Keyboard'],0,'Mridangam is a percussion instrument.'],
+['music','easy','Who sang the hit Thriller?',['Michael Jackson','Prince','Madonna','Whitney Houston'],0,'Thriller is by Michael Jackson.'],
+['music','hard','Who among these is part of the Carnatic Trinity?',['Tyagaraja','Purandara Dasa','Annamacharya','Jayadeva'],0,'Tyagaraja is one of the Trinity.'],
+['music','medium','M. S. Subbulakshmi was the first musician to receive which honour?',['Bharat Ratna','Padma Vibhushan','Sangeet Natak Award','Grammy'],0,'She received the Bharat Ratna in 1998.'],
+['tech','easy','Who is known as the father of the computer?',['Charles Babbage','Alan Turing','Bill Gates','Steve Jobs'],0,'Babbage designed the Analytical Engine.'],
+['tech','medium','Who invented the World Wide Web?',['Tim Berners-Lee','Vint Cerf','Larry Page','Steve Wozniak'],0,'Berners-Lee invented the Web in 1990.'],
+['tech','easy','In which year was the first iPhone released?',['2007','2005','2010','2008'],0,'The first iPhone launched in 2007.'],
+['tech','medium','Google was founded in which year?',['1998','2004','1995','2000'],0,'Google was founded in 1998.'],
+['tech','hard','Bluetooth is named after whom?',['A Viking king','A Roman emperor','A Greek scholar','An Egyptian queen'],0,'It is named after King Harald Bluetooth.'],
+['tech','medium','The Python language is named after what?',['Monty Python','A snake species','A Greek hero','A river'],0,'Guido van Rossum named it after Monty Python.'],
+['tech','medium','Who is regarded as the first computer programmer?',['Ada Lovelace','Grace Hopper','Katherine Johnson','Alan Turing'],0,'Ada Lovelace wrote the first algorithm.'],
+['tech','easy','Which port does HTTP normally use?',['80','443','21','25'],0,'HTTP uses port 80 by default.'],
+['tech','easy','How many MB are in 1 GB (decimal)?',['1000','1024','512','2048'],0,'Decimal gigabytes use 1000 MB.'],
+['tech','easy','Google Chrome is developed by whom?',['Google','Mozilla','Apple','Microsoft'],0,'Chrome is a Google browser.'],
+['tech','medium','Tesla\u2019s CEO is whom?',['Elon Musk','Jeff Bezos','Sundar Pichai','Tim Cook'],0,'Elon Musk leads Tesla.'],
+['tech','hard','WhatsApp was founded by whom?',['Brian Acton and Jan Koum','Larry Page and Sergey Brin','Jack Dorsey and Biz Stone','Reed Hastings and Marc Randolph'],0,'Acton and Koum founded WhatsApp.'],
+['gaming','medium','GTA is developed by which studio?',['Rockstar Games','Ubisoft','Electronic Arts','Activision'],0,'Rockstar Games makes GTA.'],
+['gaming','medium','Tetris was created in which country?',['Russia','Japan','USA','Finland'],0,'Alexey Pajitnov created Tetris in the USSR.'],
+['gaming','easy','Mario\u2019s brother is named what?',['Luigi','Wario','Yoshi','Toad'],0,'Luigi is Mario\u2019s brother.'],
+['gaming','medium','What is PUBG Mobile called in India?',['BGMI','Free Fire India','COD Mobile India','Valorant Mobile'],0,'Battlegrounds Mobile India replaced PUBG Mobile.'],
+['gaming','easy','FIFA video games are made by whom?',['EA Sports','Konami','2K Sports','Ubisoft'],0,'EA Sports makes FIFA games.'],
+['gaming','medium','Kratos is the hero of which game series?',['God of War','Halo','Gears of War','Devil May Cry'],0,'Kratos stars in God of War.'],
+['gaming','easy','What is the default player character in Minecraft called?',['Steve','Alex','Herobrine','Notch'],0,'The default skin is Steve.'],
+['gaming','medium','Valorant is developed by whom?',['Riot Games','Valve','Blizzard','Epic Games'],0,'Riot Games made Valorant.'],
+['gaming','easy','Candy Crush is made by which company?',['King','Zynga','Supercell','Rovio'],0,'King developed Candy Crush.'],
+['gaming','hard','Clash of Clans is made by whom?',['Supercell','Zynga','King','Niantic'],0,'Supercell is a Finnish studio.'],
+['gaming','medium','The Legend of Zelda stars whom?',['Link','Zelda as playable hero','Ganon','Mario'],0,'You play as Link to rescue Zelda.'],
+['gaming','hard','Elden Ring was directed by whom?',['Hidetaka Miyazaki','Hideo Kojima','Todd Howard','Neil Druckmann'],0,'Miyazaki directed Elden Ring.'],
+['world','easy','What is the capital of Australia?',['Canberra','Sydney','Melbourne','Perth'],0,'Canberra is the capital.'],
+['world','easy','What is the currency of Japan?',['Yen','Won','Yuan','Ringgit'],0,'Japan uses the yen.'],
+['world','medium','What is the official language of Brazil?',['Portuguese','Spanish','French','English'],0,'Brazil speaks Portuguese.'],
+['world','easy','Mount Fuji is in which country?',['Japan','China','South Korea','Indonesia'],0,'Mount Fuji is in Japan.'],
+['world','easy','The Statue of Liberty is in which city?',['New York','Washington','Boston','Los Angeles'],0,'It stands in New York Harbour.'],
+['world','easy','Big Ben is in which city?',['London','Paris','Dublin','Edinburgh'],0,'Big Ben towers over London.'],
+['world','easy','The Taj Mahal is in which city?',['Agra','Delhi','Jaipur','Lucknow'],0,'The Taj Mahal is in Agra.'],
+['world','medium','Which country gifted the Statue of Liberty to the USA?',['France','England','Spain','Italy'],0,'France gifted it in 1886.'],
+['world','medium','The Nile flows through which famous ancient land?',['Egypt','Greece','Iraq','Turkey'],0,'The Nile defines ancient Egypt.'],
+['world','hard','Which is the largest country by area?',['Russia','Canada','China','USA'],0,'Russia spans two continents.'],
+['world','medium','Machu Picchu is in which country?',['Peru','Mexico','Chile','Bolivia'],0,'Machu Picchu is in Peru.'],
+['world','easy','Sahara is mainly which kind of land?',['Desert','Forest','Grassland','Tundra'],0,'The Sahara is a hot desert.'],
+['history','easy','In which year did World War I begin?',['1914','1918','1939','1905'],0,'The war began in 1914.'],
+['history','medium','In which year did World War II end?',['1945','1943','1947','1950'],0,'The war ended in 1945.'],
+['history','medium','Which Mughal emperor built the Red Fort in Delhi?',['Shah Jahan','Akbar','Aurangzeb','Babur'],0,'Shah Jahan built the Red Fort.'],
+['history','medium','Who wrote the Arthashastra?',['Chanakya','Kalidasa','Aryabhata','Patanjali'],0,'Chanakya authored the Arthashastra.'],
+['history','medium','The Battle of Plassey was fought in which year?',['1757','1764','1772','1748'],0,'Clive won Plassey in 1757.'],
+['history','easy','The Quit India Movement started in which year?',['1942','1920','1930','1947'],0,'Gandhi launched it in 1942.'],
+['history','easy','Who was the first woman Prime Minister of India?',['Indira Gandhi','Sarojini Naidu','Pratibha Patil','Sonia Gandhi'],0,'Indira Gandhi took office in 1966.'],
+['history','medium','Harappa belongs to which ancient culture?',['Indus Valley','Mesopotamian','Egyptian','Mayan'],0,'Harappa is an Indus Valley city.'],
+['history','medium','Who founded the Maurya Empire?',['Chandragupta Maurya','Ashoka','Bindusara','Chanakya'],0,'Chandragupta founded it with Chanakya.'],
+['history','medium','The Jallianwala Bagh tragedy happened in which year?',['1919','1917','1921','1925'],0,'It happened in Amritsar in 1919.'],
+['history','hard','Vasco da Gama reached India in which year?',['1498','1502','1488','1510'],0,'He landed at Calicut in 1498.'],
+['history','hard','The Battle of Talikota (1565) ended which empire\u2019s dominance?',['Vijayanagara','Mughal','Maratha','Bahmani'],0,'Talikota broke Vijayanagara power.'],
+['sports','medium','Which country won the FIFA World Cup in 2022?',['Argentina','France','Brazil','Germany'],0,'Argentina beat France in the final.'],
+['sports','easy','How many overs are in a T20 innings?',['20','10','50','15'],0,'Twenty overs per side.'],
+['sports','medium','Which city hosted the 2024 Summer Olympics?',['Paris','Tokyo','London','Los Angeles'],0,'Paris hosted in 2024.'],
+['sports','easy','Neeraj Chopra is famous in which sport?',['Javelin throw','Shot put','Wrestling','Boxing'],0,'Neeraj throws the javelin.'],
+['sports','easy','P. V. Sindhu plays which sport?',['Badminton','Tennis','Squash','Table tennis'],0,'Sindhu is a badminton star.'],
+['sports','medium','How many Grand Slam singles titles did Roger Federer win?',['20','17','22','24'],0,'Federer won 20 majors.'],
+['sports','medium','Chess originated in which country?',['India','China','Persia','Greece'],0,'Chaturanga began in India.'],
+['sports','easy','Lionel Messi plays for which national team?',['Argentina','Portugal','Brazil','Spain'],0,'Messi captains Argentina.'],
+['sports','easy','Usain Bolt is from which country?',['Jamaica','USA','Kenya','Nigeria'],0,'Bolt is Jamaican.'],
+['sports','medium','How many players of a kho-kho team take the field?',['9','7','11','6'],0,'Nine players take the field.'],
+['sports','hard','In which sport is the Davis Cup contested?',['Tennis','Badminton','Squash','Golf'],0,'Davis Cup is men\u2019s team tennis.'],
+['sports','medium','The term LBW belongs to which sport?',['Cricket','Hockey','Football','Rugby'],0,'LBW is a cricket dismissal.'],
+['literature','medium','Mahabharata is traditionally attributed to whom?',['Vyasa','Valmiki','Kalidasa','Tulsidas'],0,'Vyasa composed the epic.'],
+['literature','medium','Ramayana was authored by whom?',['Valmiki','Vyasa','Kalidasa','Bhasa'],0,'Valmiki wrote the Ramayana.'],
+['literature','medium','Who wrote Macbeth?',['William Shakespeare','Christopher Marlowe','Ben Jonson','John Milton'],0,'Shakespeare wrote Macbeth.'],
+['literature','medium','Panchatantra is traditionally attributed to whom?',['Vishnu Sharma','Chanakya','Kalidasa','Somadeva'],0,'Vishnu Sharma compiled the fables.'],
+['literature','easy','Who wrote The Discovery of India?',['Jawaharlal Nehru','M. K. Gandhi','B. R. Ambedkar','Jai Prakash Narayan'],0,'Nehru wrote it in prison.'],
+['literature','medium','Wings of Fire is the autobiography of whom?',['A. P. J. Abdul Kalam','C. V. Raman','Homi Bhabha','Vikram Sarabhai'],0,'Kalam\u2019s autobiography is Wings of Fire.'],
+['literature','easy','Who wrote the Harry Potter books?',['J. K. Rowling','J. R. R. Tolkien','C. S. Lewis','Roald Dahl'],0,'J. K. Rowling created Harry Potter.'],
+['literature','medium','The Guide was written by whom?',['R. K. Narayan','Mulk Raj Anand','Anita Desai','Arundhati Roy'],0,'R. K. Narayan wrote The Guide.'],
+['literature','medium','Godan was written by whom?',['Premchand','Jaishankar Prasad','Harivansh Rai Bachchan','Mahadevi Varma'],0,'Premchand wrote Godan.'],
+['literature','easy','My Experiments with Truth is by whom?',['M. K. Gandhi','Jawaharlal Nehru','Sardar Patel','Subhas Chandra Bose'],0,'It is Gandhi\u2019s autobiography.'],
+['kids','easy','How many fingers are on one hand?',['5','4','6','10'],0,'Five fingers on each hand.'],
+['kids','easy','Which animal is called the king of the jungle?',['Lion','Tiger','Elephant','Bear'],0,'The lion is the king of beasts.'],
+['kids','easy','What do you call a baby dog?',['Puppy','Kitten','Calf','Cub'],0,'A baby dog is a puppy.'],
+['kids','easy','How many wheels does a bicycle have?',['2','4','3','1'],0,'Bicycles have two wheels.'],
+['kids','easy','Which festival is called the festival of colours?',['Holi','Diwali','Eid','Christmas'],0,'Holi is the festival of colours.'],
+['kids','easy','What is frozen water called?',['Ice','Steam','Snowflakes','Dew'],0,'Frozen water is ice.'],
+['kids','easy','How many months are in a year?',['12','10','11','13'],0,'Twelve months in a year.'],
+['kids','easy','What is the opposite of hot?',['Cold','Warm','Sunny','Spicy'],0,'Cold is the opposite of hot.'],
+['kids','easy','How many legs does a dog have?',['4','2','6','8'],0,'Dogs have four legs.'],
+['kids','medium','Which is the fastest bird in a dive?',['Peregrine falcon','Eagle','Sparrow','Owl'],0,'Peregrine falcons dive past 300 km/h.'],
+['tamil','medium','The Thiruvalluvar statue stands near which town?',['Kanyakumari','Chennai','Rameswaram','Nagapattinam'],0,'The 133-ft statue is at Kanyakumari.'],
+['tamil','easy','Tamil New Year falls in which month?',['Chithirai','Thai','Aadi','Margazhi'],0,'Puthandu falls in Chithirai (April).'],
+['tamil','easy','Marina Beach is in which city?',['Chennai','Puducherry','Tuticorin','Nagapattinam'],0,'Marina Beach is in Chennai.'],
+['tamil','medium','Bharatanatyam is the classical dance of which state?',['Tamil Nadu','Kerala','Andhra Pradesh','Karnataka'],0,'Bharatanatyam comes from Tamil Nadu.'],
+['tamil','medium','Kambaramayanam was written by whom?',['Kambar','Ilango Adigal','Thiruvalluvar','Bharathiyar'],0,'Kambar wrote the Tamil Ramayana.'],
+['tamil','medium','Into how many divisions is the Thirukkural split?',['3','2','4','10'],0,'Aram, Porul and Inbam make three.'],
+['tamil','easy','Idli batter is mainly made from what?',['Rice and black gram','Wheat and jaggery','Ragi and milk','Corn and sugar'],0,'Fermented rice and urad dal.'],
+['tamil','hard','The Shore Temple is at which town?',['Mahabalipuram','Kanchipuram','Thanjavur','Rameswaram'],0,'The Pallava Shore Temple is at Mahabalipuram.'],
+['japanese','easy','What does \u201Carigatou\u201D mean?',['Thank you','Goodbye','Please','Sorry'],0,'Arigatou means thank you.'],
+['japanese','easy','How do you say goodbye when parting in Japanese?',['Sayonara','Ohayou','Sumimasen','Onegaishimasu'],0,'Sayonara is farewell.'],
+['japanese','easy','What is \u201Csakura\u201D?',['Cherry blossom','A festival','A river','A mountain'],0,'Sakura means cherry blossom.'],
+['japanese','easy','What is the capital of Japan?',['Tokyo','Osaka','Kyoto','Nagoya'],0,'Tokyo is the capital.'],
+['japanese','easy','What is the currency of Japan?',['Yen','Won','Ringgit','Dollar'],0,'Japan uses the yen.'],
+['japanese','medium','What is origami?',['Paper folding art','Tea ceremony','Flower arrangement','Sword art'],0,'Origami folds paper into shapes.'],
+['japanese','medium','What is a samurai?',['A Japanese warrior','A priest','A farmer','A merchant'],0,'Samurai were the warrior class.'],
+['japanese','easy','Which drink is central to the Japanese tea ceremony?',['Green tea','Coffee','Rice wine','Barley tea'],0,'Matcha green tea is whisked.'],
+];
+
+const TA3 = [
+['mixed','easy','இந்தியாவின் தலைநகரம் எது?',['டெல்லி','மும்பை','கொல்கத்தா','சென்னை'],0,'புதுடெல்லி தலைநகரம்.'],
+['mixed','medium','உலகின் மிகப்பெரிய விலங்கு எது?',['நீலத் திமிங்கலம்','யானை','ஒட்டகம்','கரடி'],0,'நீலத் திமிங்கலமே மிகப்பெரியது.'],
+['mixed','easy','கணினியின் மூளை எனப்படுவது எது?',['சிபியு','மானிட்டர்','விசைப்பலகை','சுட்டி'],0,'சிபியு வழிமுறைகளை இயக்கும்.'],
+['mixed','easy','வானவில்லில் எத்தனை நிறங்கள்?',['7','5','6','8'],0,'ஏழு நிறங்கள்.'],
+['tamil','medium','மதுரை எந்த ஆற்றங்கரையில் உள்ளது?',['வைகை','காவிரி','தாமிரபரணி','பாலாறு'],0,'மதுரை வைகை கரையில்.'],
+['tamil','medium','காவிரி எங்கே உற்பத்தியாகிறது?',['குடகு','கொடைக்கானல்','ஏற்காடு','ஊட்டி'],0,'குடகில் தலைக்காவிரி.'],
+['tamil','easy','தமிழ் வருடப்பிறப்பு எந்த மாதம்?',['சித்திரை','தை','ஆடி','மார்கழி'],0,'சித்திரையில் புத்தாண்டு.'],
+['tamil','easy','மெரினா கடற்கரை எங்கே உள்ளது?',['சென்னை','தூத்துக்குடி','நாகப்பட்டினம்','புதுச்சேரி'],0,'சென்னையில் மெரினா.'],
+['tamil','hard','கல்லணை கட்டிய மன்னர் யார்?',['கரிகால் சோழன்','ராஜராஜ சோழன்','ராஜேந்திர சோழன்','குலோத்துங்கன்'],0,'கரிகாலன் கல்லணை கட்டினார்.'],
+['gk','easy','இந்திய தேசிய விலங்கு எது?',['வங்கப்புலி','சிங்கம்','யானை','சிறுத்தை'],0,'வங்கப்புலி தேசிய விலங்கு.'],
+['gk','easy','ஒலிம்பிக் வளையங்கள் எத்தனை?',['5','4','6','7'],0,'ஐந்து வளையங்கள்.'],
+['gk','medium','உலகின் மிகப்பெரிய பாலைவனம் எது?',['சஹாரா','கோபி','தார்','கலஹாரி'],0,'சஹாரா மிகப்பெரியது.'],
+];
+
+ALL_RAW.push(...RAW3);
+
 function shuffle(a) {
   const arr = [...a];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -416,6 +557,8 @@ const TA_RAW = [
 ['literature','medium','திருக்குறள் எழுதியவர் யார்?',['திருவள்ளுவர்','கம்பர்','பாரதியார்','ஔவையார்'],0,'திருவள்ளுவர் எழுதினார்.'],
 ];
 
+TA_RAW.push(...TA3);
+
 /* ---------- cross-game no-repeat memory (LRU, 20000 keys ≈ 500+ games) ---------- */
 const servedKeys = new Set();
 function keyOf(it) { return `${it.category}|${it.language || 'en'}|${it.question}`; }
@@ -437,10 +580,139 @@ function withShuffledOptions(item) {
   return { ...item, options: opts, correctAnswer: opts.indexOf(correctText) };
 }
 
+/* ---------- generative India: states/UTs × capital templates ---------- */
+const STATES = [
+['Andhra Pradesh','Amaravati'],['Arunachal Pradesh','Itanagar'],['Assam','Dispur'],['Bihar','Patna'],
+['Chhattisgarh','Raipur'],['Goa','Panaji'],['Gujarat','Gandhinagar'],['Haryana','Chandigarh'],
+['Himachal Pradesh','Shimla'],['Jharkhand','Ranchi'],['Karnataka','Bengaluru'],['Kerala','Thiruvananthapuram'],
+['Madhya Pradesh','Bhopal'],['Maharashtra','Mumbai'],['Manipur','Imphal'],['Meghalaya','Shillong'],
+['Mizoram','Aizawl'],['Nagaland','Kohima'],['Odisha','Bhubaneswar'],['Punjab','Chandigarh'],
+['Rajasthan','Jaipur'],['Sikkim','Gangtok'],['Tamil Nadu','Chennai'],['Telangana','Hyderabad'],
+['Tripura','Agartala'],['Uttar Pradesh','Lucknow'],['Uttarakhand','Dehradun'],['West Bengal','Kolkata'],
+['Delhi','New Delhi'],['Puducherry','Puducherry'],['Chandigarh','Chandigarh'],['Ladakh','Leh'],
+['Lakshadweep','Kavaratti'],['Dadra and Nagar Haveli and Daman and Diu','Daman'],
+['Andaman and Nicobar Islands','Sri Vijaya Puram'],
+];
+function genIndia(k) {
+  const out = [];
+  let guard = 0;
+  const caps = STATES.map((s) => s[1]);
+  const names = STATES.map((s) => s[0]);
+  while (out.length < k && guard++ < k * 30 + 100) {
+    const i = ri(0, STATES.length - 1);
+    const [name, cap] = STATES[i];
+    if (rnd() < 0.5) {
+      out.push(mkQ('india', 'easy', `What is the capital of ${name}?`, cap, pickOthers(caps, cap, 5), `${cap} is the capital of ${name}.`));
+    } else {
+      out.push(mkQ('india', 'medium', `${cap} is the capital of which state or territory?`, name, pickOthers(names, name, 5), `${cap} is the capital of ${name}.`));
+    }
+  }
+  return out;
+}
+
+/* ---------- generative space: stable planet facts × templates ---------- */
+const PLANETS = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'];
+function genSpace(k) {
+  const facts = [
+    ['easy', 'Which planet is closest to the Sun?', 'Mercury', 'Closest planet to the Sun.'],
+    ['easy', 'Which is the largest planet in our solar system?', 'Jupiter', 'Jupiter is the giant of the solar system.'],
+    ['easy', 'Which is the smallest planet in our solar system?', 'Mercury', 'Mercury is the smallest planet.'],
+    ['easy', 'Which planet is known as the Red Planet?', 'Mars', 'Iron oxide dust makes Mars red.'],
+    ['medium', 'Which planet is famous for its prominent rings?', 'Saturn', 'Saturn has the most famous ring system.'],
+    ['medium', 'Which planet is the hottest in our solar system?', 'Venus', 'Thick clouds trap heat on Venus.'],
+    ['medium', 'Which planet is farthest from the Sun?', 'Neptune', 'Neptune is the outermost planet.'],
+    ['easy', 'Which planet do we live on?', 'Earth', 'Earth is our home planet.'],
+    ['medium', 'Which planet is known as Earth\u2019s twin in size?', 'Venus', 'Venus nearly matches Earth in size.'],
+    ['hard', 'Which planet is known as the lord of the rings after Saturn?', 'Jupiter', 'Jupiter also has a faint ring system.'],
+    ['easy', 'Which planet is second from the Sun?', 'Venus', 'Venus orbits second.'],
+    ['easy', 'Which planet is third from the Sun?', 'Earth', 'Earth orbits third.'],
+    ['easy', 'Which planet is fourth from the Sun?', 'Mars', 'Mars orbits fourth.'],
+    ['easy', 'Which planet is fifth from the Sun?', 'Jupiter', 'Jupiter orbits fifth.'],
+    ['medium', 'Which planet is sixth from the Sun?', 'Saturn', 'Saturn orbits sixth.'],
+    ['medium', 'Which planet is seventh from the Sun?', 'Uranus', 'Uranus orbits seventh.'],
+    ['medium', 'Ganymede, the largest moon, orbits which planet?', 'Jupiter', 'Ganymede orbits Jupiter.'],
+    ['medium', 'Olympus Mons, the tallest volcano, is on which planet?', 'Mars', 'Olympus Mons towers over Mars.'],
+    ['medium', 'The Great Red Spot storm rages on which planet?', 'Jupiter', 'The Great Red Spot is on Jupiter.'],
+    ['hard', 'Which planet\u2019s rings are mostly made of ice?', 'Saturn', 'Saturn\u2019s rings are countless ice chunks.'],
+    ['hard', 'Which planet spins on its side?', 'Uranus', 'Uranus rolls around the Sun tilted.'],
+    ['medium', 'Which planet has well over 100 known moons?', 'Saturn', 'Saturn leads the moon count.'],
+    ['hard', 'Phobos and Deimos are moons of which planet?', 'Mars', 'Both tiny moons orbit Mars.'],
+    ['hard', 'Titan, a moon with thick air, orbits which planet?', 'Saturn', 'Titan orbits Saturn.'],
+    ['hard', 'The icy moon Europa orbits which planet?', 'Jupiter', 'Europa circles Jupiter.'],
+    ['hard', 'The Great Dark Spot storm was seen on which planet?', 'Neptune', 'Voyager spotted it on Neptune.'],
+  ];
+  const out = [];
+  let guard = 0;
+  while (out.length < k && guard++ < k * 30 + 100) {
+    const [tier, stem, ans] = facts[ri(0, facts.length - 1)];
+    out.push(mkQ('space', tier, stem, ans, pickOthers(PLANETS, ans, 5), facts.find((f) => f[1] === stem)[3]));
+  }
+  return out;
+}
+
+/* ---------- generative animals: traits table × templates ---------- */
+const ANIMALS = [
+['African Elephant', 4, 'savannas', 'herbivore', 'the largest land animal'],
+['Giraffe', 4, 'savannas', 'herbivore', 'the tallest land animal'],
+['Bengal Tiger', 4, 'forests', 'carnivore', 'India\u2019s national animal'],
+['Lion', 4, 'savannas', 'carnivore', 'often called the king of beasts'],
+['Kangaroo', 2, 'grasslands', 'herbivore', 'a marsupial that hops and carries its baby in a pouch'],
+['Penguin', 2, 'Antarctica', 'carnivore', 'a flightless bird that swims superbly'],
+['Ostrich', 2, 'savannas', 'omnivore', 'the tallest and fastest-running bird'],
+['Peacock', 2, 'forests', 'omnivore', 'India\u2019s national bird'],
+['Cobra', 0, 'forests', 'carnivore', 'a hooded venomous snake'],
+['Spider', 8, 'almost everywhere', 'carnivore', 'an eight-legged arachnid'],
+['Blue Whale', 0, 'oceans', 'carnivore', 'the largest animal ever known'],
+['Dolphin', 0, 'oceans', 'carnivore', 'a highly intelligent marine mammal'],
+['Bat', 2, 'caves', 'omnivore', 'the only mammal that truly flies'],
+['Camel', 4, 'deserts', 'herbivore', 'called the ship of the desert'],
+['Honeybee', 6, 'gardens', 'herbivore', 'an insect that makes honey'],
+['Ant', 6, 'almost everywhere', 'omnivore', 'an insect that can lift many times its weight'],
+['Butterfly', 6, 'gardens', 'herbivore', 'an insect with scaly colourful wings'],
+['Frog', 4, 'ponds', 'carnivore', 'an amphibian that jumps and croaks'],
+['Crocodile', 4, 'rivers', 'carnivore', 'a large armoured reptile'],
+['Parrot', 2, 'forests', 'herbivore', 'a bird famous for mimicking speech'],
+['Bald Eagle', 2, 'mountains', 'carnivore', 'a bird famous for keen eyesight'],
+['Great White Shark', 0, 'oceans', 'carnivore', 'a large predatory fish'],
+['Octopus', 8, 'oceans', 'carnivore', 'a sea creature with eight arms'],
+['Horse', 4, 'grasslands', 'herbivore', 'a fast hoofed animal people ride'],
+['Cow', 4, 'farms', 'herbivore', 'a farm animal that gives milk'],
+['Dog', 4, 'homes', 'omnivore', 'often called man\u2019s best friend'],
+['Cat', 4, 'homes', 'carnivore', 'a small pet that purrs'],
+['Wolf', 4, 'forests', 'carnivore', 'a wild animal that travels in packs'],
+['Monkey', 4, 'forests', 'omnivore', 'a tree-climbing primate'],
+['Cheetah', 4, 'savannas', 'carnivore', 'the fastest land animal'],
+];
+function genAnimals(k) {
+  const out = [];
+  let guard = 0;
+  const names = ANIMALS.map((a) => a[0]);
+  while (out.length < k && guard++ < k * 30 + 100) {
+    const [name, legs, hab, diet, trait] = ANIMALS[ri(0, ANIMALS.length - 1)];
+    const t = rnd();
+    if (t < 0.3) {
+      const near = [legs + 2, Math.max(0, legs - 2), legs + 4, legs + 1, legs + 6].filter((x) => x !== legs);
+      out.push(mkQ('animals', 'easy', `How many legs does a ${name.toLowerCase()} have?`, legs, near, `A ${name.toLowerCase()} has ${legs} legs.`));
+    } else if (t < 0.55) {
+      const others = ANIMALS.filter((a) => a[0] !== name && a[2] !== hab).map((a) => a[0]);
+      out.push(mkQ('animals', 'medium', `Which of these animals lives mainly in ${hab}?`, name, pickOthers(others, '', 5), `${name} lives mainly in ${hab}.`));
+    } else if (t < 0.8) {
+      const others = ANIMALS.filter((a) => a[0] !== name && a[3] !== diet).map((a) => a[0]);
+      out.push(mkQ('animals', 'easy', `Which of these animals is a ${diet}?`, name, pickOthers(others, '', 5), `The ${name.toLowerCase()} is a ${diet}.`));
+    } else {
+      out.push(mkQ('animals', 'medium', `Which animal is ${trait}?`, name, pickOthers(names, name, 5), `The ${name.toLowerCase()} is ${trait}.`));
+    }
+  }
+  return out;
+}
+
 function genFor(cat, k, difficulty) {
   if (cat === 'maths') return genMaths(k, difficulty);
   if (cat === 'geography') return genGeo(k);
   if (cat === 'science') return genScience(k);
+  if (cat === 'india') return genIndia(k);
+  if (cat === 'space') return genSpace(k);
+  if (cat === 'animals') return genAnimals(k);
   return [];
 }
 
@@ -466,26 +738,30 @@ export function bankQuestions({ category = 'mixed', count = 10, questionType = '
   // Strict pools: NEVER pull other categories (that was the "category ignored"
   // bug — ALL_RAW fallback injected sports/history/etc into e.g. tamil games).
   // Only requested category + neutral mixed/gk supplement.
-  const enCatRows = ALL_RAW.filter((r) => r[0] === (cat === 'custom' ? '__none__' : cat));
+  // Exception: mixed/gk games sample the WHOLE bank so they never repeat fast.
+  const isBroad = cat === 'mixed' || cat === 'gk';
+  const isCustom = cat === 'custom';
+  const enCatRows = ALL_RAW.filter((r) => (isCustom ? false : isBroad ? true : r[0] === cat));
   const enNeutralRows = ALL_RAW.filter((r) => r[0] === 'mixed' || r[0] === 'gk');
-  const taCatRows = TA_RAW.filter((r) => r[0] === (cat === 'custom' ? '__none__' : cat));
+  const taCatRows = TA_RAW.filter((r) => (isCustom ? false : isBroad ? true : r[0] === cat));
   const taNeutralRows = TA_RAW.filter((r) => r[0] === 'mixed' || r[0] === 'gk' || r[0] === 'tamil' || r[0] === 'india' || r[0] === 'gk');
 
   const tier = (rows, l) => {
     const match = [];
     const rest = [];
     for (const r of shuffle(rows)) {
-      (diff === 'mixed' || r[1] === diff ? match : rest).push(fromRow(r, l === 'ta' ? labelCat : (cat === 'custom' ? 'mixed' : r[0]), l));
+      (diff === 'mixed' || r[1] === diff ? match : rest).push(fromRow(r, l === 'ta' ? labelCat : (isCustom ? 'mixed' : r[0]), l));
     }
     return [...match, ...shuffle(rest)];
   };
 
   const candidates = [];
-  const pushGen = (n, l) => {
-    for (const g of genFor(cat === 'custom' ? 'mixed' : cat, n, diff)) {
+  const pushGen = (n, l, forceCat) => {
+    const gcat = forceCat || (isCustom ? 'mixed' : cat);
+    for (const g of genFor(gcat, n, diff)) {
       g.language = l;
       // Generative pools are already shuffled; tag category strictly.
-      if (cat !== 'custom') g.category = labelCat;
+      if (!isBroad && cat !== 'custom') g.category = labelCat;
       if (l === 'ta' && g.category === 'maths') tamilMath(g);
       candidates.push(g);
     }
@@ -494,9 +770,17 @@ export function bankQuestions({ category = 'mixed', count = 10, questionType = '
   if (lang === 'en') {
     // Difficulty-matching questions first, then rest of same category.
     candidates.push(...tier(enCatRows, 'en'));
-    pushGen(want * 3 + 20, 'en');
-    // Neutral supplement only if the category pool is thin (keeps on-topic ratio high).
-    if (candidates.length < want * 2) candidates.push(...tier(enNeutralRows, 'en'));
+    if (isBroad) {
+      // Infinite generative variety for broad games.
+      pushGen(want + 10, 'en', 'maths');
+      pushGen(want + 10, 'en', 'geography');
+      pushGen(want + 10, 'en', 'science');
+    } else {
+      pushGen(want * 3 + 20, 'en');
+    }
+    // Neutral supplement when the category pool can't cover ~3 games on its
+    // own (keeps on-topic ratio high: difficulty-matched on-topic first).
+    if (candidates.length < want * 3) candidates.push(...tier(enNeutralRows, 'en'));
   } else if (lang === 'ta') {
     candidates.push(...tier(taCatRows, 'ta'));
     candidates.push(...tier(taNeutralRows, 'ta'));

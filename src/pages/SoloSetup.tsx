@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import SetupForm, { categoryLabel, isAllowedCategory, sanitizeCount, sanitizeJlpt, sanitizeTimer } from '../components/SetupForm';
 import type { QuizConfig } from '../types';
-import { AiError, aiBackendHealth, generateQuestions } from '../services/questions';
+import { AiError, aiBackendHealth, generateQuestions, localBankQuiz } from '../services/questions';
 import { sound } from '../services/engine';
 export default function SoloSetup() {
   const [sp] = useSearchParams();
@@ -13,6 +13,9 @@ export default function SoloSetup() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
+  const [showSkip, setShowSkip] = useState(false);
+  const cleanRef = useRef<QuizConfig | null>(null);
+  const cancelRef = useRef(false);
   // Pre-warm the AI backend while the user configures the quiz, so a cold
   // server is already awake by the time they hit START.
   useEffect(() => { aiBackendHealth().catch(() => {}); }, []);
@@ -31,6 +34,9 @@ export default function SoloSetup() {
       return;
     }
     setCfg(clean);
+    cleanRef.current = clean;
+    cancelRef.current = false;
+    setShowSkip(false);
     setLoading(true);
     setErr('');
     // Staged feedback so a slow network still feels alive.
@@ -41,8 +47,10 @@ export default function SoloSetup() {
     };
     stage();
     const stageTimer = setInterval(stage, 1200);
+    const skipTimer = setTimeout(() => setShowSkip(true), 20000);
     try {
       const { questions, source, provider } = await generateQuestions(clean);
+      if (cancelRef.current) return;
       try {
         sessionStorage.removeItem('qr-result');
         sessionStorage.removeItem('qr-solo-progress');
@@ -51,11 +59,32 @@ export default function SoloSetup() {
       if (source === 'bank') setNote('AI unavailable — using offline questions.');
       nav('/solo/play');
     } catch (e) {
+      if (cancelRef.current) return;
       setNote('');
       setErr(e instanceof AiError ? e.message : 'Could not build a quiz. Check your connection and retry.');
     } finally {
       clearInterval(stageTimer);
+      clearTimeout(skipTimer);
       setLoading(false);
+    }
+  }
+  function skipToOffline() {
+    const clean = cleanRef.current;
+    if (!clean) return;
+    cancelRef.current = true;
+    setShowSkip(false);
+    sound.play('click');
+    try {
+      const { questions, source, provider } = localBankQuiz(clean);
+      try {
+        sessionStorage.removeItem('qr-result');
+        sessionStorage.removeItem('qr-solo-progress');
+        sessionStorage.setItem('qr-solo', JSON.stringify({ cfg: clean, questions, source, provider }));
+      } catch { /* storage unavailable */ }
+      nav('/solo/play');
+    } catch {
+      cancelRef.current = false;
+      setErr('Could not build offline questions. Check your connection and retry.');
     }
   }
   const topic = cfg.category === 'custom' && cfg.customTopic?.trim() ? cfg.customTopic.trim() : categoryLabel(cfg.category);
@@ -76,6 +105,13 @@ export default function SoloSetup() {
         </div>
       )}
       {!err && note && loading && <p aria-live="polite" className="mt-4 text-center text-[12px] font-bold text-muted">{note}</p>}
+      {loading && showSkip && (
+        <div className="mt-3 text-center">
+          <button onClick={skipToOffline} className="btn-press rounded-full bg-white px-5 py-2.5 text-[13px] font-extrabold text-grape shadow-sticker-sm" style={{ border: '1px solid rgba(124,92,255,0.30)' }}>
+            Taking too long? Play offline instead →
+          </button>
+        </div>
+      )}
       <div className="sticky bottom-3 z-10 mt-5">
         <div className="flex items-center gap-3 rounded-[20px] bg-ink p-2.5 pl-5 text-white shadow-lift">
           <div className="min-w-0 flex-1">

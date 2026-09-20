@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Copy, Share2, Users } from 'lucide-react';
@@ -7,12 +7,13 @@ import Avatar from '../components/Avatar';
 import { regionLabel } from '../data/regions';
 import { useRoom, withoutBots } from '../stores/app';
 import type { Player, Room } from '../types';
-import { AiError, aiBackendHealth, generateQuestions } from '../services/questions';
+import { AiError, aiBackendHealth, generateQuestions, localBankQuiz } from '../services/questions';
 import { loadNetSession, netEnabled, saveNetSession, useNetSocket, type NetMsg } from '../services/net';
 
-function LobbyShell({ code, players, config, isHost, alone, starting, err, onStart, aiNote, note }: {
+function LobbyShell({ code, players, config, isHost, alone, starting, err, onStart, aiNote, note, showSkip, onSkip }: {
   code: string; players: Player[]; config: Room['config']; isHost: boolean; alone: boolean;
   starting: boolean; err: string; onStart: () => void; aiNote?: string; note?: string;
+  showSkip?: boolean; onSkip?: () => void;
 }) {
   return (
     <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
@@ -53,6 +54,13 @@ function LobbyShell({ code, players, config, isHost, alone, starting, err, onSta
         </p>
       )}
       {starting && note && <p aria-live="polite" className="mt-3 text-center text-[12px] font-bold text-muted">{note}</p>}
+      {starting && showSkip && onSkip && (
+        <div className="mt-3 text-center">
+          <button onClick={onSkip} className="btn-press rounded-full bg-white px-5 py-2.5 text-[13px] font-extrabold text-grape shadow-sticker-sm" style={{ border: '1px solid rgba(124,92,255,0.30)' }}>
+            Taking too long? Play offline instead →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -125,6 +133,10 @@ function LocalLobby({ code }: { code: string }) {
   const [err, setErr] = useState('');
   const [starting, setStarting] = useState(false);
   const [note, setNote] = useState('');
+  const [showSkip, setShowSkip] = useState(false);
+  const cleanRef = useRef<Room['config'] | null>(null);
+  const roomRef = useRef<Room | null>(null);
+  const cancelRef = useRef(false);
   useEffect(() => { if (!room || room.code !== code) nav('/multiplayer/join', { replace: true }); }, [room, code, nav]);
   useEffect(() => {
     if (!room) return;
@@ -155,6 +167,10 @@ function LocalLobby({ code }: { code: string }) {
     }
     setStarting(true);
     setNote('');
+    setShowSkip(false);
+    cancelRef.current = false;
+    cleanRef.current = cleanConfig;
+    roomRef.current = r;
     const t0 = Date.now();
     const stage = () => {
       const s = (Date.now() - t0) / 1000;
@@ -162,8 +178,10 @@ function LocalLobby({ code }: { code: string }) {
     };
     stage();
     const stageTimer = setInterval(stage, 1200);
+    const skipTimer = setTimeout(() => setShowSkip(true), 20000);
     try {
       const { questions, source } = await generateQuestions(cleanConfig);
+      if (cancelRef.current) return;
       try {
         sessionStorage.removeItem('qr-room-result');
         sessionStorage.setItem('qr-room-qs', JSON.stringify(questions));
@@ -173,11 +191,36 @@ function LocalLobby({ code }: { code: string }) {
       setNote('');
       nav(`/room/${r.code}/play`);
     } catch (e) {
+      if (cancelRef.current) return;
       setErr(e instanceof AiError ? e.message : 'Could not build questions. Check your connection and retry.');
       setNote('');
       setStarting(false);
     } finally {
       clearInterval(stageTimer);
+      clearTimeout(skipTimer);
+    }
+  }
+  function skipToOffline() {
+    const r = roomRef.current;
+    const cleanConfig = cleanRef.current;
+    if (!r || !cleanConfig) return;
+    cancelRef.current = true;
+    setShowSkip(false);
+    try {
+      const { questions, source } = localBankQuiz(cleanConfig);
+      try {
+        sessionStorage.removeItem('qr-room-result');
+        sessionStorage.setItem('qr-room-qs', JSON.stringify(questions));
+        sessionStorage.setItem('qr-room-src', JSON.stringify({ source }));
+      } catch { /* ignore */ }
+      setRoom({ ...r, config: cleanConfig, status: 'COUNTDOWN' });
+      setNote('');
+      nav(`/room/${r.code}/play`);
+    } catch {
+      cancelRef.current = false;
+      setErr('Could not build offline questions. Check your connection and retry.');
+      setNote('');
+      setStarting(false);
     }
   }
   return (
@@ -185,6 +228,7 @@ function LocalLobby({ code }: { code: string }) {
       code={room.code} players={room.players} config={room.config}
       isHost={!!isHost} alone={room.players.length < 2}
       starting={starting} err={err} note={note}
+      showSkip={showSkip} onSkip={skipToOffline}
       onStart={start}
     />
   );
