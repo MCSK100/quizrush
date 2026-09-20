@@ -28,6 +28,15 @@ export default function Navbar() {
   const isMatch = loc.pathname.endsWith('/play');
   const isHome = loc.pathname === '/';
   useEffect(() => { setOpen(false); }, [loc.pathname]);
+  // NOTE: every hook must run before any early return — the play-route
+  // minimal header used to return before the scroll effect below, which
+  // threw "rendered fewer hooks" and unmounted the whole app (blank page)
+  // on every navigation into /solo/play or /room/*/play.
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 16);
+    on(); window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, []);
   if (isMatch) {
     return (
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
@@ -43,11 +52,6 @@ export default function Navbar() {
       </header>
     );
   }
-  useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 16);
-    on(); window.addEventListener('scroll', on, { passive: true });
-    return () => window.removeEventListener('scroll', on);
-  }, []);
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
       <div

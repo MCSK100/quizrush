@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import SetupForm, { isAllowedCategory, sanitizeCount, sanitizeJlpt, sanitizeTimer } from '../components/SetupForm';
-import { regionLabel } from '../data/regions';
+import { ArrowRight, Play, Sparkles } from 'lucide-react';
+import SetupForm, { categoryLabel, isAllowedCategory, sanitizeCount, sanitizeJlpt, sanitizeTimer } from '../components/SetupForm';
 import type { QuizConfig } from '../types';
 import { AiError, generateQuestions } from '../services/questions';
 import { sound } from '../services/engine';
@@ -48,24 +47,38 @@ export default function SoloSetup() {
       setLoading(false);
     }
   }
+  const topic = cfg.category === 'custom' && cfg.customTopic?.trim() ? cfg.customTopic.trim() : categoryLabel(cfg.category);
   return (
     <div className="mx-auto w-full min-w-0 max-w-2xl px-4 py-8 sm:px-5 sm:py-12">
-      <div className="text-[11px] font-extrabold tracking-[0.18em] text-electric">SOLO QUIZ</div>
-      <h1 className="font-display mt-2 text-balance text-3xl tracking-tight text-ink sm:text-4xl">Build your <span className="qr-gradient-text">quiz.</span></h1>
-      <div className="qr-surface mt-6 rounded-[24px] p-4 sm:p-6">
-        <SetupForm value={cfg} onChange={setCfg} />
+      <div className="flex items-center gap-2 text-[11px] font-extrabold tracking-[0.18em] text-electric">
+        <Play size={12} strokeWidth={3} /> SOLO QUIZ
       </div>
-      <button onClick={start} disabled={loading} className="qr-btn-primary group mt-4 w-full justify-center rounded-2xl py-4 font-display text-base tracking-wide disabled:opacity-60">
-        {loading ? 'ASKING THE AI…' : <>START QUIZ <ArrowRight size={18} className="arrow-nudge" /></>}
-      </button>
+      <h1 className="font-display mt-2 text-balance text-3xl tracking-tight text-ink sm:text-4xl">Build your <span className="qr-gradient-text">quiz.</span></h1>
+      <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-muted">
+        <Sparkles size={14} className="shrink-0 text-sunny" /> Fresh AI questions every run — no repeats, no stale decks.
+      </p>
+      <div className="mt-6"><SetupForm value={cfg} onChange={setCfg} /></div>
       {err && (
-        <div role="alert" className="mt-3 rounded-2xl bg-[#FFE9E9] px-4 py-3 text-center" style={{ border: '1.5px solid #FF4B5C' }}>
+        <div role="alert" className="mt-4 rounded-[22px] bg-[#FFE9E9] px-4 py-3.5 text-center" style={{ border: '1.5px solid #FF4B5C' }}>
           <p className="text-sm font-bold text-[#C62828]">{err}</p>
-          <button onClick={start} disabled={loading} className="mt-2 rounded-xl bg-[#C62828] px-5 py-2 text-sm font-extrabold text-white disabled:opacity-60">RETRY</button>
+          <button onClick={start} disabled={loading} className="btn-press mt-2 rounded-xl bg-[#C62828] px-5 py-2 text-sm font-extrabold text-white disabled:opacity-60">RETRY</button>
         </div>
       )}
-      {!err && note && loading && <p aria-live="polite" className="mt-3 text-center text-[12px] font-bold text-muted">{note}</p>}
-      <p className="mt-3 text-center text-[12px] font-bold text-muted">{cfg.count} questions · {cfg.timer > 0 ? `${cfg.timer}s each` : 'No timer'} · {String(cfg.difficulty).toUpperCase()} · {(cfg.questionType || 'mcq').toUpperCase()} · {(cfg.language || 'en').toUpperCase()} · {regionLabel(cfg.focus === 'india' ? 'india' : cfg.region).toUpperCase()}</p>
+      {!err && note && loading && <p aria-live="polite" className="mt-4 text-center text-[12px] font-bold text-muted">{note}</p>}
+      <div className="sticky bottom-3 z-10 mt-5">
+        <div className="flex items-center gap-3 rounded-[20px] bg-ink p-2.5 pl-5 text-white shadow-lift">
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[14px] font-extrabold">{topic}</div>
+            <div className="font-num truncate text-[11.5px] font-bold text-white/60">
+              {cfg.count} Qs · {cfg.timer > 0 ? `${cfg.timer}s each` : 'No timer'} · {String(cfg.difficulty).toUpperCase()}
+            </div>
+          </div>
+          <button onClick={start} disabled={loading}
+            className="qr-btn-primary btn-press group shrink-0 rounded-2xl px-6 py-3.5 font-display text-[15px] tracking-wide disabled:opacity-60 sm:px-8">
+            {loading ? 'ASKING AI…' : <>START <ArrowRight size={17} className="arrow-nudge" /></>}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

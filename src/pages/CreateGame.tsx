@@ -59,23 +59,21 @@ export default function CreateGame() {
         <input id="hname" value={name} onChange={(e) => setName(e.target.value)} maxLength={16}
           className="mt-2 w-full rounded-2xl bg-white/90 px-4 py-3.5 font-bold text-ink outline-none transition-all placeholder:text-faint focus:bg-white" style={{ ...SOFT, borderWidth: 1.5 }} />
         <div className="mt-6"><SetupForm value={cfg} onChange={setCfg} /></div>
-        <div className="mt-6">
+        <div className="mt-4 rounded-[22px] bg-white p-4 shadow-sticker-sm sm:p-5" style={SOFT}>
           <div className="mb-2 text-[11px] font-extrabold tracking-[0.16em] text-muted">MAX PLAYERS</div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-1 rounded-2xl bg-[#F3F0FF] p-1">
             {[2, 4, 8, 16, 32].map((n) => (
               <button key={n} onClick={() => setCfg({ ...cfg, maxPlayers: n })} aria-pressed={cfg.maxPlayers === n}
-                className={`btn-press rounded-2xl py-3 font-num text-sm font-extrabold transition-all ${cfg.maxPlayers === n ? 'qr-btn-primary' : 'bg-white/80 text-ink hover:bg-white'}`}
-                style={cfg.maxPlayers === n ? undefined : SOFT}>{n}</button>
+                className={`btn-press rounded-xl py-2.5 font-num text-sm font-extrabold transition-all ${cfg.maxPlayers === n ? 'bg-white text-ink shadow-sticker-sm' : 'text-muted hover:text-ink'}`}>{n}</button>
             ))}
           </div>
         </div>
-        <div className="mt-6">
+        <div className="mt-4 rounded-[22px] bg-white p-4 shadow-sticker-sm sm:p-5" style={SOFT}>
           <div className="mb-2 text-[11px] font-extrabold tracking-[0.16em] text-muted">GAME MODE</div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1 rounded-2xl bg-[#F3F0FF] p-1">
             {(['classic', 'speed', 'elimination'] as GameMode[]).map((m) => (
               <button key={m} onClick={() => setCfg({ ...cfg, mode: m })} aria-pressed={cfg.mode === m}
-                className={`btn-press rounded-2xl py-3 text-xs font-extrabold uppercase transition-all ${cfg.mode === m ? 'qr-btn-primary justify-center' : 'bg-white/80 text-ink hover:bg-white'}`}
-                style={cfg.mode === m ? undefined : SOFT}>{m === 'speed' ? 'Speed Run' : m}</button>
+                className={`btn-press rounded-xl py-2.5 text-xs font-extrabold uppercase transition-all ${cfg.mode === m ? 'bg-white text-ink shadow-sticker-sm' : 'text-muted hover:text-ink'}`}>{m === 'speed' ? 'Speed Run' : m}</button>
             ))}
           </div>
         </div>

@@ -61,10 +61,10 @@ function Shell({ children }: { children: React.ReactNode }) {
   const isHome = loc.pathname === '/';
   useLenis();
   useEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
-  if (isHome) return <div className="flex min-h-screen flex-col bg-cream font-body text-ink"><Navbar /><main className="flex-1">{children}</main></div>;
+  if (isHome) return <div className="flex min-h-screen flex-col bg-cream font-body text-ink"><ErrorBoundary><Navbar /></ErrorBoundary><main className="flex-1">{children}</main></div>;
   return (
     <div className="flex min-h-screen flex-col bg-cream font-body text-ink">
-      <Navbar />
+      <ErrorBoundary><Navbar /></ErrorBoundary>
       <main className="flex-1 pt-[88px]">{children}</main>
       <footer className="border-t border-line bg-cream py-8">
         <div className="cf-wrap flex flex-col items-center justify-between gap-4 text-[13px] text-muted sm:flex-row">
