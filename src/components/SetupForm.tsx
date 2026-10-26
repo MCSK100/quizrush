@@ -13,7 +13,7 @@ export const ALLOWED_TIMERS = [0, 10, 20, 30, 60] as const;
 export const ALLOWED_CATEGORIES = [
   'mixed', 'sports', 'science', 'history', 'tech', 'movies',
   'music', 'gaming', 'geography', 'gk', 'maths', 'literature',
-  'animals', 'space', 'kids', 'tamil', 'india', 'world', 'japanese', 'custom',
+  'animals', 'space', 'kids', 'tamil', 'tamil-nadu', 'india', 'world', 'japanese', 'custom',
 ] as const;
 export const JLPT_LEVELS: { id: JlptLevel; label: string; sub: string }[] = [
   { id: 'N5', label: 'N5', sub: 'Beginner' },
@@ -49,7 +49,7 @@ export function categoryLabel(id: string): string {
 }
 
 const TOPIC_ICONS: Record<string, LucideIcon> = {
-  Brain, Trophy, Landmark, FlaskConical, Globe, Cpu, Clapperboard, Music,
+  Brain, Trophy, Landmark, FlaskConical, Globe, Cpu, Clapperboard, Music, MapPin,
   Smile, Flag, Languages, Sigma, BookOpen, PawPrint, Rocket, Gamepad2, Torii: Flower,
 };
 const GRADS = [
@@ -64,12 +64,13 @@ const GRADS = [
   'linear-gradient(135deg,#34D399,#0EA5E9)',
   'linear-gradient(135deg,#FBBF24,#F43F5E)',
 ];
-const TOPIC_ORDER = (ALLOWED_CATEGORIES as readonly string[]).filter((id) => id !== 'custom' && id !== 'japanese');
+const TOPIC_ORDER = (ALLOWED_CATEGORIES as readonly string[]).filter(
+  (id) => !['custom', 'japanese', 'mixed', 'india', 'world'].includes(id),
+);
 
 const LANGS: { id: QuizLanguage; label: string; sub: string }[] = [
   { id: 'en', label: 'English', sub: 'EN' },
   { id: 'ta', label: 'தமிழ்', sub: 'TA' },
-  { id: 'both', label: 'Both', sub: 'EN+TA' },
 ];
 const QUICK_COUNTS = [5, 10, 15, 20, 25];
 const DIFFS: { id: Difficulty; label: string; sub: string; dot: string }[] = [
@@ -135,7 +136,11 @@ export default function SetupForm({ value, onChange }: { value: QuizConfig; onCh
 
   return (
     <div className="flex flex-col gap-4">
-      <Step n="01" icon={LayoutGrid} title="Pick an Indian topic" hint={`${TOPIC_ORDER.length + 1} topics`}>
+      <Step n="01" icon={Languages} title="Language">
+        <Seg cols="grid-cols-2" options={LANGS} value={value.language === 'ta' ? 'ta' : 'en'} onPick={(id) => set({ language: id })} />
+      </Step>
+
+      <Step n="02" icon={LayoutGrid} title="Pick an Indian topic" hint={`${TOPIC_ORDER.length + 1} topics`}>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {TOPIC_ORDER.map((id, i) => {
             const cat = CATEGORIES.find((c) => c.id === id)!;
@@ -171,30 +176,28 @@ export default function SetupForm({ value, onChange }: { value: QuizConfig; onCh
           </button>
         </div>
         {value.category === 'custom' && (
-          <input
-            value={value.customTopic || ''} onChange={(e) => onChange({ ...value, customTopic: e.target.value.slice(0, 80) })}
-            aria-label="Custom Indian topic"
-            placeholder="e.g. Chola dynasty, Chandrayaan, IPL…" maxLength={80} autoFocus
-            className="mt-2.5 w-full rounded-2xl bg-[#F8F9FF] px-4 py-3.5 text-[14px] font-bold text-ink outline-none placeholder:text-faint focus:bg-white"
-            style={{ ...SOFT, borderWidth: 1.5 }}
-          />
+          <>
+            <input
+              value={value.customTopic || ''} onChange={(e) => onChange({ ...value, customTopic: e.target.value.slice(0, 80) })}
+              aria-label="Custom Indian topic"
+              placeholder="e.g. Chola dynasty, Chandrayaan, IPL…" maxLength={80} autoFocus
+              className="mt-2.5 w-full rounded-2xl bg-[#F8F9FF] px-4 py-3.5 text-[14px] font-bold text-ink outline-none placeholder:text-faint focus:bg-white"
+              style={{ ...SOFT, borderWidth: 1.5 }}
+            />
+            <label className="mt-3 block text-[10px] font-extrabold tracking-[0.14em] text-muted" htmlFor="custom-question-focus">
+              SPECIFIC INDIAN FOCUS (OPTIONAL)
+            </label>
+            <input
+              id="custom-question-focus"
+              value={value.customFocus || ''}
+              onChange={(e) => onChange({ ...value, customFocus: e.target.value.slice(0, 120) })}
+              placeholder="e.g. women in Indian cricket, ISRO’s lunar missions"
+              maxLength={120}
+              className="mt-1.5 w-full rounded-2xl bg-[#F8F9FF] px-4 py-3.5 text-[14px] font-bold text-ink outline-none placeholder:text-faint focus:bg-white"
+              style={{ ...SOFT, borderWidth: 1.5 }}
+            />
+          </>
         )}
-        <label className="mt-3 block text-[10px] font-extrabold tracking-[0.14em] text-muted" htmlFor="custom-question-focus">
-          SPECIFIC INDIAN FOCUS (OPTIONAL)
-        </label>
-        <input
-          id="custom-question-focus"
-          value={value.customFocus || ''}
-          onChange={(e) => onChange({ ...value, customFocus: e.target.value.slice(0, 120) })}
-          placeholder="e.g. women in Indian cricket, ISRO’s lunar missions"
-          maxLength={120}
-          className="mt-1.5 w-full rounded-2xl bg-[#F8F9FF] px-4 py-3.5 text-[14px] font-bold text-ink outline-none placeholder:text-faint focus:bg-white"
-          style={{ ...SOFT, borderWidth: 1.5 }}
-        />
-      </Step>
-
-      <Step n="02" icon={Languages} title="Language">
-        <Seg options={LANGS} value={value.language || 'en'} onPick={(id) => set({ language: id })} />
       </Step>
 
       <Step n="03" icon={Hash} title="Questions" hint="3 – 40">

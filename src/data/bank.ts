@@ -69,6 +69,16 @@ const EN: Row[] = [
 ['tamil','easy','What is the capital of Tamil Nadu?',['Chennai','Madurai','Coimbatore','Trichy'],0,'Chennai is the capital.'],
 ['tamil','medium','The Brihadeeswara Temple is located in which city?',['Thanjavur','Madurai','Kanchipuram','Chidambaram'],0,'Raja Raja Chola built it in Thanjavur.'],
 ['tamil','hard','Silappathikaram was written by whom?',['Ilango Adigal','Thiruvalluvar','Kambar','Avvaiyar'],0,'Ilango Adigal authored Silappathikaram.'],
+['tamil','easy','Which city is the capital of Tamil Nadu?',['Chennai','Madurai','Salem','Tirunelveli'],0,'Chennai is the capital of Tamil Nadu.'],
+['tamil','medium','Which river is closely associated with the delta around Thanjavur?',['Kaveri','Vaigai','Palar','Tamiraparani'],0,'The Kaveri delta supports agriculture around Thanjavur.'],
+['tamil','easy','In which Tamil Nadu city is the Meenakshi Amman Temple?',['Madurai','Erode','Vellore','Dindigul'],0,'The Meenakshi Amman Temple is in Madurai.'],
+['tamil','medium','Which hill station is in the Nilgiri Hills of Tamil Nadu?',['Ooty','Kodaikanal','Yercaud','Courtallam'],0,'Ooty is in the Nilgiri Hills.'],
+['tamil','medium','Which ancient dam across the Kaveri is traditionally attributed to Karikala Chola?',['Kallanai','Mettur Dam','Vaigai Dam','Amaravathi Dam'],0,'Kallanai, or the Grand Anicut, is attributed to Karikala Chola.'],
+['tamil','easy','Which coastal town in Tamil Nadu is famous for its Shore Temple?',['Mahabalipuram','Rameswaram','Nagapattinam','Thoothukudi'],0,'Mahabalipuram is known for its Shore Temple.'],
+['tamil','medium','Which Tamil Nadu city is a major centre of textile production?',['Coimbatore','Thanjavur','Ramanathapuram','Kanchipuram'],0,'Coimbatore is a major textile and engineering centre.'],
+['tamil','easy','Which classical dance form originated in Tamil Nadu?',['Bharatanatyam','Kathak','Kuchipudi','Odissi'],0,'Bharatanatyam developed in Tamil Nadu.'],
+['tamil','medium','Which wildlife reserve in Tamil Nadu is part of the Nilgiri Biosphere Reserve?',['Mudumalai','Gir','Kaziranga','Sundarbans'],0,'Mudumalai lies in the Nilgiri Biosphere Reserve.'],
+['tamil','easy','Which festival is widely celebrated in Tamil Nadu to mark the harvest?',['Pongal','Baisakhi','Onam','Bihu'],0,'Pongal is Tamil Nadu’s harvest festival.'],
 ['tamil','easy','Pongal is primarily a festival celebrating what?',['Harvest','New Year','Victory','Monsoon'],0,'Pongal thanks the Sun for the harvest.'],
 ['tamil','medium','Which river is called the lifeline of Tamil Nadu agriculture?',['Kaveri','Vaigai','Thamirabarani','Palar'],0,'The Kaveri waters the delta.'],
 ['gk','easy','Which is the national bird of India?',['Peacock','Parrot','Eagle','Swan'],0,'The peacock is Indias national bird.'],
@@ -128,6 +138,15 @@ const TA: Row[] = [
 ['tamil','easy','தமிழ்நாட்டின் தலைநகரம் எது?',['சென்னை','மதுரை','கோவை','திருச்சி'],0,'சென்னை தலைநகரம்.'],
 ['tamil','medium','தஞ்சை பெரிய கோவில் எந்த நகரில் உள்ளது?',['தஞ்சாவூர்','மதுரை','காஞ்சிபுரம்','சிதம்பரம்'],0,'ராஜராஜ சோழன் கட்டினார்.'],
 ['tamil','hard','சிலப்பதிகாரம் எழுதியவர் யார்?',['இளங்கோ அடிகள்','திருவள்ளுவர்','கம்பர்','ஔவையார்'],0,'இளங்கோ அடிகள்.'],
+['tamil','easy','மீனாட்சி அம்மன் கோவில் எந்த நகரில் உள்ளது?',['மதுரை','சேலம்','ஈரோடு','வேலூர்'],0,'மீனாட்சி அம்மன் கோவில் மதுரையில் உள்ளது.'],
+['tamil','medium','கல்லணை எந்த ஆற்றின் குறுக்கே கட்டப்பட்டுள்ளது?',['காவிரி','வைகை','பாலாறு','தாமிரபரணி'],0,'கல்லணை காவிரி ஆற்றின் குறுக்கே அமைந்துள்ளது.'],
+['tamil','easy','தமிழ்நாட்டின் எந்த மலைநகரம் நீலகிரி மலைகளில் அமைந்துள்ளது?',['ஊட்டி','கொடைக்கானல்','ஏற்காடு','குற்றாலம்'],0,'ஊட்டி நீலகிரி மலைகளில் உள்ளது.'],
+['tamil','medium','மாமல்லபுரம் எதற்காகப் புகழ்பெற்றது?',['கடற்கரை கோவில்','மீனாட்சி கோவில்','பெரிய கோவில்','நெல்லையப்பர் கோவில்'],0,'மாமல்லபுரம் கடற்கரை கோவிலுக்குப் புகழ்பெற்றது.'],
+['tamil','easy','தமிழ்நாட்டின் அறுவடைத் திருவிழா எது?',['பொங்கல்','ஓணம்','பைசாகி','பிஹு'],0,'பொங்கல் தமிழ்நாட்டின் அறுவடைத் திருவிழா.'],
+['tamil','medium','பரதநாட்டியம் எந்த மாநிலத்துடன் தொடர்புடையது?',['தமிழ்நாடு','கேரளா','ஒடிசா','அசாம்'],0,'பரதநாட்டியம் தமிழ்நாட்டில் தோன்றிய செவ்வியல் நடனம்.'],
+['tamil','easy','மதுரை வழியாகப் பாயும் ஆறு எது?',['வைகை','காவிரி','பாலாறு','பொன்னையாறு'],0,'வைகை ஆறு மதுரை வழியாகப் பாய்கிறது.'],
+['tamil','medium','நடராஜர் கோவிலுக்குப் புகழ்பெற்ற ஊர் எது?',['சிதம்பரம்','திருவண்ணாமலை','பழனி','கும்பகோணம்'],0,'சிதம்பரம் நடராஜர் கோவிலுக்குப் புகழ்பெற்றது.'],
+['tamil','easy','பட்டுப் புடவைகளுக்குப் புகழ்பெற்ற தமிழ்நாட்டு நகரம் எது?',['காஞ்சிபுரம்','நாமக்கல்','கரூர்','திண்டுக்கல்'],0,'காஞ்சிபுரம் பட்டுப் புடவைகளுக்குப் பெயர் பெற்றது.'],
 ['gk','easy','இந்தியாவின் தேசியப் பறவை எது?',['மயில்','கிளி','கழுகு','அன்னம்'],0,'மயில் தேசியப் பறவை.'],
 ['maths','easy','7 × 8 எவ்வளவு?',['56','54','48','63'],0,'7 × 8 = 56.'],
 ['india','easy','இந்தியாவின் தேசிய நாணயம் எது?',['ரூபாய்','டாலர்','யூரோ','யென்'],0,'ரூபாய் நாணயம்.'],
@@ -197,12 +216,13 @@ function toTF(q: Question, i: number): Question {
 }
 
 export function getBackupQuestions(cfg: QuizConfig): Question[] {
-  const cat = (cfg.category || 'mixed').toLowerCase();
+  const requestedCat = (cfg.category || 'mixed').toLowerCase();
+  const cat = requestedCat === 'tamil-nadu' ? 'tamil' : requestedCat;
   const want = Math.min(40, Math.max(3, Number(cfg.count) || 10));
   const diff = ['easy', 'medium', 'hard'].includes(String(cfg.difficulty)) ? String(cfg.difficulty) : 'mixed';
   const lang = cfg.language === 'ta' || cfg.language === 'both' ? cfg.language : 'en';
   const qtype = cfg.questionType || 'mcq';
-  const label = cat === 'custom' ? 'mixed' : cat;
+  const label = cat === 'custom' ? 'mixed' : requestedCat;
 
   const build = (rows: Row[], l: string): Question[] => {
     const match: Question[] = [];
@@ -230,8 +250,6 @@ export function getBackupQuestions(cfg: QuizConfig): Question[] {
     if (pool.length < want * 2) pool.push(...build(enNeutral, 'en'));
   } else if (lang === 'ta') {
     pool = [...build(taCat, 'ta'), ...build(taNeutral, 'ta')];
-    if (pool.length < want) pool.push(...build(enCat, 'en'));
-    if (pool.length < want) pool.push(...build(enNeutral, 'en'));
   } else {
     const ta = [...build(taCat, 'ta'), ...build(taNeutral, 'ta')];
     const en = [...build(enCat, 'en')];

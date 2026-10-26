@@ -3,7 +3,7 @@ const QA: [string, string][] = [
   ['How are questions generated?', 'Every quiz is built fresh by AI (Gemini with OpenRouter fallback). If the AI is unreachable, Quizlly falls back to its built-in question bank so the game never blocks.'],
   ['Why did I get a repeated question?', 'Each session tracks every question you have seen and filters it out of new quizzes. If the AI returns a duplicate, it is removed before the game starts. Bank-only games with big question counts may still recycle when the bank runs out — connect the AI backend for fully fresh decks.'],
   ['How does multiplayer work?', 'Create a room, share the 5-letter code, and everyone answers the same questions together with live scores. The host starts the game from the lobby.'],
-  ['Which languages are supported?', 'English, Tamil (தமிழ்), or Both — which alternates questions between the two languages.'],
+  ['Which languages are supported?', 'Choose English or Tamil (தமிழ்). Questions are generated in the language you select.'],
   ['What is True / False mode?', 'Instead of 4 options you get True or False statements. Mixed mode alternates multiple-choice and True/False questions.'],
   ['Does Quizlly need an account?', 'No. Scores and stats live in your browser only. Reset them anytime from Settings.'],
 ];

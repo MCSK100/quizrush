@@ -31,7 +31,7 @@ const ALLOWED_DIFFS = new Set(['easy', 'medium', 'hard', 'mixed']);
 const ALLOWED_CATS = new Set([
   'mixed', 'sports', 'history', 'science', 'geography', 'tech', 'movies',
   'music', 'kids', 'tamil', 'gk', 'maths', 'literature', 'animals', 'space',
-  'gaming', 'world', 'india', 'japanese', 'custom',
+  'gaming', 'world', 'india', 'japanese', 'custom', 'tamil-nadu',
 ]);
 const ALLOWED_LANGS = new Set(['en', 'ta', 'both']);
 const ALLOWED_QTYPES = new Set(['mcq', 'tf', 'mixed']);
@@ -198,6 +198,7 @@ const CATEGORY_FOCUS = {
   music: 'Indian music only: Indian composers, artists, instruments, classical and regional traditions.',
   kids: 'Simple, family-friendly questions about India, Indian nature, culture, geography and everyday life.',
   tamil: 'Tamil Nadu and Tamil culture only: language, history, temples, cinema, literature and festivals.',
+  'tamil-nadu': 'Tamil Nadu only: its districts, cities, rivers, temples, history, literature, arts, festivals, food and notable people. Every question must be specifically about Tamil Nadu.',
   gk: 'Indian general knowledge only, spanning India’s history, geography, culture, science and public life.',
   maths: 'Maths questions grounded in Indian contexts, with unambiguous arithmetic, geometry or logic answers.',
   literature: 'Indian literature only: Indian books, authors, poets, languages, plays and literary traditions.',
@@ -527,7 +528,8 @@ async function resolveQuestions(opts) {
     console.log('[ai] no providers configured, using bank');
     if (opts.category === 'custom') throw new Error('AI is required to generate questions for a custom topic');
   }
-  return bankQuestions({ category: 'india', count: opts.count, questionType: opts.questionType, difficulty: opts.difficulty, language: opts.language || 'en' });
+  const backupCategory = ['tamil-nadu', 'tamil'].includes(opts.category) ? opts.category : 'india';
+  return bankQuestions({ category: backupCategory, count: opts.count, questionType: opts.questionType, difficulty: opts.difficulty, language: opts.language || 'en' });
 }
 
 /* ---------------- realtime rooms ---------------- */
@@ -674,10 +676,10 @@ async function handleStart(room, byId) {
   console.log(`[room ${room.code}] start x${want} ${room.config.category}/${room.config.difficulty} players=${room.players.length} via ${providerSummary()}`);
   try {
     const qOpts = {
-      category: room.config.category || 'mixed',
+      category: room.config.category || 'tamil-nadu',
       count: want,
       difficulty: room.config.difficulty || 'mixed',
-      region: room.config.focus === 'india' ? 'india' : room.config.region || 'global',
+      region: room.config.category === 'tamil-nadu' ? 'tamil-nadu' : room.config.focus === 'india' ? 'india' : room.config.region || 'global',
       language: cleanLang(room.config.language),
       questionType: cleanQType(room.config.questionType),
       customTopic: String(room.config.customTopic || '').slice(0, 80),
@@ -790,7 +792,7 @@ function onMessage(ws, raw) {
     if (!validName(m.name)) return sendWs(ws, { t: 'error', msg: 'Enter a display name (2+ characters).' });
     const count = Math.max(3, Math.min(40, Number(m.config?.count) || 10));
     const timer = [10, 20, 30, 60].includes(Number(m.config?.timer)) ? Number(m.config.timer) : 10;
-    const category = ALLOWED_CATS.has(String(m.config?.category)) ? String(m.config.category) : 'india';
+    const category = ALLOWED_CATS.has(String(m.config?.category)) ? String(m.config.category) : 'tamil-nadu';
     const difficulty = ALLOWED_DIFFS.has(String(m.config?.difficulty)) ? String(m.config.difficulty) : 'mixed';
     const mode = ['classic', 'speed', 'elimination'].includes(m.config?.mode) ? m.config.mode : 'classic';
     const maxPlayers = [2, 4, 8, 16, 32].includes(Number(m.config?.maxPlayers)) ? Number(m.config.maxPlayers) : 8;
@@ -890,7 +892,7 @@ const server = http.createServer(async (req, res) => {
     }
     const category = String(body.category || 'mixed').toLowerCase();
     const difficulty = String(body.difficulty || 'mixed').toLowerCase();
-    const region = cleanRegion(body.region);
+    const region = category === 'tamil-nadu' ? 'tamil-nadu' : cleanRegion(body.region);
     const count = Math.max(3, Math.min(40, Number(body.count) || 10));
     const language = cleanLang(body.language);
     const questionType = cleanQType(body.questionType);

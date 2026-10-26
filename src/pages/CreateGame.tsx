@@ -13,7 +13,7 @@ export default function CreateGame() {
   const nav = useNavigate();
   const setRoom = useRoom((s) => s.setRoom);
   const [name, setName] = useState('');
-  const [cfg, setCfg] = useState<QuizConfig>({ category: 'india', count: 20, timer: 30, difficulty: 'mixed', region: 'india', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'india', jlptLevel: 'N5' });
+  const [cfg, setCfg] = useState<QuizConfig>({ category: 'tamil-nadu', count: 20, timer: 30, difficulty: 'mixed', region: 'india', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'india', jlptLevel: 'N5' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
@@ -23,7 +23,7 @@ export default function CreateGame() {
     if (name.trim().length < 2) { setErr('Enter a display name (2+ characters).'); return; }
     const clean: QuizConfig = {
       ...cfg,
-      category: isAllowedCategory(cfg.category) ? cfg.category : 'mixed',
+      category: isAllowedCategory(cfg.category) && !['mixed', 'india', 'world', 'japanese'].includes(cfg.category) ? cfg.category : 'tamil-nadu',
       count: sanitizeCount(cfg.count),
       timer: sanitizeTimer(cfg.timer, true),
       jlptLevel: sanitizeJlpt(cfg.jlptLevel),

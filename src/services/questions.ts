@@ -90,7 +90,10 @@ function bankFallback(cfg: QuizConfig, count: number, reason: string): { questio
     throw new AiError('failed', 'AI is required to generate questions for a custom topic. Check the AI connection and retry.');
   }
   const banned = new Set([...recentTexts(), ...sessionTexts()]);
-  const pool = getBackupQuestions({ ...cfg, category: 'india', focus: 'india', region: 'india' }).filter(validateQuestion);
+  const backupCategory = cfg.category === 'tamil-nadu' || cfg.category === 'tamil'
+    ? cfg.category
+    : 'india';
+  const pool = getBackupQuestions({ ...cfg, category: backupCategory, focus: 'india', region: 'india' }).filter(validateQuestion);
   const fresh = dedupeFresh(pool.filter((q) => !banned.has(qKey(q))));
   const out = dedupeFresh([...fresh, ...pool]).slice(0, count);
   if (out.length < Math.min(3, count)) throw new AiError('failed', aiErrorMessage('failed'));
@@ -137,7 +140,7 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
       method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         category: cfg.category, count,
-        difficulty: cfg.difficulty, region: cfg.region || 'india',
+        difficulty: cfg.difficulty, region: cfg.category === 'tamil-nadu' ? 'tamil-nadu' : cfg.region || 'india',
         language: cfg.language || 'en', questionType: wantType,
         customTopic: (cfg.customTopic || '').slice(0, 80),
         customFocus: (cfg.customFocus || '').slice(0, 120), focus: cfg.focus || 'india',

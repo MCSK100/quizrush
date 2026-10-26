@@ -545,6 +545,15 @@ const TA_RAW = [
 ['tamil','medium','தஞ்சை பெரிய கோவில் எந்த நகரில் உள்ளது?',['தஞ்சாவூர்','மதுரை','காஞ்சிபுரம்','சிதம்பரம்'],0,'ராஜராஜ சோழன் கட்டினார்.'],
 ['tamil','medium','பொங்கல் முதன்மையாக எதைக் கொண்டாடும் விழா?',['அறுவடை','புத்தாண்டு','வெற்றி','பருவமழை'],0,'சூரியனுக்கு நன்றி சொல்லும் அறுவடை விழா.'],
 ['tamil','hard','சிலப்பதிகாரம் எழுதியவர் யார்?',['இளங்கோ அடிகள்','திருவள்ளுவர்','கம்பர்','ஔவையார்'],0,'இளங்கோ அடிகள் எழுதினார்.'],
+['tamil','easy','மீனாட்சி அம்மன் கோவில் எந்த நகரில் உள்ளது?',['மதுரை','சேலம்','ஈரோடு','வேலூர்'],0,'மீனாட்சி அம்மன் கோவில் மதுரையில் உள்ளது.'],
+['tamil','medium','கல்லணை எந்த ஆற்றின் குறுக்கே கட்டப்பட்டுள்ளது?',['காவிரி','வைகை','பாலாறு','தாமிரபரணி'],0,'கல்லணை காவிரி ஆற்றின் குறுக்கே அமைந்துள்ளது.'],
+['tamil','easy','தமிழ்நாட்டின் எந்த மலைநகரம் நீலகிரி மலைகளில் அமைந்துள்ளது?',['ஊட்டி','கொடைக்கானல்','ஏற்காடு','குற்றாலம்'],0,'ஊட்டி நீலகிரி மலைகளில் உள்ளது.'],
+['tamil','medium','மாமல்லபுரம் எதற்காகப் புகழ்பெற்றது?',['கடற்கரை கோவில்','மீனாட்சி கோவில்','பெரிய கோவில்','நெல்லையப்பர் கோவில்'],0,'மாமல்லபுரம் கடற்கரை கோவிலுக்குப் புகழ்பெற்றது.'],
+['tamil','easy','தமிழ்நாட்டின் அறுவடைத் திருவிழா எது?',['பொங்கல்','ஓணம்','பைசாகி','பிஹு'],0,'பொங்கல் தமிழ்நாட்டின் அறுவடைத் திருவிழா.'],
+['tamil','medium','பரதநாட்டியம் எந்த மாநிலத்துடன் தொடர்புடையது?',['தமிழ்நாடு','கேரளா','ஒடிசா','அசாம்'],0,'பரதநாட்டியம் தமிழ்நாட்டில் தோன்றிய செவ்வியல் நடனம்.'],
+['tamil','easy','மெரினா கடற்கரை எந்த நகரில் உள்ளது?',['சென்னை','தூத்துக்குடி','கன்னியாகுமரி','நாகப்பட்டினம்'],0,'மெரினா கடற்கரை சென்னையில் உள்ளது.'],
+['tamil','medium','கொடைக்கானல் எந்த மாவட்டத்தில் அமைந்துள்ளது?',['திண்டுக்கல்','நீலகிரி','கோயம்புத்தூர்','திருவள்ளூர்'],0,'கொடைக்கானல் திண்டுக்கல் மாவட்டத்தில் அமைந்துள்ளது.'],
+['tamil','medium','கன்னியாகுமரி எந்த மூன்று நீர்நிலைகள் சந்திக்கும் இடமாகும்?',['அரபிக்கடல், வங்காள விரிகுடா, இந்தியப் பெருங்கடல்','காவிரி, வைகை, பாலாறு','கிருஷ்ணா, கோதாவரி, நர்மதை','செங்கடல், அரபிக்கடல், பசிபிக்'],0,'கன்னியாகுமரியில் மூன்று நீர்நிலைகள் சந்திக்கின்றன.'],
 ['gk','easy','இந்தியாவின் தேசியப் பறவை எது?',['மயில்','கிளி','கழுகு','அன்னம்'],0,'மயில் தேசியப் பறவை.'],
 ['gk','easy','சூரியன் எந்த திசையில் உதிக்கும்?',['கிழக்கு','மேற்கு','வடக்கு','தெற்கு'],0,'சூரியன் கிழக்கில் உதிக்கும்.'],
 ['maths','easy','7 × 8 எவ்வளவு?',['56','54','48','63'],0,'7 × 8 = 56.'],
@@ -730,6 +739,7 @@ function fromRow(r, labelCat, lang) {
 
 export function bankQuestions({ category = 'mixed', count = 10, questionType = 'mcq', difficulty = 'mixed', language = 'en' } = {}) {
   const cat = String(category || 'mixed').toLowerCase();
+  const rowCat = cat === 'tamil-nadu' ? 'tamil' : cat;
   const want = Math.max(3, Math.min(40, Number(count) || 10));
   const diff = ['easy', 'medium', 'hard', 'mixed'].includes(String(difficulty).toLowerCase()) ? String(difficulty).toLowerCase() : 'mixed';
   const lang = cleanBankLang(language);
@@ -741,16 +751,16 @@ export function bankQuestions({ category = 'mixed', count = 10, questionType = '
   // Exception: mixed/gk games sample the WHOLE bank so they never repeat fast.
   const isBroad = cat === 'mixed' || cat === 'gk';
   const isCustom = cat === 'custom';
-  const enCatRows = ALL_RAW.filter((r) => (isCustom ? false : isBroad ? true : r[0] === cat));
+  const enCatRows = ALL_RAW.filter((r) => (isCustom ? false : isBroad ? true : r[0] === rowCat));
   const enNeutralRows = ALL_RAW.filter((r) => r[0] === 'mixed' || r[0] === 'gk');
-  const taCatRows = TA_RAW.filter((r) => (isCustom ? false : isBroad ? true : r[0] === cat));
+  const taCatRows = TA_RAW.filter((r) => (isCustom ? false : isBroad ? true : r[0] === rowCat));
   const taNeutralRows = TA_RAW.filter((r) => r[0] === 'mixed' || r[0] === 'gk' || r[0] === 'tamil' || r[0] === 'india' || r[0] === 'gk');
 
   const tier = (rows, l) => {
     const match = [];
     const rest = [];
     for (const r of shuffle(rows)) {
-      (diff === 'mixed' || r[1] === diff ? match : rest).push(fromRow(r, l === 'ta' ? labelCat : (isCustom ? 'mixed' : r[0]), l));
+      (diff === 'mixed' || r[1] === diff ? match : rest).push(fromRow(r, l === 'ta' || cat === 'tamil-nadu' ? labelCat : (isCustom ? 'mixed' : r[0]), l));
     }
     return [...match, ...shuffle(rest)];
   };
@@ -780,14 +790,11 @@ export function bankQuestions({ category = 'mixed', count = 10, questionType = '
     }
     // Neutral supplement when the category pool can't cover ~3 games on its
     // own (keeps on-topic ratio high: difficulty-matched on-topic first).
-    if (candidates.length < want * 3) candidates.push(...tier(enNeutralRows, 'en'));
+    if (candidates.length < want * 3 && cat !== 'tamil-nadu') candidates.push(...tier(enNeutralRows, 'en'));
   } else if (lang === 'ta') {
     candidates.push(...tier(taCatRows, 'ta'));
-    candidates.push(...tier(taNeutralRows, 'ta'));
+    if (cat !== 'tamil-nadu') candidates.push(...tier(taNeutralRows, 'ta'));
     pushGen(0, 'ta');
-    // Last resort: English category questions (better than breaking the quiz).
-    if (candidates.length < want) candidates.push(...tier(enCatRows, 'en'));
-    if (candidates.length < want) candidates.push(...tier(enNeutralRows, 'en'));
   } else {
     // both: interleave Tamil + English so the language toggle is visible in backup too.
     const ta = [...tier(taCatRows, 'ta'), ...tier(taNeutralRows, 'ta')];

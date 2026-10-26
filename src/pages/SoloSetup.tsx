@@ -8,8 +8,8 @@ import { sound } from '../services/engine';
 export default function SoloSetup() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
-  const rawCat = sp.get('cat') || 'india';
-  const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) ? rawCat : 'india', count: 10, timer: 10, difficulty: 'mixed', region: 'india', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'india', jlptLevel: 'N5' });
+  const rawCat = sp.get('cat') || 'tamil-nadu';
+  const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) && !['mixed', 'india', 'world', 'japanese'].includes(rawCat) ? rawCat : 'tamil-nadu', count: 10, timer: 10, difficulty: 'mixed', region: 'india', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'india', jlptLevel: 'N5' });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
@@ -23,7 +23,7 @@ export default function SoloSetup() {
     sound.play('click');
     const clean: QuizConfig = {
       ...cfg,
-      category: isAllowedCategory(cfg.category) ? cfg.category : 'mixed',
+      category: isAllowedCategory(cfg.category) && !['mixed', 'india', 'world', 'japanese'].includes(cfg.category) ? cfg.category : 'tamil-nadu',
       count: sanitizeCount(cfg.count),
       timer: sanitizeTimer(cfg.timer, true),
       jlptLevel: sanitizeJlpt(cfg.jlptLevel),
