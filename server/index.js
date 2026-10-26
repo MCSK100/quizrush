@@ -189,25 +189,25 @@ function roomCode(len = 5) {
 }
 
 const CATEGORY_FOCUS = {
-  sports: 'ONLY sports: cricket, football, Olympics, tennis, athletes, rules, scores, tournaments. NEVER science, history or movies.',
-  history: 'ONLY history: ancient/medieval/modern events, empires (Chola, Mughal, Roman), wars, independence movements, dates, historical figures. NEVER science, physics, chemistry or biology.',
-  science: 'ONLY science: physics, chemistry, biology, human body, elements, experiments. NEVER history or sports.',
-  geography: 'ONLY geography: countries, capitals, rivers, mountains, maps, flags. NEVER history dates or science formulas.',
-  tech: 'ONLY technology: computers, AI, internet, gadgets, programming, inventors. NEVER history or biology.',
-  movies: 'ONLY movies: films, directors, actors, Oscars, blockbusters. NEVER science or history.',
-  music: 'ONLY music: songs, bands, instruments, composers, genres. NEVER sports or science.',
-  kids: 'ONLY fun kid-friendly general questions with very simple words. NEVER hard history or science.',
-  tamil: 'ONLY Tamil Nadu / Tamil language, culture, temples, cinema, literature, festivals. NEVER generic science.',
-  gk: 'general knowledge spanning many topics (one question per topic is fine).',
-  maths: 'ONLY mathematics: arithmetic, algebra, geometry, numbers, logic puzzles with a single numeric answer. NEVER history or science facts.',
-  literature: 'ONLY literature: books, authors, poets, plays, novels. NEVER science or sports.',
-  animals: 'ONLY animals & nature: species, habitats, wildlife facts. NEVER history or tech.',
-  space: 'ONLY space: planets, stars, ISRO/NASA missions, astronauts, universe. NEVER sports or movies.',
-  gaming: 'ONLY video games, esports, consoles, game characters. NEVER history or biology.',
-  world: 'ONLY world cultures, countries, food, festivals, landmarks. NEVER maths formulas or physics.',
-  india: 'ONLY India: states, history, geography, culture, sports, cinema, current affairs. NEVER generic non-India facts.',
-  japanese: 'ONLY Japanese language ability: vocabulary (語彙), kanji readings and meanings, grammar (文法), particles and everyday expressions. NEVER generic trivia.',
-  mixed: 'mixed general knowledge across many topics.',
+  sports: 'Indian sports only: cricket, kabaddi, hockey, Indian athletes, leagues, teams and India’s Olympic history.',
+  history: 'Indian history only: ancient, medieval and modern India, dynasties, freedom movement, events and historical figures.',
+  science: 'Indian science only: Indian scientists, discoveries, institutions, public health and science in India.',
+  geography: 'Geography of India only: states, cities, rivers, mountains, climate, maps and landmarks.',
+  tech: 'Indian technology only: ISRO, Indian software, digital public infrastructure, local innovators and technology in India.',
+  movies: 'Indian cinema only: Indian films, directors, actors, regional industries, awards and film history.',
+  music: 'Indian music only: Indian composers, artists, instruments, classical and regional traditions.',
+  kids: 'Simple, family-friendly questions about India, Indian nature, culture, geography and everyday life.',
+  tamil: 'Tamil Nadu and Tamil culture only: language, history, temples, cinema, literature and festivals.',
+  gk: 'Indian general knowledge only, spanning India’s history, geography, culture, science and public life.',
+  maths: 'Maths questions grounded in Indian contexts, with unambiguous arithmetic, geometry or logic answers.',
+  literature: 'Indian literature only: Indian books, authors, poets, languages, plays and literary traditions.',
+  animals: 'Indian wildlife and nature only: species, habitats, ecosystems and conservation in India.',
+  space: 'India’s space programme and Indian astronomy only, including ISRO missions and Indian scientists.',
+  gaming: 'Gaming in India only: Indian esports, players, teams, tournaments and games popular in India.',
+  world: 'India’s connections with the world: Indian diaspora, diplomacy, trade, culture and shared history.',
+  india: 'Indian studies only: states, history, geography, culture, sports, cinema, science and public life.',
+  japanese: 'Japanese-language learning through Indian contexts, such as Indian places, culture and daily life.',
+  mixed: 'Indian general knowledge across subjects; every question must have a clear India connection.',
 };
 const JLPT_DESC = {
   N5: 'N5 beginner: hiragana, katakana, ~100 basic kanji, simple everyday phrases and basic particles (は、が、を、に).',
@@ -217,13 +217,13 @@ const JLPT_DESC = {
   N1: 'N1 advanced: ~2000 kanji, complex grammar, nuanced expressions, fast natural-speed reading like newspapers and novels.',
 };
 const JLPT_DIFF = { N5: 'easy', N4: 'easy', N3: 'medium', N2: 'hard', N1: 'hard' };
-function buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid }) {
+function buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, customFocus, focus, jlptLevel, avoid }) {
   const isCustom = category === 'custom' && String(customTopic || '').trim();
   const level = cleanJlpt(jlptLevel);
   const isJapanese = category === 'japanese';
   const catLabel = isCustom ? `CUSTOM TOPIC "${String(customTopic).trim().toUpperCase()}"` : isJapanese ? `JAPANESE LANGUAGE (JLPT ${level})` : category === 'mixed' ? 'mixed general knowledge' : category.toUpperCase();
   const focusRule = isCustom
-    ? `Every question MUST be strictly about "${String(customTopic).trim()}". NEVER drift to other topics.`
+    ? `Every question MUST be strictly about "${String(customTopic).trim()}" and explain its connection to India. NEVER drift to unrelated topics.`
     : isJapanese
       ? `Every question MUST test Japanese at JLPT ${level} level: ${JLPT_DESC[level]} Mix vocabulary, kanji readings/meanings, grammar and particles suited to ${level}.`
       : (CATEGORY_FOCUS[category] || CATEGORY_FOCUS.mixed);
@@ -234,7 +234,10 @@ function buildPrompt({ category, count, difficulty, region, language, questionTy
     : language === 'both'
       ? ' Alternate languages: odd-numbered questions fully in English, even-numbered fully in Tamil (தமிழ்).'
       : ' Write everything in English.';
-  const regionBit = focus === 'topic' ? '' : regionPrompt(region || 'global');
+  const regionBit = regionPrompt(region || 'india');
+  const customFocusBit = String(customFocus || '').trim()
+    ? ` Additional requested focus: "${String(customFocus).trim()}". Treat this as a specific Indian subtopic, not permission to leave the India context.`
+    : '';
   const diffBit = isJapanese ? `difficulty=${JLPT_DIFF[level]} for EVERY question (JLPT ${level} standard)` : difficulty === 'mixed' ? 'a mix of easy, medium and hard' : `difficulty=${difficulty} for EVERY question`;
   const typeBit = questionType === 'tf'
     ? 'TYPE: True/False ONLY. Each item MUST have exactly options ["True","False"] and correctAnswer 0 or 1.'
@@ -247,6 +250,7 @@ function buildPrompt({ category, count, difficulty, region, language, questionTy
   return (
     `You are a strict quiz generator. Generate EXACTLY ${count} quiz questions. ` +
     `CATEGORY (strict): ${catLabel}. Topic rule: ${focusRule}${langBit}${regionBit} ` +
+    `INDIA REQUIREMENT: Every question must be about India or have a direct, meaningful connection to India. Do not return generic global trivia. ${customFocusBit} ` +
     `Difficulty: ${diffBit}. ${typeBit} ` +
     `CRITICAL: 100% of questions MUST be about ${catLabel}. Off-topic questions are a FAILURE. ` +
     (Array.isArray(avoid) && avoid.length
@@ -452,7 +456,7 @@ async function generateSmall(opts, prompt, count) {
   if (raced) return raced;
   return generateSequential(opts, prompt, count);
 }
-async function generateSequential({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel }, prompt) {
+async function generateSequential({ category, count, difficulty, region, language, questionType, customTopic, customFocus, focus, jlptLevel }, prompt) {
   let lastErr = new Error('no AI providers configured (set GEMINI_API_KEY, OPENROUTER_API_KEY and/or GROQ_API_KEY)');
   const tryParse = (parsed, tag, qtype) => tryParseQuestions(parsed, tag, qtype, category, language, count);
   // A dead key fails every model the same way — skip the rest of that provider.
@@ -485,9 +489,9 @@ async function generateSequential({ category, count, difficulty, region, languag
     (() => { throw lastErr; })()
   );
 }
-async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid }) {
-  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid });
-  const opts = { category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid };
+async function generateAIQuestions({ category, count, difficulty, region, language, questionType, customTopic, customFocus, focus, jlptLevel, avoid }) {
+  const prompt = buildPrompt({ category, count, difficulty, region, language, questionType, customTopic, customFocus, focus, jlptLevel, avoid });
+  const opts = { category, count, difficulty, region, language, questionType, customTopic, customFocus, focus, jlptLevel, avoid };
   if (count > 10) return generateChunked(opts, prompt, count);
   return generateSmall(opts, prompt, count);
 }
@@ -516,12 +520,14 @@ async function resolveQuestions(opts) {
     try {
       return await withBudget(generateAIQuestions(opts), AI_BUDGET_MS);
     } catch (e) {
+      if (opts.category === 'custom') throw e;
       console.error(`[ai] all providers failed, using bank: ${String(e?.message || e).slice(0, 150)}`);
     }
   } else {
     console.log('[ai] no providers configured, using bank');
+    if (opts.category === 'custom') throw new Error('AI is required to generate questions for a custom topic');
   }
-  return bankQuestions({ category: opts.category, count: opts.count, questionType: opts.questionType, difficulty: opts.difficulty, language: opts.language || 'en' });
+  return bankQuestions({ category: 'india', count: opts.count, questionType: opts.questionType, difficulty: opts.difficulty, language: opts.language || 'en' });
 }
 
 /* ---------------- realtime rooms ---------------- */
@@ -675,6 +681,7 @@ async function handleStart(room, byId) {
       language: cleanLang(room.config.language),
       questionType: cleanQType(room.config.questionType),
       customTopic: String(room.config.customTopic || '').slice(0, 80),
+      customFocus: String(room.config.customFocus || '').slice(0, 120),
       focus: ALLOWED_FOCUS.has(room.config.focus) ? room.config.focus : 'global',
       jlptLevel: cleanJlpt(room.config.jlptLevel),
     };
@@ -783,7 +790,7 @@ function onMessage(ws, raw) {
     if (!validName(m.name)) return sendWs(ws, { t: 'error', msg: 'Enter a display name (2+ characters).' });
     const count = Math.max(3, Math.min(40, Number(m.config?.count) || 10));
     const timer = [10, 20, 30, 60].includes(Number(m.config?.timer)) ? Number(m.config.timer) : 10;
-    const category = ALLOWED_CATS.has(String(m.config?.category)) ? String(m.config.category) : 'mixed';
+    const category = ALLOWED_CATS.has(String(m.config?.category)) ? String(m.config.category) : 'india';
     const difficulty = ALLOWED_DIFFS.has(String(m.config?.difficulty)) ? String(m.config.difficulty) : 'mixed';
     const mode = ['classic', 'speed', 'elimination'].includes(m.config?.mode) ? m.config.mode : 'classic';
     const maxPlayers = [2, 4, 8, 16, 32].includes(Number(m.config?.maxPlayers)) ? Number(m.config.maxPlayers) : 8;
@@ -792,6 +799,7 @@ function onMessage(ws, raw) {
     const questionType = cleanQType(m.config?.questionType);
     const focus = ALLOWED_FOCUS.has(m.config?.focus) ? m.config.focus : 'global';
     const customTopic = String(m.config?.customTopic || '').slice(0, 80);
+    const customFocus = String(m.config?.customFocus || '').slice(0, 120);
     const jlptLevel = cleanJlpt(m.config?.jlptLevel);
     let code = roomCode(5);
     while (rooms.has(code)) code = roomCode(5);
@@ -802,7 +810,7 @@ function onMessage(ws, raw) {
       isHost: true, connected: true, ws: null,
     };
     const room = {
-      code, config: { category, count, timer, difficulty, mode, maxPlayers, region, language, questionType, customTopic, focus, jlptLevel },
+      code, config: { category, count, timer, difficulty, mode, maxPlayers, region, language, questionType, customTopic, customFocus, focus, jlptLevel },
       players: [player], hostId: player.id, status: 'LOBBY',
       questions: [], qi: 0, answers: {}, endsAt: 0, timers: [],
       lastMsg: null, rows: [], touchedAt: Date.now(),
@@ -888,6 +896,7 @@ const server = http.createServer(async (req, res) => {
     const questionType = cleanQType(body.questionType);
     const focus = ALLOWED_FOCUS.has(body.focus) ? body.focus : 'global';
     const customTopic = String(body.customTopic || '').slice(0, 80);
+    const customFocus = String(body.customFocus || '').slice(0, 120);
     const jlptLevel = cleanJlpt(body.jlptLevel);
     const avoid = Array.isArray(body.avoid)
       ? body.avoid.filter((x) => typeof x === 'string').map((s) => s.slice(0, 120)).slice(0, 12)
@@ -901,7 +910,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     try {
-      const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, focus, jlptLevel, avoid });
+      const { questions: fetched, provider } = await resolveQuestions({ category, count, difficulty, region, language, questionType, customTopic, customFocus, focus, jlptLevel, avoid });
       const questions = dedupeQs(
         fetched
           .map((r) => (r && r.id && Array.isArray(r.options) ? r : normalize(r, category, questionType, language)))

@@ -102,6 +102,14 @@ const EN: Row[] = [
 ['india','medium','Which city is known as the Pink City?',['Jaipur','Jodhpur','Udaipur','Agra'],0,'Jaipur is the Pink City.'],
 ['india','hard','Which is the longest river entirely within India?',['Ganga','Yamuna','Godavari','Narmada'],0,'The Ganga runs about 2,525 km.'],
 ['india','easy','How many players are on a kabaddi team on court?',['7','6','5','11'],0,'Seven players per side.'],
+['india','easy','On which date did India become a republic?',['26 January 1950','15 August 1947','2 October 1947','26 November 1949'],0,'The Constitution came into effect on 26 January 1950.'],
+['india','easy','What is the capital of India?',['New Delhi','Mumbai','Kolkata','Chennai'],0,'New Delhi is the capital of India.'],
+['india','medium','Which is the largest Indian state by area?',['Rajasthan','Madhya Pradesh','Maharashtra','Uttar Pradesh'],0,'Rajasthan is India’s largest state by area.'],
+['india','easy','What is the national animal of India?',['Bengal tiger','Asiatic lion','Asian elephant','Snow leopard'],0,'The Bengal tiger is India’s national animal.'],
+['india','easy','Which bird is the national bird of India?',['Indian peafowl','Sarus crane','Great hornbill','House sparrow'],0,'The Indian peafowl is India’s national bird.'],
+['india','medium','Who wrote the Indian national anthem, Jana Gana Mana?',['Rabindranath Tagore','Bankim Chandra Chattopadhyay','Sarojini Naidu','Subramania Bharati'],0,'Rabindranath Tagore wrote Jana Gana Mana.'],
+['india','medium','Which Indian organisation operates the Chandrayaan lunar missions?',['ISRO','DRDO','CSIR','BARC'],0,'ISRO is the Indian Space Research Organisation.'],
+['india','easy','Which body issues Indian rupee banknotes?',['Reserve Bank of India','State Bank of India','NITI Aayog','Election Commission of India'],0,'The Reserve Bank of India issues banknotes.'],
 ['japanese','easy','「ねこ」の意味は何ですか？ (What does “ねこ” mean?)',['Cat','Dog','Bird','Fish'],0,'ねこ (neko) means cat.'],
 ['japanese','easy','「みず」の意味は何ですか？ (What does “みず” mean?)',['Water','Fire','Rice','Milk'],0,'みず (mizu) means water.'],
 ['japanese','easy','「いぬ」の意味は何ですか？ (What does “いぬ” mean?)',['Dog','Cat','Horse','Cow'],0,'いぬ (inu) means dog.'],
@@ -208,9 +216,10 @@ export function getBackupQuestions(cfg: QuizConfig): Question[] {
   };
 
   const enCat = EN.filter((r) => r[0] === cat);
-  const enNeutral = EN.filter((r) => r[0] === 'mixed' || r[0] === 'gk');
+  const indiaOnly = cfg.focus === 'india' || cfg.region === 'india';
+  const enNeutral = indiaOnly ? [] : EN.filter((r) => r[0] === 'mixed' || r[0] === 'gk');
   const taCat = TA.filter((r) => r[0] === cat);
-  const taNeutral = TA.filter((r) => r[0] !== cat);
+  const taNeutral = indiaOnly ? [] : TA.filter((r) => r[0] !== cat);
 
   let pool: Question[] = [];
   if (lang === 'en') {

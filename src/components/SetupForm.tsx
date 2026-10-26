@@ -64,7 +64,7 @@ const GRADS = [
   'linear-gradient(135deg,#34D399,#0EA5E9)',
   'linear-gradient(135deg,#FBBF24,#F43F5E)',
 ];
-const TOPIC_ORDER = (ALLOWED_CATEGORIES as readonly string[]).filter((id) => id !== 'custom');
+const TOPIC_ORDER = (ALLOWED_CATEGORIES as readonly string[]).filter((id) => id !== 'custom' && id !== 'japanese');
 
 const LANGS: { id: QuizLanguage; label: string; sub: string }[] = [
   { id: 'en', label: 'English', sub: 'EN' },
@@ -84,8 +84,7 @@ const QTYPES: { id: QuestionType; label: string; icon: LucideIcon }[] = [
   { id: 'mixed', label: 'Mixed', icon: Shuffle },
 ];
 const FOCUS: { id: QuizFocus; label: string; icon: LucideIcon }[] = [
-  { id: 'global', label: 'Global', icon: Globe },
-  { id: 'india', label: 'India', icon: MapPin },
+  { id: 'india', label: 'India-wide', icon: MapPin },
   { id: 'topic', label: 'Topic-only', icon: Crosshair },
 ];
 
@@ -128,16 +127,15 @@ function Seg<T extends string | number>({ options, value, onPick, cols }: {
 export default function SetupForm({ value, onChange }: { value: QuizConfig; onChange: (c: QuizConfig) => void }) {
   const set = (p: Partial<QuizConfig>) => { sound.play('click'); onChange({ ...value, ...p }); };
   const applyFocus = (f: QuizFocus) => {
-    if (f === 'india') set({ focus: f, region: 'india' });
-    else set({ focus: f, region: 'global' });
+    set({ focus: f, region: 'india' });
   };
   const bump = (d: number) => set({ count: sanitizeCount(value.count + d) });
   const qtype = QTYPES.find((q) => q.id === (value.questionType || 'mcq'))!;
-  const focusLabel = FOCUS.find((f) => f.id === (value.focus || 'global'))!.label;
+  const focusLabel = FOCUS.find((f) => f.id === (value.focus || 'india'))?.label ?? FOCUS[0].label;
 
   return (
     <div className="flex flex-col gap-4">
-      <Step n="01" icon={LayoutGrid} title="Pick a topic" hint={`${TOPIC_ORDER.length + 1} playgrounds`}>
+      <Step n="01" icon={LayoutGrid} title="Pick an Indian topic" hint={`${TOPIC_ORDER.length + 1} topics`}>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {TOPIC_ORDER.map((id, i) => {
             const cat = CATEGORIES.find((c) => c.id === id)!;
@@ -175,20 +173,25 @@ export default function SetupForm({ value, onChange }: { value: QuizConfig; onCh
         {value.category === 'custom' && (
           <input
             value={value.customTopic || ''} onChange={(e) => onChange({ ...value, customTopic: e.target.value.slice(0, 80) })}
+            aria-label="Custom Indian topic"
             placeholder="e.g. Chola dynasty, Chandrayaan, IPL…" maxLength={80} autoFocus
             className="mt-2.5 w-full rounded-2xl bg-[#F8F9FF] px-4 py-3.5 text-[14px] font-bold text-ink outline-none placeholder:text-faint focus:bg-white"
             style={{ ...SOFT, borderWidth: 1.5 }}
           />
         )}
+        <label className="mt-3 block text-[10px] font-extrabold tracking-[0.14em] text-muted" htmlFor="custom-question-focus">
+          SPECIFIC INDIAN FOCUS (OPTIONAL)
+        </label>
+        <input
+          id="custom-question-focus"
+          value={value.customFocus || ''}
+          onChange={(e) => onChange({ ...value, customFocus: e.target.value.slice(0, 120) })}
+          placeholder="e.g. women in Indian cricket, ISRO’s lunar missions"
+          maxLength={120}
+          className="mt-1.5 w-full rounded-2xl bg-[#F8F9FF] px-4 py-3.5 text-[14px] font-bold text-ink outline-none placeholder:text-faint focus:bg-white"
+          style={{ ...SOFT, borderWidth: 1.5 }}
+        />
       </Step>
-
-      {value.category === 'japanese' && (
-        <Step n="01+" icon={Flower} title="JLPT level" hint="Japanese test prep">
-          <Seg cols="grid-cols-5"
-            options={JLPT_LEVELS.map((l) => ({ id: l.id, label: l.label, sub: l.sub }))}
-            value={value.jlptLevel || 'N5'} onPick={(id) => set({ jlptLevel: id })} />
-        </Step>
-      )}
 
       <Step n="02" icon={Languages} title="Language">
         <Seg options={LANGS} value={value.language || 'en'} onPick={(id) => set({ language: id })} />
@@ -255,7 +258,7 @@ export default function SetupForm({ value, onChange }: { value: QuizConfig; onCh
           </div>
           <div>
             <div className="mb-1.5 text-[11px] font-extrabold tracking-[0.14em] text-muted">QUESTION FOCUS</div>
-            <Seg options={FOCUS.map((f) => ({ id: f.id, label: <span className="inline-flex items-center gap-1.5"><f.icon size={14} />{f.label}</span> }))} value={value.focus || 'global'} onPick={applyFocus} />
+            <Seg options={FOCUS.map((f) => ({ id: f.id, label: <span className="inline-flex items-center gap-1.5"><f.icon size={14} />{f.label}</span> }))} value={value.focus || 'india'} onPick={applyFocus} />
           </div>
         </div>
       </details>

@@ -13,7 +13,7 @@ export default function CreateGame() {
   const nav = useNavigate();
   const setRoom = useRoom((s) => s.setRoom);
   const [name, setName] = useState('');
-  const [cfg, setCfg] = useState<QuizConfig>({ category: 'mixed', count: 20, timer: 30, difficulty: 'mixed', region: 'global', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'global', jlptLevel: 'N5' });
+  const [cfg, setCfg] = useState<QuizConfig>({ category: 'india', count: 20, timer: 30, difficulty: 'mixed', region: 'india', mode: 'classic', maxPlayers: 8, language: 'en', questionType: 'mcq', focus: 'india', jlptLevel: 'N5' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
@@ -28,6 +28,7 @@ export default function CreateGame() {
       timer: sanitizeTimer(cfg.timer, true),
       jlptLevel: sanitizeJlpt(cfg.jlptLevel),
       customTopic: String(cfg.customTopic || '').slice(0, 80),
+      customFocus: String(cfg.customFocus || '').slice(0, 120),
     };
     if (clean.category === 'custom' && !clean.customTopic?.trim()) { setErr('Enter a custom topic to continue.'); return; }
     setCfg(clean);

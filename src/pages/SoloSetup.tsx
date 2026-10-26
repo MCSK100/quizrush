@@ -8,8 +8,8 @@ import { sound } from '../services/engine';
 export default function SoloSetup() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
-  const rawCat = sp.get('cat') || 'mixed';
-  const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) ? rawCat : 'mixed', count: 10, timer: 10, difficulty: 'mixed', region: 'global', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'global', jlptLevel: 'N5' });
+  const rawCat = sp.get('cat') || 'india';
+  const [cfg, setCfg] = useState<QuizConfig>({ category: isAllowedCategory(rawCat) ? rawCat : 'india', count: 10, timer: 10, difficulty: 'mixed', region: 'india', randomizeQ: true, randomizeA: true, language: 'en', questionType: 'mcq', focus: 'india', jlptLevel: 'N5' });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
@@ -28,6 +28,7 @@ export default function SoloSetup() {
       timer: sanitizeTimer(cfg.timer, true),
       jlptLevel: sanitizeJlpt(cfg.jlptLevel),
       customTopic: (cfg.customTopic || '').slice(0, 80),
+      customFocus: (cfg.customFocus || '').slice(0, 120),
     };
     if (clean.category === 'custom' && !clean.customTopic?.trim()) {
       setErr('Enter a custom topic to continue.');
@@ -56,7 +57,7 @@ export default function SoloSetup() {
         sessionStorage.removeItem('qr-solo-progress');
         sessionStorage.setItem('qr-solo', JSON.stringify({ cfg: clean, questions, source, provider }));
       } catch { /* storage unavailable */ }
-      if (source === 'bank') setNote('AI unavailable — using offline questions.');
+      if (source === 'bank') setNote('AI unavailable — using India-focused offline practice questions.');
       nav('/solo/play');
     } catch (e) {
       if (cancelRef.current) return;
@@ -95,7 +96,7 @@ export default function SoloSetup() {
       </div>
       <h1 className="font-display mt-2 text-balance text-3xl tracking-tight text-ink sm:text-4xl">Build your <span className="qr-gradient-text">quiz.</span></h1>
       <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-muted">
-        <Sparkles size={14} className="shrink-0 text-sunny" /> Fresh AI questions every run — no repeats, no stale decks.
+        <Sparkles size={14} className="shrink-0 text-sunny" /> India-first questions, freshly generated for your chosen topic.
       </p>
       <div className="mt-6"><SetupForm value={cfg} onChange={setCfg} /></div>
       {err && (

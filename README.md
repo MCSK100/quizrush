@@ -8,8 +8,9 @@ npm run dev
 2. `cp server/.env.example server/.env` and set `GEMINI_API_KEY`.
 3. Run it: `npm start --prefix server` (health: http://localhost:8787/api/health).
 4. `cp .env.example .env`, set `VITE_AI_ENDPOINT=http://localhost:8787`, restart `npm run dev`.
-5. Solo + rooms now load Gemini questions per your setup (category/count/difficulty),
-   validated server-side, with seeded fallback if AI fails.
+5. Solo + rooms load India-first Gemini questions per your setup (topic, custom focus,
+   count, and difficulty), validated server-side, with India-focused offline questions
+   as a fallback. Custom topics require the AI service so they never receive unrelated filler.
 Deploy: push this repo to Render using `render.yaml` (sets `GEMINI_API_KEY` in
 Render dashboard), then point the frontend `VITE_AI_ENDPOINT` at the Render URL.
 ## Demo Mode

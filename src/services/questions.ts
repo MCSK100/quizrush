@@ -86,10 +86,13 @@ function normalize(raw: unknown, cat: string, maxIdx = 3, lang = 'en'): Question
   };
 }
 function bankFallback(cfg: QuizConfig, count: number, reason: string): { questions: Question[]; source: 'bank'; provider: string } {
+  if (cfg.category === 'custom') {
+    throw new AiError('failed', 'AI is required to generate questions for a custom topic. Check the AI connection and retry.');
+  }
   const banned = new Set([...recentTexts(), ...sessionTexts()]);
-  const pool = getBackupQuestions(cfg).filter(validateQuestion);
+  const pool = getBackupQuestions({ ...cfg, category: 'india', focus: 'india', region: 'india' }).filter(validateQuestion);
   const fresh = dedupeFresh(pool.filter((q) => !banned.has(qKey(q))));
-  const out = (fresh.length >= Math.min(3, count) ? fresh : dedupeFresh(pool)).slice(0, count);
+  const out = dedupeFresh([...fresh, ...pool]).slice(0, count);
   if (out.length < Math.min(3, count)) throw new AiError('failed', aiErrorMessage('failed'));
   rememberQuestions(out);
   console.log(`[quizlly] ${out.length} backup questions (${reason}) · ${cfg.category}/${cfg.difficulty}/${cfg.questionType || 'mcq'}/${cfg.language || 'en'}`);
@@ -134,9 +137,10 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
       method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         category: cfg.category, count,
-        difficulty: cfg.difficulty, region: cfg.focus === 'india' ? 'india' : cfg.region || 'global',
+        difficulty: cfg.difficulty, region: cfg.region || 'india',
         language: cfg.language || 'en', questionType: wantType,
-        customTopic: (cfg.customTopic || '').slice(0, 80), focus: cfg.focus || 'global',
+        customTopic: (cfg.customTopic || '').slice(0, 80),
+        customFocus: (cfg.customFocus || '').slice(0, 120), focus: cfg.focus || 'india',
         jlptLevel: cfg.category === 'japanese' ? (cfg.jlptLevel || 'N5') : undefined,
         avoid,
       }),
@@ -169,7 +173,7 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
       .map((r) => normalize(r, cfg.category, maxIdx, cfg.language || 'en'))
       .filter((q): q is Question => !!q && validateQuestion(q));
     const freshB = dedupeFresh(allB.filter((q) => !bannedB.has(qKey(q))));
-    const outB = (freshB.length >= Math.min(3, count) ? freshB : dedupeFresh(allB)).slice(0, count);
+    const outB = dedupeFresh([...freshB, ...allB]).slice(0, count);
     if (outB.length >= Math.min(3, count)) {
       rememberQuestions(outB);
       return { questions: outB, source: 'bank', provider: 'bank' };
@@ -185,7 +189,7 @@ export async function generateQuestions(cfg: QuizConfig): Promise<{ questions: Q
     .map((r: unknown) => normalize(r, cfg.category, maxIdx, cfg.language || 'en'))
     .filter((q): q is Question => !!q && validateQuestion(q));
   const fresh = dedupeFresh(all.filter((q) => !banned.has(qKey(q))));
-  const out = (fresh.length >= Math.min(3, count) ? fresh : dedupeFresh(all)).slice(0, count);
+  const out = dedupeFresh([...fresh, ...all]).slice(0, count);
   if (out.length < Math.min(3, count)) {
     console.error('[quizlly] AI endpoint returned too few valid questions');
     return bankFallback(cfg, count, 'too-few-valid');
